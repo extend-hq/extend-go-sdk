@@ -22,7 +22,7 @@ type WorkflowsCreateRequest struct {
 	//
 	// When omitted, the workflow is created with default steps (`TRIGGER` → `PARSE`). The default steps may change in the future.
 	//
-	// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for step definitions, branching patterns, and examples.
+	// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for step definitions, branching patterns, and examples.
 	Steps []*WorkflowStepDefinition `json:"steps,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -424,7 +424,7 @@ type WorkflowsUpdateRequest struct {
 	Name *string `json:"name,omitempty" url:"-"`
 	// The new step definitions for the draft version. Replaces all existing draft steps.
 	//
-	// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for step definitions, branching patterns, and examples.
+	// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for step definitions, branching patterns, and examples.
 	Steps []*WorkflowStepDefinition `json:"steps,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted

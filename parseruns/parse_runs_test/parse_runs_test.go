@@ -174,6 +174,31 @@ func TestParseRunsDeleteWithWireMock(
 	VerifyRequestCount(t, "TestParseRunsDeleteWithWireMock", "DELETE", "/parse_runs/parse_run_id_here", nil, 1)
 }
 
+func TestParseRunsCancelWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithToken("test-token"),
+	)
+	request := &extend.ParseRunsCancelRequest{}
+	_, invocationErr := client.ParseRuns.Cancel(
+		context.TODO(),
+		"parse_run_id_here",
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestParseRunsCancelWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestParseRunsCancelWithWireMock", "POST", "/parse_runs/parse_run_id_here/cancel", nil, 1)
+}
+
 func TestParseRunsCreateBatchWithWireMock(
 	t *testing.T,
 ) {

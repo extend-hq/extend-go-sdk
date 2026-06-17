@@ -15,7 +15,7 @@ var (
 )
 
 type ProcessorRunCancelRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -54,11 +54,11 @@ type ProcessorRunCreateRequest struct {
 	// - `"draft"` for the draft version.
 	// - Specific version numbers corresponding to versions your team has published, e.g. `"1.0"`, `"2.2"`, etc.
 	Version *string `json:"version,omitempty" url:"-"`
-	// The file to be processed. One of `file` or `rawText` must be provided. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/product/general/supported-file-types).
+	// The file to be processed. One of `file` or `rawText` must be provided. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types).
 	File *LegacyProcessorRunFileInput `json:"file,omitempty" url:"-"`
 	// A raw string to be processed. Can be used in place of file when passing raw text data streams. One of `file` or `rawText` must be provided.
 	RawText *string `json:"rawText,omitempty" url:"-"`
-	// Whether to run the processor synchronously. When `true`, the request will wait for the processor run to complete and return the final results. When `false` (default), the request returns immediately with a `PROCESSING` status, and you can poll for completion or use webhooks. For production use cases, we recommending leaving sync off and building around an async integration for more resiliency, unless your use case is predictably fast (e.g. sub < 30 seconds) run time or otherwise have integration constraints that require a synchronous API. See [Async Processing](https://docs.extend.ai/2026-02-09/developers/async-processing) for more details.
+	// Whether to run the processor synchronously. When `true`, the request will wait for the processor run to complete and return the final results. When `false` (default), the request returns immediately with a `PROCESSING` status, and you can poll for completion or use webhooks. For production use cases, we recommending leaving sync off and building around an async integration for more resiliency, unless your use case is predictably fast (e.g. sub < 30 seconds) run time or otherwise have integration constraints that require a synchronous API. See [Async Processing](https://docs.extend.ai/2026-02-09/general/async-processing) for more details.
 	//
 	// **Timeout**: Synchronous requests have a 5-minute timeout. If the processor run takes longer, it will continue processing asynchronously and you can retrieve the results via the GET endpoint.
 	Sync *bool `json:"sync,omitempty" url:"-"`
@@ -164,7 +164,7 @@ var (
 )
 
 type ProcessorRunDeleteRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -190,7 +190,7 @@ var (
 )
 
 type ProcessorRunGetRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -226,7 +226,7 @@ var (
 )
 
 type ProcessorRunListRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// Filters processor runs by their status. If not provided, no filter is applied.
 	//
@@ -495,11 +495,11 @@ func (l *LegacyClassifierOutput) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// These are usage credits for document processing (extraction, classification, or splitting). File parsing credits are tracked separately and can be retrieved from the [Get File](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/file/get-file) endpoint.
+// These are usage credits for document processing (extraction, classification, or splitting). File parsing credits are tracked separately and can be retrieved from the [Get File](https://docs.extend.ai/2026-02-09/api-reference/endpoints/file/get-file) endpoint.
 //
 // This field will not be returned for processor runs created before October 7, 2025, or for customers on legacy billing systems.
 //
-// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/product/general/how-credits-work).
+// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/general/how-credits-work).
 var (
 	legacyDocumentProcessorRunCreditsFieldCredits = big.NewInt(1 << 0)
 )
@@ -1179,7 +1179,7 @@ type LegacyJSONOutputMetadataValue struct {
 	//
 	// These scores will be present when the `reviewAgent.enabled` flag is set to `true` in the processor config.
 	// If the review agent is enabled but a score is not returned for a field, this value will be `null`.
-	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgentScore *int                                          `json:"reviewAgentScore,omitempty" url:"reviewAgentScore,omitempty"`
 	Citations        []*LegacyJSONOutputMetadataValueCitationsItem `json:"citations,omitempty" url:"citations,omitempty"`
 	Insights         []*Insight                                    `json:"insights,omitempty" url:"insights,omitempty"`

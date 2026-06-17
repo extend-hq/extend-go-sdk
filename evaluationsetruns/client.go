@@ -4,6 +4,7 @@ package evaluationsetruns
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -57,7 +61,7 @@ func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set run.
 	//
-	// Example: `"evr_Xj8mK2pL9nR4vT7qY5wZ"`
+	// Example: `"bpr_Xj8mK2pL9nR4vT7qY5wZ"`
 	id string,
 	request *extend.EvaluationSetRunsRetrieveRequest,
 	opts ...option.RequestOption,

@@ -18,7 +18,7 @@ var (
 )
 
 type EvaluationSetRunsCreateRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// The ID of the evaluation set to run.
 	EvaluationSetID string `json:"evaluationSetId" url:"-"`
@@ -92,7 +92,7 @@ var (
 )
 
 type EvaluationSetRunsRetrieveRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -128,7 +128,7 @@ var (
 type EvaluationSetRun struct {
 	// The unique identifier for this evaluation set run.
 	//
-	// Example: `"eval_set_run_Xj8mK2pL9nR4vT7qY5wZ"`
+	// Example: `"bpr_Xj8mK2pL9nR4vT7qY5wZ"`
 	ID string `json:"id" url:"id"`
 	// The ID of the evaluation set that was run.
 	//

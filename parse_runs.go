@@ -7,7 +7,34 @@ import (
 	fmt "fmt"
 	internal "github.com/extend-hq/extend-go-sdk/internal"
 	big "math/big"
+	time "time"
 )
+
+var (
+	parseRunsCancelRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
+)
+
+type ParseRunsCancelRequest struct {
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+	ExtendWorkspaceID *string `json:"-" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (p *ParseRunsCancelRequest) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunsCancelRequest) SetExtendWorkspaceID(extendWorkspaceID *string) {
+	p.ExtendWorkspaceID = extendWorkspaceID
+	p.require(parseRunsCancelRequestFieldExtendWorkspaceID)
+}
 
 var (
 	parseRunsCreateRequestFieldFile     = big.NewInt(1 << 0)
@@ -145,7 +172,7 @@ var (
 )
 
 type ParseRunsDeleteRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -178,7 +205,7 @@ var (
 )
 
 type ParseRunsListRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// Filter parse runs by status.
 	Status *ParseRunsListRequestStatus `json:"-" url:"status,omitempty"`
@@ -272,7 +299,7 @@ var (
 )
 
 type ParseRunsRetrieveRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// Controls how the output is delivered. Defaults to `inline`.
 	// * `json` - Returns the output directly in the `output` field of the response body.
@@ -346,6 +373,459 @@ func NewParseRunSourceFromString(s string) (ParseRunSource, error) {
 }
 
 func (p ParseRunSource) Ptr() *ParseRunSource {
+	return &p
+}
+
+// Summary representation of a parse run.
+var (
+	parseRunSummaryFieldID             = big.NewInt(1 << 0)
+	parseRunSummaryFieldBatchID        = big.NewInt(1 << 1)
+	parseRunSummaryFieldFile           = big.NewInt(1 << 2)
+	parseRunSummaryFieldStatus         = big.NewInt(1 << 3)
+	parseRunSummaryFieldFailureReason  = big.NewInt(1 << 4)
+	parseRunSummaryFieldFailureMessage = big.NewInt(1 << 5)
+	parseRunSummaryFieldMetadata       = big.NewInt(1 << 6)
+	parseRunSummaryFieldMetrics        = big.NewInt(1 << 7)
+	parseRunSummaryFieldUsage          = big.NewInt(1 << 8)
+	parseRunSummaryFieldCreatedAt      = big.NewInt(1 << 9)
+	parseRunSummaryFieldUpdatedAt      = big.NewInt(1 << 10)
+)
+
+type ParseRunSummary struct {
+	// A unique identifier for the parse run.
+	//
+	// Example: `"pr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID string `json:"id" url:"id"`
+	// The ID of the batch this run belongs to, if created via `POST /parse_runs/batch`.
+	//
+	// **Availability:** Present when the run was submitted as part of a batch.
+	//
+	// Example: `"bpar_Xj8mK2pL9nR4vT7qY5wZ"`
+	BatchID *string `json:"batchId,omitempty" url:"batchId,omitempty"`
+	// The file that was parsed. This file can be used as a parameter for other Extend endpoints, such as `POST /workflow_runs`. May be `null` for batch parse runs where file ingestion failed.
+	File *FileSummary `json:"file" url:"file"`
+	// The status of the parse run:
+	// * `"PENDING"` - The run has been created and is waiting to be processed. Only applies to runs created via `POST /parse_runs/batch`.
+	// * `"PROCESSING"` - The file is still being processed
+	// * `"PROCESSED"` - The file was successfully processed
+	// * `"FAILED"` - The processing failed (see `failureReason` for details)
+	Status ParseRunSummaryStatus `json:"status" url:"status"`
+	// The reason for failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	//
+	// Possible values include:
+	// * `UNABLE_TO_DOWNLOAD_FILE` - The file could not be downloaded from the provided URL
+	// * `FILE_TYPE_NOT_SUPPORTED` - The file type is not supported for parsing
+	// * `FILE_SIZE_TOO_LARGE` - The file exceeds the maximum allowed size
+	// * `CORRUPT_FILE` - The file appears to be corrupted or malformed
+	// * `OCR_ERROR` - An error occurred during optical character recognition
+	// * `PASSWORD_PROTECTED_FILE` - The file is password protected and cannot be processed
+	// * `FAILED_TO_CONVERT_TO_PDF` - The file could not be converted to PDF for processing
+	// * `FAILED_TO_CONVERT_TO_JPEG` - The file could not be converted to JPEG for processing
+	// * `FAILED_TO_GENERATE_TARGET_FORMAT` - The output could not be generated in the requested format
+	// * `CHUNKING_ERROR` - An error occurred while chunking the document
+	// * `INTERNAL_ERROR` - An unexpected internal error occurred
+	// * `INVALID_CONFIG_OPTIONS` - The provided configuration options are invalid
+	// * `OUT_OF_CREDITS` - Insufficient credits to process the file
+	//
+	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
+	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
+	// A human-readable description of the failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	FailureMessage *string `json:"failureMessage,omitempty" url:"failureMessage,omitempty"`
+	// Any metadata that was provided when creating the parse run.
+	//
+	// **Availability:** Present when metadata was provided during creation.
+	Metadata *RunMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
+	// Metrics about the parsing process.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`.
+	Metrics *ParseRunSummaryMetrics `json:"metrics,omitempty" url:"metrics,omitempty"`
+	// Usage credits consumed by this parse run. Omits `breakdown` — fetch the full parse run by id to see the per-line items.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`, the run was created after October 7, 2025, and the customer is on the current billing system.
+	Usage     *RunUsageSummary `json:"usage,omitempty" url:"usage,omitempty"`
+	CreatedAt CreatedAt        `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt        `json:"updatedAt" url:"updatedAt"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunSummary) GetID() string {
+	if p == nil {
+		return ""
+	}
+	return p.ID
+}
+
+func (p *ParseRunSummary) GetBatchID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BatchID
+}
+
+func (p *ParseRunSummary) GetFile() *FileSummary {
+	if p == nil {
+		return nil
+	}
+	return p.File
+}
+
+func (p *ParseRunSummary) GetStatus() ParseRunSummaryStatus {
+	if p == nil {
+		return ""
+	}
+	return p.Status
+}
+
+func (p *ParseRunSummary) GetFailureReason() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FailureReason
+}
+
+func (p *ParseRunSummary) GetFailureMessage() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FailureMessage
+}
+
+func (p *ParseRunSummary) GetMetadata() *RunMetadata {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
+}
+
+func (p *ParseRunSummary) GetMetrics() *ParseRunSummaryMetrics {
+	if p == nil {
+		return nil
+	}
+	return p.Metrics
+}
+
+func (p *ParseRunSummary) GetUsage() *RunUsageSummary {
+	if p == nil {
+		return nil
+	}
+	return p.Usage
+}
+
+func (p *ParseRunSummary) GetCreatedAt() CreatedAt {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.CreatedAt
+}
+
+func (p *ParseRunSummary) GetUpdatedAt() UpdatedAt {
+	if p == nil {
+		return time.Time{}
+	}
+	return p.UpdatedAt
+}
+
+func (p *ParseRunSummary) Object() string {
+	return p.object
+}
+
+func (p *ParseRunSummary) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunSummary) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetID(id string) {
+	p.ID = id
+	p.require(parseRunSummaryFieldID)
+}
+
+// SetBatchID sets the BatchID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetBatchID(batchID *string) {
+	p.BatchID = batchID
+	p.require(parseRunSummaryFieldBatchID)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetFile(file *FileSummary) {
+	p.File = file
+	p.require(parseRunSummaryFieldFile)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetStatus(status ParseRunSummaryStatus) {
+	p.Status = status
+	p.require(parseRunSummaryFieldStatus)
+}
+
+// SetFailureReason sets the FailureReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetFailureReason(failureReason *string) {
+	p.FailureReason = failureReason
+	p.require(parseRunSummaryFieldFailureReason)
+}
+
+// SetFailureMessage sets the FailureMessage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetFailureMessage(failureMessage *string) {
+	p.FailureMessage = failureMessage
+	p.require(parseRunSummaryFieldFailureMessage)
+}
+
+// SetMetadata sets the Metadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetMetadata(metadata *RunMetadata) {
+	p.Metadata = metadata
+	p.require(parseRunSummaryFieldMetadata)
+}
+
+// SetMetrics sets the Metrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetMetrics(metrics *ParseRunSummaryMetrics) {
+	p.Metrics = metrics
+	p.require(parseRunSummaryFieldMetrics)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetUsage(usage *RunUsageSummary) {
+	p.Usage = usage
+	p.require(parseRunSummaryFieldUsage)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetCreatedAt(createdAt CreatedAt) {
+	p.CreatedAt = createdAt
+	p.require(parseRunSummaryFieldCreatedAt)
+}
+
+// SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetUpdatedAt(updatedAt UpdatedAt) {
+	p.UpdatedAt = updatedAt
+	p.require(parseRunSummaryFieldUpdatedAt)
+}
+
+func (p *ParseRunSummary) UnmarshalJSON(data []byte) error {
+	type embed ParseRunSummary
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed: embed(*p),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*p = ParseRunSummary(unmarshaler.embed)
+	p.CreatedAt = unmarshaler.CreatedAt.Time()
+	p.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	if unmarshaler.Object != "parse_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", p, "parse_run", unmarshaler.Object)
+	}
+	p.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *p, "object")
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunSummary) MarshalJSON() ([]byte, error) {
+	type embed ParseRunSummary
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed:     embed(*p),
+		CreatedAt: internal.NewDateTime(p.CreatedAt),
+		UpdatedAt: internal.NewDateTime(p.UpdatedAt),
+		Object:    "parse_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunSummary) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Metrics about the parsing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
+var (
+	parseRunSummaryMetricsFieldProcessingTimeMs = big.NewInt(1 << 0)
+	parseRunSummaryMetricsFieldPageCount        = big.NewInt(1 << 1)
+)
+
+type ParseRunSummaryMetrics struct {
+	// The time taken to process the document in milliseconds.
+	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
+	// The number of pages from the document that were parsed. For PDF and image files, this is the actual page count. For spreadsheet files (Excel, CSV), this is an estimated page count based on content volume (~1000 tokens per page).
+	PageCount float64 `json:"pageCount" url:"pageCount"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunSummaryMetrics) GetProcessingTimeMs() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.ProcessingTimeMs
+}
+
+func (p *ParseRunSummaryMetrics) GetPageCount() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.PageCount
+}
+
+func (p *ParseRunSummaryMetrics) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunSummaryMetrics) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummaryMetrics) SetProcessingTimeMs(processingTimeMs float64) {
+	p.ProcessingTimeMs = processingTimeMs
+	p.require(parseRunSummaryMetricsFieldProcessingTimeMs)
+}
+
+// SetPageCount sets the PageCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummaryMetrics) SetPageCount(pageCount float64) {
+	p.PageCount = pageCount
+	p.require(parseRunSummaryMetricsFieldPageCount)
+}
+
+func (p *ParseRunSummaryMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunSummaryMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunSummaryMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunSummaryMetrics) MarshalJSON() ([]byte, error) {
+	type embed ParseRunSummaryMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunSummaryMetrics) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// The status of the parse run:
+// * `"PENDING"` - The run has been created and is waiting to be processed. Only applies to runs created via `POST /parse_runs/batch`.
+// * `"PROCESSING"` - The file is still being processed
+// * `"PROCESSED"` - The file was successfully processed
+// * `"FAILED"` - The processing failed (see `failureReason` for details)
+type ParseRunSummaryStatus string
+
+const (
+	ParseRunSummaryStatusPending    ParseRunSummaryStatus = "PENDING"
+	ParseRunSummaryStatusProcessing ParseRunSummaryStatus = "PROCESSING"
+	ParseRunSummaryStatusProcessed  ParseRunSummaryStatus = "PROCESSED"
+	ParseRunSummaryStatusFailed     ParseRunSummaryStatus = "FAILED"
+)
+
+func NewParseRunSummaryStatusFromString(s string) (ParseRunSummaryStatus, error) {
+	switch s {
+	case "PENDING":
+		return ParseRunSummaryStatusPending, nil
+	case "PROCESSING":
+		return ParseRunSummaryStatusProcessing, nil
+	case "PROCESSED":
+		return ParseRunSummaryStatusProcessed, nil
+	case "FAILED":
+		return ParseRunSummaryStatusFailed, nil
+	}
+	var t ParseRunSummaryStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ParseRunSummaryStatus) Ptr() *ParseRunSummaryStatus {
 	return &p
 }
 
@@ -716,8 +1196,8 @@ var (
 )
 
 type ParseRunsListResponse struct {
-	Data          []*ParseRun    `json:"data" url:"data"`
-	NextPageToken *NextPageToken `json:"nextPageToken,omitempty" url:"nextPageToken,omitempty"`
+	Data          []*ParseRunSummary `json:"data" url:"data"`
+	NextPageToken *NextPageToken     `json:"nextPageToken,omitempty" url:"nextPageToken,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -727,7 +1207,7 @@ type ParseRunsListResponse struct {
 	rawJSON         json.RawMessage
 }
 
-func (p *ParseRunsListResponse) GetData() []*ParseRun {
+func (p *ParseRunsListResponse) GetData() []*ParseRunSummary {
 	if p == nil {
 		return nil
 	}
@@ -761,7 +1241,7 @@ func (p *ParseRunsListResponse) require(field *big.Int) {
 
 // SetData sets the Data field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (p *ParseRunsListResponse) SetData(data []*ParseRun) {
+func (p *ParseRunsListResponse) SetData(data []*ParseRunSummary) {
 	p.Data = data
 	p.require(parseRunsListResponseFieldData)
 }

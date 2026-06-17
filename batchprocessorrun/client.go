@@ -4,6 +4,7 @@ package batchprocessorrun
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -35,7 +39,7 @@ func NewClient(options *core.RequestOptions) *Client {
 
 // Retrieve details about a batch processor run, including evaluation runs.
 //
-// **Deprecated:** This endpoint is maintained for backwards compatibility only and will be replaced in a future API version. Use [Get Evaluation Set Run](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/evaluation/get-evaluation-set-run) for interacting with evaluation set runs.
+// **Deprecated:** This endpoint is maintained for backwards compatibility only and will be replaced in a future API version. Use [Get Evaluation Set Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/get-evaluation-set-run) for interacting with evaluation set runs.
 func (c *Client) Get(
 	ctx context.Context,
 	// The unique identifier of the batch processor run to retrieve.
