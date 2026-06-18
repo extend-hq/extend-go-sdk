@@ -15,7 +15,7 @@ var (
 )
 
 type ExtractRunsCancelRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -45,9 +45,9 @@ var (
 )
 
 type ExtractRunsCreateRequest struct {
-	// Reference to an existing extractor. One of `extractor` or `config` must be provided.
+	// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Extractor *ExtractRunsCreateRequestExtractor `json:"extractor,omitempty" url:"-"`
-	// Inline extract configuration. One of `extractor` or `config` must be provided.
+	// Inline extract configuration. Mutually exclusive with `extractor` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Config *ExtractConfigJSON `json:"config,omitempty" url:"-"`
 	// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
 	File     *ExtractRunsCreateRequestFile `json:"file" url:"-"`
@@ -192,7 +192,7 @@ var (
 )
 
 type ExtractRunsDeleteRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -228,7 +228,7 @@ var (
 )
 
 type ExtractRunsListRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string             `json:"-" url:"-"`
 	Status            *ProcessorRunStatus `json:"-" url:"status,omitempty"`
 	// Filters extract runs by the extractor ID. If not provided, all extract runs are returned.
@@ -345,7 +345,7 @@ var (
 )
 
 type ExtractRunsRetrieveRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -400,6 +400,20 @@ type ExtractRunSummary struct {
 	// The reason for failure.
 	//
 	// **Availability:** Present when `status` is `"FAILED"`.
+	//
+	// Possible values include:
+	// * `ABORTED` - The run was aborted by the user
+	// * `INTERNAL_ERROR` - An unexpected internal error occurred
+	// * `FAILED_TO_PROCESS_FILE` - Failed to process the file (e.g., OCR failure, file access issues)
+	// * `INVALID_PROCESSOR` - The processor configuration is invalid
+	// * `INVALID_CONFIGURATION` - The provided configuration is incompatible with the selected model
+	// * `PARSING_ERROR` - Failed to parse the extraction output
+	// * `PRE_PROCESSING_FAILURE` - An error occurred during preprocessing (e.g., chunking)
+	// * `POST_PROCESSING_FAILURE` - An error occurred during postprocessing
+	// * `OUT_OF_CREDITS` - Insufficient credits to run the extraction
+	// * `SCHEMA_GENERATION_FAILED` - Automatic schema inference failed (only applies when `schema` is omitted). The file could not be parsed or a schema could not be generated from it.
+	//
+	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
 	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
 	// A detailed message about the failure.
 	//
@@ -413,8 +427,8 @@ type ExtractRunSummary struct {
 	Reviewed bool `json:"reviewed" url:"reviewed"`
 	// Indicates whether the run results have been edited during review.
 	Edited bool `json:"edited" url:"edited"`
-	// The file that was processed.
-	File *FileSummary `json:"file" url:"file"`
+	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
 	// The ID of the parse run that was used for this extract run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -1029,7 +1043,7 @@ func (e *ExtractRunsCreateBatchRequestInputsItemFile) Accept(visitor ExtractRuns
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// Reference to an existing extractor. One of `extractor` or `config` must be provided.
+// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 var (
 	extractRunsCreateRequestExtractorFieldID             = big.NewInt(1 << 0)
 	extractRunsCreateRequestExtractorFieldVersion        = big.NewInt(1 << 1)

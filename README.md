@@ -21,7 +21,7 @@ The Extend Go library provides convenient access to the Extend APIs from Go.
 
 ## Documentation
 
-API reference documentation is available [here](https://docs.extend.ai/2026-02-09/developers).
+API reference documentation is available [here](https://docs.extend.ai/2026-02-09/api-reference).
 
 ## Reference
 

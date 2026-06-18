@@ -4,6 +4,7 @@ package splitruns
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -73,7 +77,7 @@ func (c *Client) Create(
 
 // Retrieve details about a specific split run, including its status and outputs.
 //
-// A common use case for this endpoint is to poll for the status and final output of a split run when using the [Create Split Run](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/split/create-split-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+// A common use case for this endpoint is to poll for the status and final output of a split run when using the [Create Split Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/split/create-split-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for this split run.
@@ -143,7 +147,7 @@ func (c *Client) Cancel(
 
 // Submit up to **1,000 files** for splitting in a single request. Each file is processed as an independent split run using the same splitter and configuration.
 //
-// Unlike the single [Split File (Async)](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/split/create-split-run) endpoint, this batch endpoint accepts an `inputs` array and immediately returns a `BatchRun` object containing a batch `id` and a `PENDING` status. The individual runs are then queued and processed asynchronously.
+// Unlike the single [Split File (Async)](https://docs.extend.ai/2026-02-09/api-reference/endpoints/split/create-split-run) endpoint, this batch endpoint accepts an `inputs` array and immediately returns a `BatchRun` object containing a batch `id` and a `PENDING` status. The individual runs are then queued and processed asynchronously.
 //
 // **Monitoring results:**
 // - **Webhooks (recommended):** Subscribe to `batch_processor_run.processed` and `batch_processor_run.failed` events. The webhook payload indicates the batch has finished — fetch individual run results using `GET /split_runs?batchId={id}`.

@@ -4,6 +4,7 @@ package processorrun
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -57,8 +61,8 @@ func (c *Client) List(
 // - **Synchronous**: Set `sync: true` to wait for completion and get final results in the response (5-minute timeout).
 //
 // **For asynchronous processing:**
-// - You can [configure webhooks](https://docs.extend.ai/2026-02-09/product/webhooks/configuration) to receive notifications when a processor run is complete or failed.
-// - Or you can [poll the get endpoint](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/legacy/get-processor-run) for updates on the status of the processor run.
+// - You can [configure webhooks](https://docs.extend.ai/2026-02-09/webhooks/configuration) to receive notifications when a processor run is complete or failed.
+// - Or you can [poll the get endpoint](https://docs.extend.ai/2026-02-09/api-reference/endpoints/legacy/get-processor-run) for updates on the status of the processor run.
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ProcessorRunCreateRequest,
@@ -77,7 +81,7 @@ func (c *Client) Create(
 
 // Retrieve details about a specific processor run, including its status, outputs, and any edits made during review.
 //
-// A common use case for this endpoint is to poll for the status and final output of an async processor run when using the [Run Processor](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/legacy/create-processor-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+// A common use case for this endpoint is to poll for the status and final output of an async processor run when using the [Run Processor](https://docs.extend.ai/2026-02-09/api-reference/endpoints/legacy/create-processor-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
 func (c *Client) Get(
 	ctx context.Context,
 	// The unique identifier for this processor run.

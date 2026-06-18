@@ -15,7 +15,7 @@ var (
 )
 
 type SplitRunsCancelRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -192,7 +192,7 @@ var (
 )
 
 type SplitRunsDeleteRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -228,7 +228,7 @@ var (
 )
 
 type SplitRunsListRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string             `json:"-" url:"-"`
 	Status            *ProcessorRunStatus `json:"-" url:"status,omitempty"`
 	// Filters split runs by the splitter ID. If not provided, all split runs are returned.
@@ -345,7 +345,7 @@ var (
 )
 
 type SplitRunsRetrieveRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -413,8 +413,8 @@ type SplitRunSummary struct {
 	Reviewed bool `json:"reviewed" url:"reviewed"`
 	// Indicates whether the run results have been edited during review.
 	Edited bool `json:"edited" url:"edited"`
-	// The file that was processed.
-	File *FileSummary `json:"file" url:"file"`
+	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
 	// The ID of the parse run that was used for this split run.
 	//
 	// **Availability:** Present when a parse run was created.

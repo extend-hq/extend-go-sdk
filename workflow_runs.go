@@ -15,7 +15,7 @@ var (
 )
 
 type WorkflowRunsCancelRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -47,7 +47,7 @@ var (
 
 type WorkflowRunsCreateRequest struct {
 	Workflow *WorkflowReference `json:"workflow" url:"-"`
-	// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/product/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
+	// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
 	File *WorkflowRunsCreateRequestFile `json:"file" url:"-"`
 	// Predetermined outputs to be used for the workflow run. Generally not recommended for most use cases, however, can be useful in cases of overriding a classification in a workflow, or a subset of extraction fields when data is known.
 	Outputs  []*WorkflowRunsCreateRequestOutputsItem `json:"outputs,omitempty" url:"-"`
@@ -132,12 +132,15 @@ func (w *WorkflowRunsCreateRequest) MarshalJSON() ([]byte, error) {
 var (
 	workflowRunsCreateBatchRequestFieldWorkflow = big.NewInt(1 << 0)
 	workflowRunsCreateBatchRequestFieldInputs   = big.NewInt(1 << 1)
+	workflowRunsCreateBatchRequestFieldPriority = big.NewInt(1 << 2)
 )
 
 type WorkflowRunsCreateBatchRequest struct {
 	Workflow *WorkflowReference `json:"workflow" url:"-"`
 	// An array of input objects to be processed by the workflow. Each object represents a single workflow run to be created. The array must contain at least 1 input and at most 1000 inputs.
 	Inputs []*WorkflowRunsCreateBatchRequestInputsItem `json:"inputs" url:"-"`
+	// An optional value used to determine the relative order of runs when rate limiting is in effect. Lower values will be prioritized before higher values. Defaults to 90 if not specified.
+	Priority *int `json:"priority,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -162,6 +165,13 @@ func (w *WorkflowRunsCreateBatchRequest) SetWorkflow(workflow *WorkflowReference
 func (w *WorkflowRunsCreateBatchRequest) SetInputs(inputs []*WorkflowRunsCreateBatchRequestInputsItem) {
 	w.Inputs = inputs
 	w.require(workflowRunsCreateBatchRequestFieldInputs)
+}
+
+// SetPriority sets the Priority field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowRunsCreateBatchRequest) SetPriority(priority *int) {
+	w.Priority = priority
+	w.require(workflowRunsCreateBatchRequestFieldPriority)
 }
 
 func (w *WorkflowRunsCreateBatchRequest) UnmarshalJSON(data []byte) error {
@@ -190,7 +200,7 @@ var (
 )
 
 type WorkflowRunsDeleteRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -224,14 +234,14 @@ var (
 )
 
 type WorkflowRunsListRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string            `json:"-" url:"-"`
 	Status            *WorkflowRunStatus `json:"-" url:"status,omitempty"`
 	// Filters workflow runs by the workflow ID. If not provided, runs for all workflows are returned.
 	//
 	// Example: `"workflow_BMdfq_yWM3sT-ZzvCnA3f"`
 	WorkflowID *string `json:"-" url:"workflowId,omitempty"`
-	// Filters workflow runs by the batch ID. This is useful for fetching all runs for a given batch created via the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
+	// Filters workflow runs by the batch ID. This is useful for fetching all runs for a given batch created via the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
 	//
 	// Example: `"batch_7Ws31-F5"`
 	BatchID *string `json:"-" url:"batchId,omitempty"`
@@ -323,7 +333,7 @@ var (
 )
 
 type WorkflowRunsRetrieveRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -5961,7 +5971,7 @@ func (w *WorkflowRunsCreateBatchResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/product/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
+// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
 type WorkflowRunsCreateRequestFile struct {
 	FileFromURL  *FileFromURL
 	FileFromID   *FileFromID
@@ -6356,7 +6366,7 @@ var (
 )
 
 type WorkflowRunsUpdateRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// An optional name that can be assigned to a specific WorkflowRun
 	Name *string `json:"name,omitempty" url:"-"`

@@ -81,7 +81,7 @@ func (r *RawClient) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set run.
 	//
-	// Example: `"evr_Xj8mK2pL9nR4vT7qY5wZ"`
+	// Example: `"bpr_Xj8mK2pL9nR4vT7qY5wZ"`
 	id string,
 	request *extend.EvaluationSetRunsRetrieveRequest,
 	opts ...option.RequestOption,

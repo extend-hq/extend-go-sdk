@@ -4,6 +4,7 @@ package client
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	batchprocessorrun "github.com/extend-hq/extend-go-sdk/batchprocessorrun"
@@ -75,6 +76,9 @@ type Client struct {
 
 func NewClient(opts ...option.RequestOption) *Client {
 	options := core.NewRequestOptions(opts...)
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		Files:                files.NewClient(options),
 		ParseRuns:            parseruns.NewClient(options),
@@ -117,11 +121,11 @@ func NewClient(opts ...option.RequestOption) *Client {
 
 // Parse a file synchronously, waiting for the result before returning. This endpoint has a **5-minute timeout** — if processing takes longer, the request will fail.
 //
-// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /parse_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/developers/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
+// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /parse_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/general/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
 //
 // The Parse endpoint allows you to convert documents into structured, machine-readable formats with fine-grained control over the parsing process. This endpoint is ideal for extracting cleaned document content to be used as context for downstream processing, e.g. RAG pipelines, custom ingestion pipelines, embeddings classification, etc.
 //
-// For more details, see the [Parse File guide](https://docs.extend.ai/2026-02-09/product/parsing/parse).
+// For more details, see the [Parse File guide](https://docs.extend.ai/2026-02-09/parsing/overview).
 func (c *Client) Parse(
 	ctx context.Context,
 	request *extend.ParseRequest,
@@ -140,11 +144,11 @@ func (c *Client) Parse(
 
 // Edit a file synchronously, waiting for the result before returning. This endpoint has a **5-minute timeout** — if processing takes longer, the request will fail.
 //
-// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /edit_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/developers/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
+// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /edit_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/general/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
 //
 // The Edit endpoint allows you to detect and fill form fields in PDF documents.
 //
-// For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/product/editing/edit).
+// For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/edit).
 func (c *Client) Edit(
 	ctx context.Context,
 	request *extend.EditRequest,
@@ -163,11 +167,11 @@ func (c *Client) Edit(
 
 // Extract structured data from a file synchronously, waiting for the result before returning. This endpoint has a **5-minute timeout** — if processing takes longer, the request will fail.
 //
-// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /extract_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/developers/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
+// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /extract_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/general/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
 //
-// The Extract endpoint allows you to extract structured data from files using an existing extractor or an inline configuration.
+// The Extract endpoint allows you to extract structured data from files using an existing extractor, an inline configuration, or no configuration at all. When neither is provided, Extend automatically infers a schema from the document before extraction — no extractor or schema is required.
 //
-// For more details, see the [Extract File guide](https://docs.extend.ai/2026-02-09/product/extraction/quick-start-5-minutes).
+// For more details, see the [Extract File guide](https://docs.extend.ai/2026-02-09/extraction/overview).
 func (c *Client) Extract(
 	ctx context.Context,
 	request *extend.ExtractRequest,
@@ -186,11 +190,11 @@ func (c *Client) Extract(
 
 // Classify a document synchronously, waiting for the result before returning. This endpoint has a **5-minute timeout** — if processing takes longer, the request will fail.
 //
-// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /classify_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/developers/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
+// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /classify_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/general/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
 //
 // The Classify endpoint allows you to classify documents using an existing classifier or an inline configuration.
 //
-// For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/product/classification/configuring-a-classifier).
+// For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuring-a-classifier).
 func (c *Client) Classify(
 	ctx context.Context,
 	request *extend.ClassifyRequest,
@@ -209,11 +213,11 @@ func (c *Client) Classify(
 
 // Split a document synchronously, waiting for the result before returning. This endpoint has a **5-minute timeout** — if processing takes longer, the request will fail.
 //
-// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /split_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/developers/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
+// **Note:** This endpoint is intended for onboarding and testing only. For production workloads, use `POST /split_runs` with [polling or webhooks](https://docs.extend.ai/2026-02-09/general/async-processing) instead, as it provides better reliability for large files and avoids timeout issues.
 //
 // The Split endpoint allows you to split documents into multiple parts using an existing splitter or an inline configuration.
 //
-// For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/product/splitting/configuring-a-splitter).
+// For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuring-a-splitter).
 func (c *Client) Split(
 	ctx context.Context,
 	request *extend.SplitRequest,

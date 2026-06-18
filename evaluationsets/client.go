@@ -4,6 +4,7 @@ package evaluationsets
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -50,9 +54,9 @@ func (c *Client) List(
 	return response.Body, nil
 }
 
-// Evaluation sets are collections of files and expected outputs that are used to evaluate the performance of a given extractor, classifier, or splitter. This endpoint will create a new evaluation set, which items can be added to using the [Create Evaluation Set Item](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/evaluation/create-evaluation-set-item) endpoint.
+// Evaluation sets are collections of files and expected outputs that are used to evaluate the performance of a given extractor, classifier, or splitter. This endpoint will create a new evaluation set, which items can be added to using the [Create Evaluation Set Item](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/create-evaluation-set-item) endpoint.
 //
-// Note: It is not necessary to create an evaluation set via API. You can also create an evaluation set via the Extend dashboard and take the ID from there. To learn more about how to create evaluation sets, see the [Evaluation Sets](https://docs.extend.ai/2026-02-09/product/evaluation/overview) product page.
+// Note: It is not necessary to create an evaluation set via API. You can also create an evaluation set via the Extend dashboard and take the ID from there. To learn more about how to create evaluation sets, see the [Evaluation Sets](https://docs.extend.ai/2026-02-09/evaluation/overview) product page.
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.EvaluationSetsCreateRequest,
@@ -69,7 +73,7 @@ func (c *Client) Create(
 	return response.Body, nil
 }
 
-// Retrieve a specific evaluation set by ID. This returns an evaluation set object, but does not include the items in the evaluation set. You can use the [List Evaluation Set Items](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/evaluation/list-evaluation-set-items) endpoint to get the items in an evaluation set.
+// Retrieve a specific evaluation set by ID. This returns an evaluation set object, but does not include the items in the evaluation set. You can use the [List Evaluation Set Items](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/list-evaluation-set-items) endpoint to get the items in an evaluation set.
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set.

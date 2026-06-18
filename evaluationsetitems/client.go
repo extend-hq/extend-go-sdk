@@ -4,6 +4,7 @@ package evaluationsetitems
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -35,7 +39,7 @@ func NewClient(options *core.RequestOptions) *Client {
 
 // List items in a specific evaluation set.
 //
-// Returns a summary of each evaluation set item. Use the [Get Evaluation Set Item](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/evaluation/get-evaluation-set-item) endpoint to get the full details of an evaluation set item.
+// Returns a summary of each evaluation set item. Use the [Get Evaluation Set Item](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/get-evaluation-set-item) endpoint to get the full details of an evaluation set item.
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the evaluation set.
@@ -61,7 +65,7 @@ func (c *Client) List(
 //
 // **Limit:** You can create up to 100 items at a time.
 //
-// Learn more about how to create evaluation set items in the [Evaluation Sets](https://docs.extend.ai/2026-02-09/product/evaluation/overview) product page.
+// Learn more about how to create evaluation set items in the [Evaluation Sets](https://docs.extend.ai/2026-02-09/evaluation/overview) product page.
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the evaluation set.

@@ -150,9 +150,9 @@ var (
 )
 
 type ExtractRequest struct {
-	// Reference to an existing extractor. One of `extractor` or `config` must be provided.
+	// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Extractor *ExtractRequestExtractor `json:"extractor,omitempty" url:"-"`
-	// Inline extract configuration. One of `extractor` or `config` must be provided.
+	// Inline extract configuration. Mutually exclusive with `extractor` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Config *ExtractConfigJSON `json:"config,omitempty" url:"-"`
 	// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
 	File     *ExtractRequestFile `json:"file" url:"-"`
@@ -227,7 +227,7 @@ var (
 )
 
 type ParseRequest struct {
-	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/developers/authentication) for details on API key scopes.
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
 	// Controls the format of the response chunks. Defaults to `json` if not specified.
 	// * `json` - Returns parsed outputs in the response body
@@ -383,7 +383,7 @@ func (s *SplitRequest) MarshalJSON() ([]byte, error) {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 var (
 	aPIErrorFieldCode      = big.NewInt(1 << 0)
 	aPIErrorFieldMessage   = big.NewInt(1 << 1)
@@ -1812,15 +1812,24 @@ func (b *BlockDetails) Accept(visitor BlockDetailsVisitor) error {
 
 // Metadata about the block.
 var (
-	blockMetadataFieldPage          = big.NewInt(1 << 0)
-	blockMetadataFieldTextDirection = big.NewInt(1 << 1)
+	blockMetadataFieldPage             = big.NewInt(1 << 0)
+	blockMetadataFieldSheet            = big.NewInt(1 << 1)
+	blockMetadataFieldTextDirection    = big.NewInt(1 << 2)
+	blockMetadataFieldMinOcrConfidence = big.NewInt(1 << 3)
+	blockMetadataFieldAvgOcrConfidence = big.NewInt(1 << 4)
 )
 
 type BlockMetadata struct {
 	// Information about the page this block appears on.
 	Page *BlockMetadataPage `json:"page,omitempty" url:"page,omitempty"`
+	// Spreadsheet sheet metadata. Present for blocks parsed from spreadsheet files, such as Excel workbooks.
+	Sheet *BlockMetadataSheet `json:"sheet,omitempty" url:"sheet,omitempty"`
 	// Text direction for this block's content ("ltr" for left-to-right, "rtl" for right-to-left).
 	TextDirection *BlockMetadataTextDirection `json:"textDirection,omitempty" url:"textDirection,omitempty"`
+	// Lowest per-word OCR confidence across words in this block, or `null` when word-level confidence is unavailable.
+	MinOcrConfidence *float64 `json:"minOcrConfidence,omitempty" url:"minOcrConfidence,omitempty"`
+	// Average per-word OCR confidence across words in this block, or `null` when word-level confidence is unavailable.
+	AvgOcrConfidence *float64 `json:"avgOcrConfidence,omitempty" url:"avgOcrConfidence,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -1836,11 +1845,32 @@ func (b *BlockMetadata) GetPage() *BlockMetadataPage {
 	return b.Page
 }
 
+func (b *BlockMetadata) GetSheet() *BlockMetadataSheet {
+	if b == nil {
+		return nil
+	}
+	return b.Sheet
+}
+
 func (b *BlockMetadata) GetTextDirection() *BlockMetadataTextDirection {
 	if b == nil {
 		return nil
 	}
 	return b.TextDirection
+}
+
+func (b *BlockMetadata) GetMinOcrConfidence() *float64 {
+	if b == nil {
+		return nil
+	}
+	return b.MinOcrConfidence
+}
+
+func (b *BlockMetadata) GetAvgOcrConfidence() *float64 {
+	if b == nil {
+		return nil
+	}
+	return b.AvgOcrConfidence
 }
 
 func (b *BlockMetadata) GetExtraProperties() map[string]interface{} {
@@ -1864,11 +1894,32 @@ func (b *BlockMetadata) SetPage(page *BlockMetadataPage) {
 	b.require(blockMetadataFieldPage)
 }
 
+// SetSheet sets the Sheet field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockMetadata) SetSheet(sheet *BlockMetadataSheet) {
+	b.Sheet = sheet
+	b.require(blockMetadataFieldSheet)
+}
+
 // SetTextDirection sets the TextDirection field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (b *BlockMetadata) SetTextDirection(textDirection *BlockMetadataTextDirection) {
 	b.TextDirection = textDirection
 	b.require(blockMetadataFieldTextDirection)
+}
+
+// SetMinOcrConfidence sets the MinOcrConfidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockMetadata) SetMinOcrConfidence(minOcrConfidence *float64) {
+	b.MinOcrConfidence = minOcrConfidence
+	b.require(blockMetadataFieldMinOcrConfidence)
+}
+
+// SetAvgOcrConfidence sets the AvgOcrConfidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockMetadata) SetAvgOcrConfidence(avgOcrConfidence *float64) {
+	b.AvgOcrConfidence = avgOcrConfidence
+	b.require(blockMetadataFieldAvgOcrConfidence)
 }
 
 func (b *BlockMetadata) UnmarshalJSON(data []byte) error {
@@ -2019,6 +2070,109 @@ func (b *BlockMetadataPage) MarshalJSON() ([]byte, error) {
 }
 
 func (b *BlockMetadataPage) String() string {
+	if b == nil {
+		return "<nil>"
+	}
+	if len(b.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(b.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(b); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", b)
+}
+
+// Spreadsheet sheet metadata. Present for blocks parsed from spreadsheet files, such as Excel workbooks.
+var (
+	blockMetadataSheetFieldIndex = big.NewInt(1 << 0)
+	blockMetadataSheetFieldName  = big.NewInt(1 << 1)
+)
+
+type BlockMetadataSheet struct {
+	// The zero-based index of the sheet in the original workbook.
+	Index int `json:"index" url:"index"`
+	// The name of the sheet in the original workbook.
+	Name string `json:"name" url:"name"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (b *BlockMetadataSheet) GetIndex() int {
+	if b == nil {
+		return 0
+	}
+	return b.Index
+}
+
+func (b *BlockMetadataSheet) GetName() string {
+	if b == nil {
+		return ""
+	}
+	return b.Name
+}
+
+func (b *BlockMetadataSheet) GetExtraProperties() map[string]interface{} {
+	if b == nil {
+		return nil
+	}
+	return b.extraProperties
+}
+
+func (b *BlockMetadataSheet) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetIndex sets the Index field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockMetadataSheet) SetIndex(index int) {
+	b.Index = index
+	b.require(blockMetadataSheetFieldIndex)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockMetadataSheet) SetName(name string) {
+	b.Name = name
+	b.require(blockMetadataSheetFieldName)
+}
+
+func (b *BlockMetadataSheet) UnmarshalJSON(data []byte) error {
+	type unmarshaler BlockMetadataSheet
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*b = BlockMetadataSheet(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *b)
+	if err != nil {
+		return err
+	}
+	b.extraProperties = extraProperties
+	b.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (b *BlockMetadataSheet) MarshalJSON() ([]byte, error) {
+	type embed BlockMetadataSheet
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*b),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, b.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (b *BlockMetadataSheet) String() string {
 	if b == nil {
 		return "<nil>"
 	}
@@ -2516,12 +2670,18 @@ func (c *Chunk) String() string {
 
 // Metadata about the chunk.
 var (
-	chunkMetadataFieldPageRange = big.NewInt(1 << 0)
+	chunkMetadataFieldPageRange        = big.NewInt(1 << 0)
+	chunkMetadataFieldMinOcrConfidence = big.NewInt(1 << 1)
+	chunkMetadataFieldAvgOcrConfidence = big.NewInt(1 << 2)
 )
 
 type ChunkMetadata struct {
 	// The page range this chunk covers. Often will just be a partial page, in which cases `start` and `end` will be the same.
 	PageRange *ChunkMetadataPageRange `json:"pageRange" url:"pageRange"`
+	// Lowest per-word OCR confidence across words in this chunk, or `null` when word-level confidence is unavailable.
+	MinOcrConfidence *float64 `json:"minOcrConfidence,omitempty" url:"minOcrConfidence,omitempty"`
+	// Average per-word OCR confidence across words in this chunk, or `null` when word-level confidence is unavailable.
+	AvgOcrConfidence *float64 `json:"avgOcrConfidence,omitempty" url:"avgOcrConfidence,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -2535,6 +2695,20 @@ func (c *ChunkMetadata) GetPageRange() *ChunkMetadataPageRange {
 		return nil
 	}
 	return c.PageRange
+}
+
+func (c *ChunkMetadata) GetMinOcrConfidence() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.MinOcrConfidence
+}
+
+func (c *ChunkMetadata) GetAvgOcrConfidence() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.AvgOcrConfidence
 }
 
 func (c *ChunkMetadata) GetExtraProperties() map[string]interface{} {
@@ -2556,6 +2730,20 @@ func (c *ChunkMetadata) require(field *big.Int) {
 func (c *ChunkMetadata) SetPageRange(pageRange *ChunkMetadataPageRange) {
 	c.PageRange = pageRange
 	c.require(chunkMetadataFieldPageRange)
+}
+
+// SetMinOcrConfidence sets the MinOcrConfidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ChunkMetadata) SetMinOcrConfidence(minOcrConfidence *float64) {
+	c.MinOcrConfidence = minOcrConfidence
+	c.require(chunkMetadataFieldMinOcrConfidence)
+}
+
+// SetAvgOcrConfidence sets the AvgOcrConfidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ChunkMetadata) SetAvgOcrConfidence(avgOcrConfidence *float64) {
+	c.AvgOcrConfidence = avgOcrConfidence
+	c.require(chunkMetadataFieldAvgOcrConfidence)
 }
 
 func (c *ChunkMetadata) UnmarshalJSON(data []byte) error {
@@ -3087,7 +3275,7 @@ func (c *Classification) String() string {
 
 // A next entry for `CLASSIFY` and `SPLIT` steps. Routes based on the classification result.
 //
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for end-to-end examples.
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	classificationNextEntryFieldStep             = big.NewInt(1 << 0)
 	classificationNextEntryFieldClassificationID = big.NewInt(1 << 1)
@@ -4498,7 +4686,7 @@ func (c ClassifyAdvancedOptionsContext) Ptr() *ClassifyAdvancedOptionsContext {
 	return &c
 }
 
-// The base processor to use. For classifiers, this can be either `"classification_performance"` or `"classification_light"`. Defaults to `"classification_performance"` if not provided. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+// The base processor to use. For classifiers, this can be either `"classification_performance"` or `"classification_light"`. Defaults to `"classification_performance"` if not provided. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 type ClassifyBaseProcessor string
 
 const (
@@ -4532,7 +4720,7 @@ var (
 
 type ClassifyConfig struct {
 	BaseProcessor *ClassifyBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 	BaseVersion     *string         `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	Classifications Classifications `json:"classifications" url:"classifications"`
 	// Custom rules to guide the classification process in natural language.
@@ -4838,7 +5026,7 @@ var (
 
 type ClassifyOverrideConfig struct {
 	BaseProcessor *ClassifyBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 	BaseVersion     *string          `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	Classifications *Classifications `json:"classifications,omitempty" url:"classifications,omitempty"`
 	// Custom rules to guide the classification process in natural language.
@@ -5278,8 +5466,8 @@ type ClassifyRun struct {
 	Edited bool `json:"edited" url:"edited"`
 	// The configuration used for this classify run.
 	Config *ClassifyConfig `json:"config" url:"config"`
-	// The file that was processed.
-	File *FileSummary `json:"file" url:"file"`
+	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
 	// The ID of the parse run that was used for this classify run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -5852,7 +6040,7 @@ func (c *ClassifyRunProcessedWebhookEvent) String() string {
 //
 // The classifier reference must include a pinned `version` — `"latest"` is not supported for `CLASSIFY` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
 //
-// See the [Classify step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#classify-step).
+// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 var (
 	classifyStepDefinitionFieldName   = big.NewInt(1 << 0)
 	classifyStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -5867,11 +6055,11 @@ type ClassifyStepDefinition struct {
 	//
 	// The classifier `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
 	//
-	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#classify-step).
+	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 	Config *ClassifyStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
 	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a classification `id` from the referenced classifier's configuration. Use the classification's stable `id` (e.g. `"cls_invoice"`), not the `type` string.
 	//
-	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#classify-step).
+	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 	Next []*ClassificationNextEntry `json:"next,omitempty" url:"next,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -5985,7 +6173,7 @@ func (c *ClassifyStepDefinition) String() string {
 //
 // The classifier `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
 //
-// See the [Classify step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#classify-step).
+// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 var (
 	classifyStepDefinitionConfigFieldClassifier = big.NewInt(1 << 0)
 )
@@ -6072,7 +6260,7 @@ func (c *ClassifyStepDefinitionConfig) String() string {
 
 // Collects outputs from multiple upstream branches before continuing.
 //
-// See the [Collect step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#collect-step).
+// See the [Collect step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#collect).
 var (
 	collectStepDefinitionFieldName = big.NewInt(1 << 0)
 	collectStepDefinitionFieldNext = big.NewInt(1 << 1)
@@ -6177,7 +6365,7 @@ func (c *CollectStepDefinition) String() string {
 //
 // Each extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`).
 //
-// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-extract-step).
+// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract).
 var (
 	conditionalExtractStepDefinitionFieldName   = big.NewInt(1 << 0)
 	conditionalExtractStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -6304,7 +6492,7 @@ var (
 type ConditionalExtractStepDefinitionConfig struct {
 	// Formula-based extractor rules for this step. Each rule pairs a formula with an extractor reference. The last rule must have `formula: "TRUE"` as a default catch-all.
 	//
-	// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-extract-step).
+	// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract).
 	Rules []*ConditionalExtractStepDefinitionConfigRulesItem `json:"rules" url:"rules"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -6394,7 +6582,7 @@ type ConditionalExtractStepDefinitionConfigRulesItem struct {
 	Name *string `json:"name,omitempty" url:"name,omitempty"`
 	// The formula that determines when this extractor runs.
 	//
-	// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-extract-step) and [Formulas](https://docs.extend.ai/2026-02-09/product/workflows/formulas).
+	// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract) and [Formulas](https://docs.extend.ai/2026-02-09/workflows/formulas).
 	Formula   string        `json:"formula" url:"formula"`
 	Extractor *ExtractorRef `json:"extractor" url:"extractor"`
 
@@ -6505,7 +6693,7 @@ func (c *ConditionalExtractStepDefinitionConfigRulesItem) String() string {
 
 // A next entry for `CONDITIONAL` steps. Routes based on which condition branch matched.
 //
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for end-to-end examples.
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	conditionalNextEntryFieldStep        = big.NewInt(1 << 0)
 	conditionalNextEntryFieldConditionID = big.NewInt(1 << 1)
@@ -6610,7 +6798,7 @@ func (c *ConditionalNextEntry) String() string {
 
 // Routes to different next steps based on ordered conditional branches evaluated against upstream step outputs.
 //
-// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 var (
 	conditionalStepDefinitionFieldName   = big.NewInt(1 << 0)
 	conditionalStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -6622,7 +6810,7 @@ type ConditionalStepDefinition struct {
 	Config *ConditionalStepDefinitionConfig `json:"config" url:"config"`
 	// Each entry should include a `conditionId` matching a `config.conditions[].id` value.
 	//
-	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 	Next []*ConditionalNextEntry `json:"next,omitempty" url:"next,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -6737,7 +6925,7 @@ var (
 type ConditionalStepDefinitionConfig struct {
 	// Ordered conditional branches for this step. Use `IF` for the first branch, `ELSE_IF` for additional branches, and `ELSE` for the fallback branch.
 	//
-	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 	Conditions []*ConditionalStepDefinitionConfigConditionsItem `json:"conditions" url:"conditions"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -6831,15 +7019,15 @@ type ConditionalStepDefinitionConfigConditionsItem struct {
 	Type ConditionalStepDefinitionConfigConditionsItemType `json:"type" url:"type"`
 	// The comparison operation for this branch.
 	//
-	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 	Operation *ConditionalStepDefinitionConfigConditionsItemOperation `json:"operation,omitempty" url:"operation,omitempty"`
 	// The left operand expression. This is typically a workflow variable or dynamic expression.
 	//
-	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 	LeftOperand *string `json:"leftOperand,omitempty" url:"leftOperand,omitempty"`
 	// The right operand value. This is typically a literal comparison value and is omitted for fallback branches like `ELSE`.
 	//
-	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+	// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 	RightOperand *string `json:"rightOperand,omitempty" url:"rightOperand,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -6977,7 +7165,7 @@ func (c *ConditionalStepDefinitionConfigConditionsItem) String() string {
 
 // The comparison operation for this branch.
 //
-// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#conditional-step).
+// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 type ConditionalStepDefinitionConfigConditionsItemOperation string
 
 const (
@@ -10868,7 +11056,7 @@ func (e *ExcelSheetRange) String() string {
 
 // Sends extraction data to an external HTTP endpoint for validation.
 //
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 var (
 	externalDataValidationStepDefinitionFieldName   = big.NewInt(1 << 0)
 	externalDataValidationStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -10996,11 +11184,11 @@ var (
 type ExternalDataValidationStepDefinitionConfig struct {
 	// HTTP request configuration for the external validation call.
 	//
-	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 	RequestOptions *ExternalDataValidationStepDefinitionConfigRequestOptions `json:"requestOptions" url:"requestOptions"`
 	// Whether to continue or exit the workflow on validation failure. Defaults to `CONTINUE`.
 	//
-	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 	FailureBehavior *ExternalDataValidationStepDefinitionConfigFailureBehavior `json:"failureBehavior,omitempty" url:"failureBehavior,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -11096,7 +11284,7 @@ func (e *ExternalDataValidationStepDefinitionConfig) String() string {
 
 // Whether to continue or exit the workflow on validation failure. Defaults to `CONTINUE`.
 //
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 type ExternalDataValidationStepDefinitionConfigFailureBehavior string
 
 const (
@@ -11121,7 +11309,7 @@ func (e ExternalDataValidationStepDefinitionConfigFailureBehavior) Ptr() *Extern
 
 // HTTP request configuration for the external validation call.
 //
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 var (
 	externalDataValidationStepDefinitionConfigRequestOptionsFieldURL         = big.NewInt(1 << 0)
 	externalDataValidationStepDefinitionConfigRequestOptionsFieldMethod      = big.NewInt(1 << 1)
@@ -11135,11 +11323,11 @@ type ExternalDataValidationStepDefinitionConfigRequestOptions struct {
 	Method ExternalDataValidationStepDefinitionConfigRequestOptionsMethod `json:"method" url:"method"`
 	// Optional HTTP headers to include on the external validation request.
 	//
-	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 	Headers map[string]string `json:"headers,omitempty" url:"headers,omitempty"`
 	// Content type of the request body sent to the external endpoint.
 	//
-	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+	// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 	ContentType *ExternalDataValidationStepDefinitionConfigRequestOptionsContentType `json:"contentType,omitempty" url:"contentType,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -11263,7 +11451,7 @@ func (e *ExternalDataValidationStepDefinitionConfigRequestOptions) String() stri
 
 // Content type of the request body sent to the external endpoint.
 //
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#external-data-validation-step).
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 type ExternalDataValidationStepDefinitionConfigRequestOptionsContentType string
 
 const (
@@ -11353,7 +11541,7 @@ type ExtractAdvancedOptions struct {
 	// and may include additional `insights` of type `issue` or `review_summary` to help identify
 	// fields that may need manual review.
 	//
-	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgent *ExtractAdvancedOptionsReviewAgent `json:"reviewAgent,omitempty" url:"reviewAgent,omitempty"`
 	// Whether to include the current date as context for the model during extraction. Defaults to `false`.
 	CurrentDateEnabled *bool `json:"currentDateEnabled,omitempty" url:"currentDateEnabled,omitempty"`
@@ -11675,7 +11863,7 @@ func (e ExtractAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *ExtractAdvance
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
 // fields that may need manual review.
 //
-// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 var (
 	extractAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
 )
@@ -11761,7 +11949,7 @@ func (e *ExtractAdvancedOptionsReviewAgent) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 type ExtractBaseProcessor string
 
 const (
@@ -12048,14 +12236,16 @@ var (
 
 type ExtractConfigJSON struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
-	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
-	// JSON Schema definition of the data to extract.
 	//
-	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/product/extraction/schema) for details and examples of schema configuration.
-	Schema JSONObject `json:"schema" url:"schema"`
+	// When `schema` is omitted, `extractionRules` also serves as schema generation instructions — for example, `"Invoice with vendor name, line items, and total due"`. Providing focused instructions produces a more targeted inferred schema.
+	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
+	// JSON Schema definition of the data to extract. **Optional** — if omitted, Extend automatically infers a schema from the document before running extraction. No extractor is required.
+	//
+	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/extraction/schema) for details and examples of schema configuration.
+	Schema *JSONObject `json:"schema,omitempty" url:"schema,omitempty"`
 	// Advanced configuration options.
 	AdvancedOptions *ExtractAdvancedOptions `json:"advancedOptions,omitempty" url:"advancedOptions,omitempty"`
 	// Configuration options for the parsing process.
@@ -12089,7 +12279,7 @@ func (e *ExtractConfigJSON) GetExtractionRules() *string {
 	return e.ExtractionRules
 }
 
-func (e *ExtractConfigJSON) GetSchema() JSONObject {
+func (e *ExtractConfigJSON) GetSchema() *JSONObject {
 	if e == nil {
 		return nil
 	}
@@ -12147,7 +12337,7 @@ func (e *ExtractConfigJSON) SetExtractionRules(extractionRules *string) {
 
 // SetSchema sets the Schema field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *ExtractConfigJSON) SetSchema(schema JSONObject) {
+func (e *ExtractConfigJSON) SetSchema(schema *JSONObject) {
 	e.Schema = schema
 	e.require(extractConfigJSONFieldSchema)
 }
@@ -12218,9 +12408,9 @@ var (
 )
 
 type ExtractConfigLegacy struct {
-	// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseProcessor *ExtractConfigLegacyBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
@@ -12380,7 +12570,7 @@ func (e *ExtractConfigLegacy) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 type ExtractConfigLegacyBaseProcessor string
 
 const (
@@ -12747,7 +12937,7 @@ type ExtractOutputMetadataValue struct {
 	//
 	// These scores will be present when the `reviewAgent.enabled` flag is set to `true` in the processor config.
 	// If the review agent is enabled but a score is not returned for a field, this value will be `null`.
-	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgentScore *int        `json:"reviewAgentScore,omitempty" url:"reviewAgentScore,omitempty"`
 	Citations        []*Citation `json:"citations,omitempty" url:"citations,omitempty"`
 	Insights         []*Insight  `json:"insights,omitempty" url:"insights,omitempty"`
@@ -12898,13 +13088,13 @@ var (
 
 type ExtractOverrideConfigJSON struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
 	// JSON Schema definition of the data to extract.
 	//
-	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/product/extraction/schema) for details and examples of schema configuration.
+	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/extraction/schema) for details and examples of schema configuration.
 	Schema *JSONObject `json:"schema,omitempty" url:"schema,omitempty"`
 	// Advanced configuration options.
 	AdvancedOptions *ExtractAdvancedOptions `json:"advancedOptions,omitempty" url:"advancedOptions,omitempty"`
@@ -13058,7 +13248,7 @@ func (e *ExtractOverrideConfigJSON) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Reference to an existing extractor. One of `extractor` or `config` must be provided.
+// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 var (
 	extractRequestExtractorFieldID             = big.NewInt(1 << 0)
 	extractRequestExtractorFieldVersion        = big.NewInt(1 << 1)
@@ -13293,7 +13483,7 @@ type ExtractRun struct {
 	Status ProcessorRunStatus `json:"status" url:"status"`
 	// The final output, either reviewed or initial. This is a union of two possible shapes:
 	//
-	// - **[JSON Schema output](https://docs.extend.ai/2026-02-09/product/extraction/output-types):** The current output format, returned for runs created with a JSON Schema config.
+	// - **[JSON Schema output](https://docs.extend.ai/2026-02-09/extraction/response-format):** The current output format, returned for runs created with a JSON Schema config.
 	// - **[Legacy output](https://docs.extend.ai/2025-04-21/product/legacy/output-type-legacy):** A legacy output format from a previous API version. This shape is only returned for runs that were originally created with a legacy config.
 	//
 	// **Availability:** Present when `status` is `"PROCESSED"`.
@@ -13320,6 +13510,7 @@ type ExtractRun struct {
 	// * `PRE_PROCESSING_FAILURE` - An error occurred during preprocessing (e.g., chunking)
 	// * `POST_PROCESSING_FAILURE` - An error occurred during postprocessing
 	// * `OUT_OF_CREDITS` - Insufficient credits to run the extraction
+	// * `SCHEMA_GENERATION_FAILED` - Automatic schema inference failed (only applies when `schema` is omitted). The file could not be parsed or a schema could not be generated from it.
 	//
 	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
 	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
@@ -13341,7 +13532,7 @@ type ExtractRun struct {
 	Edits map[string]*ExtractOutputEdits `json:"edits,omitempty" url:"edits,omitempty"`
 	// The configuration used for this extract run. This is a union of two possible shapes:
 	//
-	// - **[JSON Schema config](https://docs.extend.ai/2026-02-09/product/extraction/schema):** The current config format. All runs created through this API version use this shape.
+	// - **[JSON Schema config](https://docs.extend.ai/2026-02-09/extraction/schema):** The current config format. All runs created through this API version use this shape.
 	// - **[Legacy config](https://docs.extend.ai/2025-04-21/product/legacy/legacy-schema):** A fields-array config from a previous API version. This shape is only returned when retrieving runs that were originally created with the legacy format. This API version does not support creating runs with legacy configs.
 	Config *ExtractConfig `json:"config" url:"config"`
 	// The extractor that was used for this run.
@@ -13352,8 +13543,8 @@ type ExtractRun struct {
 	//
 	// **Availability:** Present when an extractor reference was provided. Not present when using inline `config`.
 	ExtractorVersion *ExtractorVersionSummary `json:"extractorVersion,omitempty" url:"extractorVersion,omitempty"`
-	// The file that was processed.
-	File *FileSummary `json:"file" url:"file"`
+	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
 	// The ID of the parse run that was used for this extract run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -13940,7 +14131,7 @@ func (e *ExtractRunProcessedWebhookEvent) String() string {
 //
 // The extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`).
 //
-// See the [Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#extract-step).
+// See the [Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#extract).
 var (
 	extractStepDefinitionFieldName   = big.NewInt(1 << 0)
 	extractStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -15570,7 +15761,7 @@ type ExtractorVersion struct {
 	Version string `json:"version" url:"version"`
 	// The configuration settings for this version of the extractor. This is a union of two possible shapes:
 	//
-	// - **[JSON Schema config](https://docs.extend.ai/2026-02-09/product/extraction/schema):** The current config format. All extractors created through this API version use this shape.
+	// - **[JSON Schema config](https://docs.extend.ai/2026-02-09/extraction/schema):** The current config format. All extractors created through this API version use this shape.
 	// - **[Legacy config](https://docs.extend.ai/2025-04-21/product/legacy/legacy-schema):** A fields-array config from a previous API version. This shape is only returned for extractors that were originally configured with the legacy format. This API version does not support creating extractors with legacy configs.
 	Config *ExtractConfig `json:"config" url:"config"`
 	// The ID of the extractor that this version belongs to.
@@ -16973,7 +17164,7 @@ func (f *FileContentsSheetsItem) String() string {
 
 // Converts files to a different format.
 //
-// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#file-conversion-step).
+// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#file-conversion).
 var (
 	fileConversionStepDefinitionFieldName   = big.NewInt(1 << 0)
 	fileConversionStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -17097,7 +17288,7 @@ var (
 type FileConversionStepDefinitionConfig struct {
 	// Whether to continue or exit the workflow if file conversion fails. Defaults to `EXIT`.
 	//
-	// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#file-conversion-step).
+	// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#file-conversion).
 	FailureBehavior *FileConversionStepDefinitionConfigFailureBehavior `json:"failureBehavior,omitempty" url:"failureBehavior,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -17179,7 +17370,7 @@ func (f *FileConversionStepDefinitionConfig) String() string {
 
 // Whether to continue or exit the workflow if file conversion fails. Defaults to `EXIT`.
 //
-// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#file-conversion-step).
+// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#file-conversion).
 type FileConversionStepDefinitionConfigFailureBehavior string
 
 const (
@@ -17402,7 +17593,7 @@ var (
 type FileFromURL struct {
 	// A URL to download the file. For production use cases, we recommend using presigned URLs with a 5-15 minute expiration time.
 	//
-	// Supported file types can be found [here](https://docs.extend.ai/2026-02-09/product/general/supported-file-types).
+	// Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types).
 	URL string `json:"url" url:"url"`
 	// The name of the file. If not set, the file name is taken from the URL.
 	Name *string `json:"name,omitempty" url:"name,omitempty"`
@@ -18062,7 +18253,7 @@ func (f *FormulaDetails) String() string {
 
 // Pauses the workflow for human review in the dashboard.
 //
-// See the [Human Review step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#human-review-step).
+// See the [Human Review step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#human-review).
 var (
 	humanReviewStepDefinitionFieldName = big.NewInt(1 << 0)
 	humanReviewStepDefinitionFieldNext = big.NewInt(1 << 1)
@@ -18480,7 +18671,7 @@ type LegacyClassificationAdvancedOptions struct {
 	Context *LegacyClassificationAdvancedOptionsContext `json:"context,omitempty" url:"context,omitempty"`
 	// Enable advanced multimodal processing for better handling of visual elements during classification.
 	AdvancedMultimodalEnabled *bool `json:"advancedMultimodalEnabled,omitempty" url:"advancedMultimodalEnabled,omitempty"`
-	// Limit processing to a specific number of pages from the beginning of the document. See [Page Ranges](https://docs.extend.ai/2026-02-09/product/page-ranges).
+	// Limit processing to a specific number of pages from the beginning of the document. See [Page Ranges](https://docs.extend.ai/2026-02-09/page-ranges).
 	FixedPageLimit *int        `json:"fixedPageLimit,omitempty" url:"fixedPageLimit,omitempty"`
 	PageRanges     *PageRanges `json:"pageRanges,omitempty" url:"pageRanges,omitempty"`
 
@@ -18636,9 +18827,9 @@ var (
 )
 
 type LegacyClassificationConfig struct {
-	// The base processor to use. For classifiers, this must be either `"classification_performance"` or `"classification_light"`. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+	// The base processor to use. For classifiers, this must be either `"classification_performance"` or `"classification_light"`. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 	BaseProcessor *LegacyClassificationConfigBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Array of possible classifications for the document.
 	Classifications []*LegacyClassification `json:"classifications" url:"classifications"`
@@ -18796,7 +18987,7 @@ func (l *LegacyClassificationConfig) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// The base processor to use. For classifiers, this must be either `"classification_performance"` or `"classification_light"`. See [Classification Changelog](https://docs.extend.ai/2026-02-09/changelog/classification/classification-performance) for more details.
+// The base processor to use. For classifiers, this must be either `"classification_performance"` or `"classification_light"`. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
 type LegacyClassificationConfigBaseProcessor string
 
 const (
@@ -19281,7 +19472,7 @@ type LegacyExtractionAdvancedOptions struct {
 	// and may include additional `insights` of type `issue` or `review_summary` to help identify
 	// fields that may need manual review.
 	//
-	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgent *LegacyExtractionAdvancedOptionsReviewAgent `json:"reviewAgent,omitempty" url:"reviewAgent,omitempty"`
 	// Strategy for handling large arrays in documents.
 	ArrayStrategy   *ArrayStrategy                `json:"arrayStrategy,omitempty" url:"arrayStrategy,omitempty"`
@@ -19290,7 +19481,7 @@ type LegacyExtractionAdvancedOptions struct {
 	ExcelSheetRanges []*ExcelSheetRange `json:"excelSheetRanges,omitempty" url:"excelSheetRanges,omitempty"`
 	// Strategy for selecting sheets from Excel documents.
 	ExcelSheetSelectionStrategy *LegacyExtractionAdvancedOptionsExcelSheetSelectionStrategy `json:"excelSheetSelectionStrategy,omitempty" url:"excelSheetSelectionStrategy,omitempty"`
-	// DEPRECATED - See [Page Ranges](https://docs.extend.ai/2026-02-09/product/page-ranges).
+	// DEPRECATED - See [Page Ranges](https://docs.extend.ai/2026-02-09/page-ranges).
 	FixedPageLimit *int        `json:"fixedPageLimit,omitempty" url:"fixedPageLimit,omitempty"`
 	PageRanges     *PageRanges `json:"pageRanges,omitempty" url:"pageRanges,omitempty"`
 
@@ -19610,7 +19801,7 @@ func (l LegacyExtractionAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *Legac
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
 // fields that may need manual review.
 //
-// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/product/extraction/review-agent)
+// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 var (
 	legacyExtractionAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
 )
@@ -19707,15 +19898,15 @@ var (
 )
 
 type LegacyExtractionConfig struct {
-	// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseProcessor *LegacyExtractionConfigBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
 	// JSON Schema definition of the data to extract. Either `fields` or `schema` must be provided.
 	//
-	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/product/extraction/schema) for details and examples of schema configuration.
+	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/extraction/schema) for details and examples of schema configuration.
 	Schema *JSONObject `json:"schema,omitempty" url:"schema,omitempty"`
 	// Array of fields to extract from the document. Either `fields` or `schema` must be provided.
 	//
@@ -19887,7 +20078,7 @@ func (l *LegacyExtractionConfig) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/changelog/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 type LegacyExtractionConfigBaseProcessor string
 
 const (
@@ -21398,7 +21589,7 @@ type LegacySplitterAdvancedOptions struct {
 	SplitMethod *LegacySplitterAdvancedOptionsSplitMethod `json:"splitMethod,omitempty" url:"splitMethod,omitempty"`
 	// For Excel documents, split by worksheet.
 	SplitExcelDocumentsBySheetEnabled *bool `json:"splitExcelDocumentsBySheetEnabled,omitempty" url:"splitExcelDocumentsBySheetEnabled,omitempty"`
-	// Limit processing to a specific number of pages from the beginning of the document. See [Page Ranges](https://docs.extend.ai/2026-02-09/product/page-ranges).
+	// Limit processing to a specific number of pages from the beginning of the document. See [Page Ranges](https://docs.extend.ai/2026-02-09/page-ranges).
 	FixedPageLimit *int        `json:"fixedPageLimit,omitempty" url:"fixedPageLimit,omitempty"`
 	PageRanges     *PageRanges `json:"pageRanges,omitempty" url:"pageRanges,omitempty"`
 
@@ -21570,9 +21761,9 @@ var (
 )
 
 type LegacySplitterConfig struct {
-	// The base processor to use. For splitters, this can currently only be `"splitting_performance"` or `"splitting_light"`. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+	// The base processor to use. For splitters, this can currently only be `"splitting_performance"` or `"splitting_light"`. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 	BaseProcessor *LegacySplitterConfigBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Array of classifications that define the possible types of document sections.
 	SplitClassifications []*LegacyClassification `json:"splitClassifications" url:"splitClassifications"`
@@ -21730,7 +21921,7 @@ func (l *LegacySplitterConfig) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// The base processor to use. For splitters, this can currently only be `"splitting_performance"` or `"splitting_light"`. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+// The base processor to use. For splitters, this can currently only be `"splitting_performance"` or `"splitting_light"`. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 type LegacySplitterConfigBaseProcessor string
 
 const (
@@ -21758,7 +21949,7 @@ type MaxPageSize = int
 
 // Merges extraction outputs from multiple upstream extract steps.
 //
-// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#merge-extract-step).
+// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#merge-extract).
 var (
 	mergeExtractStepDefinitionFieldName   = big.NewInt(1 << 0)
 	mergeExtractStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -21882,7 +22073,7 @@ var (
 type MergeExtractStepDefinitionConfig struct {
 	// How to order fields when merging. Defaults to confidence.
 	//
-	// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#merge-extract-step).
+	// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#merge-extract).
 	MergeOrder *MergeExtractStepDefinitionConfigMergeOrder `json:"mergeOrder,omitempty" url:"mergeOrder,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -21964,7 +22155,7 @@ func (m *MergeExtractStepDefinitionConfig) String() string {
 
 // How to order fields when merging. Defaults to confidence.
 //
-// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#merge-extract-step).
+// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#merge-extract).
 type MergeExtractStepDefinitionConfigMergeOrder string
 
 const (
@@ -21998,7 +22189,7 @@ func (m MergeExtractStepDefinitionConfigMergeOrder) Ptr() *MergeExtractStepDefin
 // Note that if other parameters are changed in subsequent requests, you may receive inconsistent data.
 type NextPageToken = string
 
-// Limit processing to the specified page ranges. See [Page Ranges](https://docs.extend.ai/2026-02-09/product/page-ranges).
+// Limit processing to the specified page ranges. See [Page Ranges](https://docs.extend.ai/2026-02-09/page-ranges).
 type PageRanges = []*PageRangesItem
 
 var (
@@ -22282,13 +22473,13 @@ type ParseConfig struct {
 	// * Prefer `markdown` for most documents, multi-column reading order, and retrieval use cases
 	// * Prefer `spatial` for messy/scanned/handwritten or skewed documents, when you need near 1:1 layout fidelity, or for BOL-like logistics docs
 	//
-	// See “Markdown vs Spatial” in the [Parse guide](https://docs.extend.ai/2026-02-09/product/parsing/configuration-options#target-format) for details.
+	// See “Markdown vs Spatial” in the [Parse guide](https://docs.extend.ai/2026-02-09/parsing/configuration#target-format) for details.
 	Target *ParseConfigTarget `json:"target,omitempty" url:"target,omitempty"`
 	// Strategy for dividing the document into chunks.
 	ChunkingStrategy *ParseConfigChunkingStrategy `json:"chunkingStrategy,omitempty" url:"chunkingStrategy,omitempty"`
 	// The parsing engine to use. Supported values:
 	// * `parse_performance`: Full-featured parsing engine with highest accuracy (default)
-	// * `parse_light`: Lightweight parsing engine optimized for speed. This does not have robust layout support and does not support markdown layout target.
+	// * `parse_light`: Lightweight parsing engine optimized for high-volume, cost-sensitive ingestion. Uses the new layout model with full layout support and the markdown target at lower cost and latency, but performs worse than `parse_performance` on lower-quality scans, harder handwriting, larger tables, non-Latin-based languages, and dense checkbox regions.
 	Engine *ParseConfigEngine `json:"engine,omitempty" url:"engine,omitempty"`
 	// Pin a specific parser engine version for reproducibility. When set to `latest`, the most recent stable version of the selected engine is used.
 	EngineVersion *string `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
@@ -23262,6 +23453,7 @@ var (
 	parseConfigBlockOptionsFiguresFieldEnabled                        = big.NewInt(1 << 0)
 	parseConfigBlockOptionsFiguresFieldFigureImageClippingEnabled     = big.NewInt(1 << 1)
 	parseConfigBlockOptionsFiguresFieldAdvancedChartExtractionEnabled = big.NewInt(1 << 2)
+	parseConfigBlockOptionsFiguresFieldCustomInstructions             = big.NewInt(1 << 3)
 )
 
 type ParseConfigBlockOptionsFigures struct {
@@ -23271,6 +23463,8 @@ type ParseConfigBlockOptionsFigures struct {
 	FigureImageClippingEnabled *bool `json:"figureImageClippingEnabled,omitempty" url:"figureImageClippingEnabled,omitempty"`
 	// Whether to enable advanced chart extraction using vision models for improved data extraction from charts.
 	AdvancedChartExtractionEnabled *bool `json:"advancedChartExtractionEnabled,omitempty" url:"advancedChartExtractionEnabled,omitempty"`
+	// Custom instructions injected into the vision model prompt used to analyze and summarize figures. Use to steer figure descriptions toward your use case (e.g. domain terminology, details to always capture). Requires `enabled: true`. Available on `parse_performance` >= `2.0.0` and `parse_light` >= `1.0.0`.
+	CustomInstructions *string `json:"customInstructions,omitempty" url:"customInstructions,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -23298,6 +23492,13 @@ func (p *ParseConfigBlockOptionsFigures) GetAdvancedChartExtractionEnabled() *bo
 		return nil
 	}
 	return p.AdvancedChartExtractionEnabled
+}
+
+func (p *ParseConfigBlockOptionsFigures) GetCustomInstructions() *string {
+	if p == nil {
+		return nil
+	}
+	return p.CustomInstructions
 }
 
 func (p *ParseConfigBlockOptionsFigures) GetExtraProperties() map[string]interface{} {
@@ -23333,6 +23534,13 @@ func (p *ParseConfigBlockOptionsFigures) SetFigureImageClippingEnabled(figureIma
 func (p *ParseConfigBlockOptionsFigures) SetAdvancedChartExtractionEnabled(advancedChartExtractionEnabled *bool) {
 	p.AdvancedChartExtractionEnabled = advancedChartExtractionEnabled
 	p.require(parseConfigBlockOptionsFiguresFieldAdvancedChartExtractionEnabled)
+}
+
+// SetCustomInstructions sets the CustomInstructions field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigBlockOptionsFigures) SetCustomInstructions(customInstructions *string) {
+	p.CustomInstructions = customInstructions
+	p.require(parseConfigBlockOptionsFiguresFieldCustomInstructions)
 }
 
 func (p *ParseConfigBlockOptionsFigures) UnmarshalJSON(data []byte) error {
@@ -24281,7 +24489,7 @@ func (p ParseConfigChunkingStrategyType) Ptr() *ParseConfigChunkingStrategyType 
 
 // The parsing engine to use. Supported values:
 // * `parse_performance`: Full-featured parsing engine with highest accuracy (default)
-// * `parse_light`: Lightweight parsing engine optimized for speed. This does not have robust layout support and does not support markdown layout target.
+// * `parse_light`: Lightweight parsing engine optimized for high-volume, cost-sensitive ingestion. Uses the new layout model with full layout support and the markdown target at lower cost and latency, but performs worse than `parse_performance` on lower-quality scans, harder handwriting, larger tables, non-Latin-based languages, and dense checkbox regions.
 type ParseConfigEngine string
 
 const (
@@ -24316,7 +24524,7 @@ func (p ParseConfigEngine) Ptr() *ParseConfigEngine {
 // * Prefer `markdown` for most documents, multi-column reading order, and retrieval use cases
 // * Prefer `spatial` for messy/scanned/handwritten or skewed documents, when you need near 1:1 layout fidelity, or for BOL-like logistics docs
 //
-// See “Markdown vs Spatial” in the [Parse guide](https://docs.extend.ai/2026-02-09/product/parsing/configuration-options#target-format) for details.
+// See “Markdown vs Spatial” in the [Parse guide](https://docs.extend.ai/2026-02-09/parsing/configuration#target-format) for details.
 type ParseConfigTarget string
 
 const (
@@ -24432,11 +24640,12 @@ var (
 	parseRunFieldStatus         = big.NewInt(1 << 3)
 	parseRunFieldFailureReason  = big.NewInt(1 << 4)
 	parseRunFieldFailureMessage = big.NewInt(1 << 5)
-	parseRunFieldOutput         = big.NewInt(1 << 6)
-	parseRunFieldOutputURL      = big.NewInt(1 << 7)
-	parseRunFieldMetrics        = big.NewInt(1 << 8)
-	parseRunFieldConfig         = big.NewInt(1 << 9)
-	parseRunFieldUsage          = big.NewInt(1 << 10)
+	parseRunFieldMetadata       = big.NewInt(1 << 6)
+	parseRunFieldOutput         = big.NewInt(1 << 7)
+	parseRunFieldOutputURL      = big.NewInt(1 << 8)
+	parseRunFieldMetrics        = big.NewInt(1 << 9)
+	parseRunFieldConfig         = big.NewInt(1 << 10)
+	parseRunFieldUsage          = big.NewInt(1 << 11)
 )
 
 type ParseRun struct {
@@ -24483,6 +24692,10 @@ type ParseRun struct {
 	//
 	// **Availability:** Present when `status` is `"FAILED"`.
 	FailureMessage *string `json:"failureMessage,omitempty" url:"failureMessage,omitempty"`
+	// Any metadata that was provided when creating the parse run.
+	//
+	// **Availability:** Present when metadata was provided during creation.
+	Metadata *RunMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
 	// The parse run output.
 	//
 	// **Availability:** Present when `status` is `"PROCESSED"` and the request was made without the `responseType=url` query parameter. Contains the parsed chunks.
@@ -24550,6 +24763,13 @@ func (p *ParseRun) GetFailureMessage() *string {
 		return nil
 	}
 	return p.FailureMessage
+}
+
+func (p *ParseRun) GetMetadata() *RunMetadata {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
 }
 
 func (p *ParseRun) GetOutput() *ParseRunOutput {
@@ -24645,6 +24865,13 @@ func (p *ParseRun) SetFailureReason(failureReason *string) {
 func (p *ParseRun) SetFailureMessage(failureMessage *string) {
 	p.FailureMessage = failureMessage
 	p.require(parseRunFieldFailureMessage)
+}
+
+// SetMetadata sets the Metadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRun) SetMetadata(metadata *RunMetadata) {
+	p.Metadata = metadata
+	p.require(parseRunFieldMetadata)
 }
 
 // SetOutput sets the Output field and marks it as non-optional;
@@ -25615,7 +25842,7 @@ func (p ParseRunStatusStatus) Ptr() *ParseRunStatusStatus {
 
 // Parses file content (OCR, text extraction). Every workflow should have exactly one parse step immediately after the trigger.
 //
-// See the [Parse step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#parse-step).
+// See the [Parse step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#parse).
 var (
 	parseStepDefinitionFieldName   = big.NewInt(1 << 0)
 	parseStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -26479,7 +26706,7 @@ func (r ReleaseType) Ptr() *ReleaseType {
 
 // A next entry for `RULE_VALIDATION` steps. Routes based on whether all validation rules passed.
 //
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for end-to-end examples.
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	ruleValidationNextEntryFieldStep   = big.NewInt(1 << 0)
 	ruleValidationNextEntryFieldResult = big.NewInt(1 << 1)
@@ -26607,7 +26834,7 @@ func (r RuleValidationNextEntryResult) Ptr() *RuleValidationNextEntryResult {
 
 // Validates extraction outputs against formula-based rules. Routes to pass/fail next steps.
 //
-// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#rule-validation-step).
+// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation).
 var (
 	ruleValidationStepDefinitionFieldName   = big.NewInt(1 << 0)
 	ruleValidationStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -26620,7 +26847,7 @@ type RuleValidationStepDefinition struct {
 	Config *RuleValidationStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
 	// Can only be set when `config` is present. Each entry must include a `result` of `"pass"` or `"fail"` to route based on whether all validation rules passed.
 	//
-	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#rule-validation-step).
+	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation).
 	Next []*RuleValidationNextEntry `json:"next,omitempty" url:"next,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -26736,7 +26963,7 @@ var (
 type RuleValidationStepDefinitionConfig struct {
 	// Validation rules for this step. Each rule defines a name and a boolean formula.
 	//
-	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#rule-validation-step).
+	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation).
 	Rules []*RuleValidationStepDefinitionConfigRulesItem `json:"rules" url:"rules"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -26826,7 +27053,7 @@ type RuleValidationStepDefinitionConfigRulesItem struct {
 	Name string `json:"name" url:"name"`
 	// Boolean formula used to validate the workflow data for this rule.
 	//
-	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#rule-validation-step) and [Formulas](https://docs.extend.ai/2026-02-09/product/workflows/formulas).
+	// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation) and [Formulas](https://docs.extend.ai/2026-02-09/workflows/formulas).
 	Formula     string  `json:"formula" url:"formula"`
 	Description *string `json:"description,omitempty" url:"description,omitempty"`
 
@@ -26999,7 +27226,7 @@ type RunSourceID = string
 // * Runs created before October 7, 2025
 // * Customers on legacy billing systems
 //
-// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/product/general/how-credits-work).
+// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/general/how-credits-work).
 var (
 	runUsageFieldCredits      = big.NewInt(1 << 0)
 	runUsageFieldTotalCredits = big.NewInt(1 << 1)
@@ -27123,11 +27350,166 @@ func (r *RunUsage) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// One line item in a run's `usage.breakdown`. Each entry corresponds to a concrete chargeable resource that contributed credits to the parent operation.
+// A single cost driver within a breakdown entry's credit total. The per-unit rate is `credits / quantity`.
+var (
+	runUsageBreakdownChargeFieldProduct  = big.NewInt(1 << 0)
+	runUsageBreakdownChargeFieldUnit     = big.NewInt(1 << 1)
+	runUsageBreakdownChargeFieldQuantity = big.NewInt(1 << 2)
+	runUsageBreakdownChargeFieldCredits  = big.NewInt(1 << 3)
+	runUsageBreakdownChargeFieldPages    = big.NewInt(1 << 4)
+)
+
+type RunUsageBreakdownCharge struct {
+	// Identifier for the billable cost driver.
+	Product string `json:"product" url:"product"`
+	// The unit `quantity` is measured in.
+	Unit string `json:"unit" url:"unit"`
+	// How many units this charge was billed for.
+	Quantity float64 `json:"quantity" url:"quantity"`
+	// Credits consumed by this charge.
+	Credits float64 `json:"credits" url:"credits"`
+	// 1-indexed page numbers that incurred this charge. Present on usage-based add-ons that are only billed for the pages where they actually applied (e.g. `agentic_text_correction`, `agentic_table_correction`).
+	Pages []int `json:"pages,omitempty" url:"pages,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RunUsageBreakdownCharge) GetProduct() string {
+	if r == nil {
+		return ""
+	}
+	return r.Product
+}
+
+func (r *RunUsageBreakdownCharge) GetUnit() string {
+	if r == nil {
+		return ""
+	}
+	return r.Unit
+}
+
+func (r *RunUsageBreakdownCharge) GetQuantity() float64 {
+	if r == nil {
+		return 0
+	}
+	return r.Quantity
+}
+
+func (r *RunUsageBreakdownCharge) GetCredits() float64 {
+	if r == nil {
+		return 0
+	}
+	return r.Credits
+}
+
+func (r *RunUsageBreakdownCharge) GetPages() []int {
+	if r == nil {
+		return nil
+	}
+	return r.Pages
+}
+
+func (r *RunUsageBreakdownCharge) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RunUsageBreakdownCharge) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetProduct sets the Product field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownCharge) SetProduct(product string) {
+	r.Product = product
+	r.require(runUsageBreakdownChargeFieldProduct)
+}
+
+// SetUnit sets the Unit field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownCharge) SetUnit(unit string) {
+	r.Unit = unit
+	r.require(runUsageBreakdownChargeFieldUnit)
+}
+
+// SetQuantity sets the Quantity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownCharge) SetQuantity(quantity float64) {
+	r.Quantity = quantity
+	r.require(runUsageBreakdownChargeFieldQuantity)
+}
+
+// SetCredits sets the Credits field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownCharge) SetCredits(credits float64) {
+	r.Credits = credits
+	r.require(runUsageBreakdownChargeFieldCredits)
+}
+
+// SetPages sets the Pages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownCharge) SetPages(pages []int) {
+	r.Pages = pages
+	r.require(runUsageBreakdownChargeFieldPages)
+}
+
+func (r *RunUsageBreakdownCharge) UnmarshalJSON(data []byte) error {
+	type unmarshaler RunUsageBreakdownCharge
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RunUsageBreakdownCharge(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RunUsageBreakdownCharge) MarshalJSON() ([]byte, error) {
+	type embed RunUsageBreakdownCharge
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RunUsageBreakdownCharge) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// One line item in a run's `usage.breakdown`. Each entry corresponds to a concrete chargeable resource that contributed credits to the parent operation. When `charges` is present, it itemizes the cost drivers behind this entry's `credits`.
 var (
 	runUsageBreakdownEntryFieldObject  = big.NewInt(1 << 0)
 	runUsageBreakdownEntryFieldID      = big.NewInt(1 << 1)
 	runUsageBreakdownEntryFieldCredits = big.NewInt(1 << 2)
+	runUsageBreakdownEntryFieldCharges = big.NewInt(1 << 3)
 )
 
 type RunUsageBreakdownEntry struct {
@@ -27137,6 +27519,10 @@ type RunUsageBreakdownEntry struct {
 	ID string `json:"id" url:"id"`
 	// Credits charged to the contributing resource.
 	Credits float64 `json:"credits" url:"credits"`
+	// Itemized cost drivers that make up this entry's `credits`. When present, `sum(charges[].credits) === credits`.
+	//
+	// **Availability:** Present on runs persisted on or after June 10, 2026. Runs persisted before that date will omit this field.
+	Charges []*RunUsageBreakdownCharge `json:"charges,omitempty" url:"charges,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27164,6 +27550,13 @@ func (r *RunUsageBreakdownEntry) GetCredits() float64 {
 		return 0
 	}
 	return r.Credits
+}
+
+func (r *RunUsageBreakdownEntry) GetCharges() []*RunUsageBreakdownCharge {
+	if r == nil {
+		return nil
+	}
+	return r.Charges
 }
 
 func (r *RunUsageBreakdownEntry) GetExtraProperties() map[string]interface{} {
@@ -27199,6 +27592,13 @@ func (r *RunUsageBreakdownEntry) SetID(id string) {
 func (r *RunUsageBreakdownEntry) SetCredits(credits float64) {
 	r.Credits = credits
 	r.require(runUsageBreakdownEntryFieldCredits)
+}
+
+// SetCharges sets the Charges field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RunUsageBreakdownEntry) SetCharges(charges []*RunUsageBreakdownCharge) {
+	r.Charges = charges
+	r.require(runUsageBreakdownEntryFieldCharges)
 }
 
 func (r *RunUsageBreakdownEntry) UnmarshalJSON(data []byte) error {
@@ -27281,7 +27681,7 @@ func (r RunUsageBreakdownEntryObject) Ptr() *RunUsageBreakdownEntryObject {
 // * Runs created before October 7, 2025
 // * Customers on legacy billing systems
 //
-// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/product/general/how-credits-work).
+// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/general/how-credits-work).
 var (
 	runUsageSummaryFieldCredits      = big.NewInt(1 << 0)
 	runUsageSummaryFieldTotalCredits = big.NewInt(1 << 1)
@@ -27700,7 +28100,7 @@ func (s SplitAdvancedOptionsSplitMethod) Ptr() *SplitAdvancedOptionsSplitMethod 
 	return &s
 }
 
-// The base processor to use. For splitters, this can be either `"splitting_performance"` or `"splitting_light"`. Defaults to `"splitting_performance"` if not provided. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+// The base processor to use. For splitters, this can be either `"splitting_performance"` or `"splitting_light"`. Defaults to `"splitting_performance"` if not provided. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 type SplitBaseProcessor string
 
 const (
@@ -27878,7 +28278,7 @@ var (
 
 type SplitConfig struct {
 	BaseProcessor *SplitBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 	BaseVersion          *string              `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	SplitClassifications SplitClassifications `json:"splitClassifications" url:"splitClassifications"`
 	// Custom rules to guide the document splitting process in natural language.
@@ -28369,7 +28769,7 @@ var (
 
 type SplitOverrideConfig struct {
 	BaseProcessor *SplitBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/changelog/splitting/splitting-performance) for more details.
+	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
 	BaseVersion          *string               `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	SplitClassifications *SplitClassifications `json:"splitClassifications,omitempty" url:"splitClassifications,omitempty"`
 	// Custom rules to guide the document splitting process in natural language.
@@ -28788,8 +29188,8 @@ type SplitRun struct {
 	Edited bool `json:"edited" url:"edited"`
 	// The configuration used for this split run.
 	Config *SplitConfig `json:"config" url:"config"`
-	// The file that was processed.
-	File *FileSummary `json:"file" url:"file"`
+	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
 	// The ID of the parse run that was used for this split run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -29362,7 +29762,7 @@ func (s *SplitRunProcessedWebhookEvent) String() string {
 //
 // The splitter reference must include a pinned `version` — `"latest"` is not supported for `SPLIT` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
 //
-// See the [Split step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#split-step).
+// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 var (
 	splitStepDefinitionFieldName   = big.NewInt(1 << 0)
 	splitStepDefinitionFieldConfig = big.NewInt(1 << 1)
@@ -29377,11 +29777,11 @@ type SplitStepDefinition struct {
 	//
 	// The splitter `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
 	//
-	// See the [Split step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#split-step).
+	// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 	Config *SplitStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
 	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a split classification `id` from the referenced splitter's configuration. Use the classification's stable `id` (e.g. `"cls_receipt"`), not the `type` string.
 	//
-	// See the [Split step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#split-step).
+	// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 	Next []*ClassificationNextEntry `json:"next,omitempty" url:"next,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -29495,7 +29895,7 @@ func (s *SplitStepDefinition) String() string {
 //
 // The splitter `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
 //
-// See the [Split step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#split-step).
+// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 var (
 	splitStepDefinitionConfigFieldSplitter = big.NewInt(1 << 0)
 )
@@ -31049,7 +31449,7 @@ func (t *TooManyRequestsErrorBody) String() string {
 
 // The entry point of the workflow. Every workflow must have exactly one trigger step, and it must route to exactly one `PARSE` step.
 //
-// See the [Trigger step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#trigger-step).
+// See the [Trigger step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#trigger).
 var (
 	triggerStepDefinitionFieldName = big.NewInt(1 << 0)
 	triggerStepDefinitionFieldNext = big.NewInt(1 << 1)
@@ -32163,7 +32563,7 @@ func (w *WebhookEvent) validate() error {
 
 // A terminal step that triggers webhook delivery of the workflow results.
 //
-// See the [Webhook Response step docs](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api#webhook-response-step).
+// See the [Webhook Response step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#webhook-response).
 var (
 	webhookResponseStepDefinitionFieldName = big.NewInt(1 << 0)
 )
@@ -33159,7 +33559,7 @@ func (w *WorkflowRunStepRunProcessedWebhookEvent) String() string {
 
 // A workflow step definition used when creating, updating, deploying, and retrieving workflow versions.
 //
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/product/workflows/configuring-workflows-via-api) for routing patterns and examples.
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for routing patterns and examples.
 type WorkflowStepDefinition struct {
 	Type                   string
 	Trigger                *TriggerStepDefinition

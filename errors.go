@@ -9,7 +9,7 @@ import (
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type BadRequestError struct {
 	*core.APIError
 	Body any
@@ -35,7 +35,7 @@ func (b *BadRequestError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type ForbiddenError struct {
 	*core.APIError
 	Body *APIError
@@ -61,7 +61,7 @@ func (f *ForbiddenError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type InternalServerError struct {
 	*core.APIError
 	Body any
@@ -87,7 +87,7 @@ func (i *InternalServerError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type NotFoundError struct {
 	*core.APIError
 	Body any
@@ -113,7 +113,7 @@ func (n *NotFoundError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type PaymentRequiredError struct {
 	*core.APIError
 	Body *APIError
@@ -139,7 +139,7 @@ func (p *PaymentRequiredError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type TooManyRequestsError struct {
 	*core.APIError
 	Body any
@@ -165,7 +165,7 @@ func (t *TooManyRequestsError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type UnauthorizedError struct {
 	*core.APIError
 	Body any
@@ -191,7 +191,7 @@ func (u *UnauthorizedError) Unwrap() error {
 
 // Standard error response format for all Extend API errors.
 //
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/developers/error-codes) for error handling recommendations.
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type UnprocessableEntityError struct {
 	*core.APIError
 	Body *APIError

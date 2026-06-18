@@ -237,6 +237,58 @@ func (r *RawClient) Delete(
 	}, nil
 }
 
+func (r *RawClient) Cancel(
+	ctx context.Context,
+	// The ID of the parse run to cancel.
+	//
+	// Example: `"pr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	id string,
+	request *extend.ParseRunsCancelRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*extend.ParseRun], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"https://api.extend.ai",
+	)
+	endpointURL := internal.EncodeURL(
+		baseURL+"/parse_runs/%v/cancel",
+		id,
+	)
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	if request.ExtendWorkspaceID != nil {
+		headers.Add("x-extend-workspace-id", *request.ExtendWorkspaceID)
+	}
+
+	var response *extend.ParseRun
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(extend.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*extend.ParseRun]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) CreateBatch(
 	ctx context.Context,
 	request *extend.ParseRunsCreateBatchRequest,

@@ -4,6 +4,7 @@ package parseruns
 
 import (
 	context "context"
+	os "os"
 
 	extend "github.com/extend-hq/extend-go-sdk"
 	core "github.com/extend-hq/extend-go-sdk/core"
@@ -20,6 +21,9 @@ type Client struct {
 }
 
 func NewClient(options *core.RequestOptions) *Client {
+	if options.Token == "" {
+		options.Token = os.Getenv("EXTEND_API_KEY")
+	}
 	return &Client{
 		WithRawResponse: NewRawClient(options),
 		options:         options,
@@ -75,7 +79,7 @@ func (c *Client) Create(
 
 // Retrieve the status and results of a parse run.
 //
-// Use this endpoint to get results for a parse run that has already completed, or to check on the status of a parse run initiated by the [Create Parse Run](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/parse/create-parse-run) endpoint.
+// Use this endpoint to get results for a parse run that has already completed, or to check on the status of a parse run initiated by the [Create Parse Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/parse/create-parse-run) endpoint.
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the parse run.
@@ -121,9 +125,33 @@ func (c *Client) Delete(
 	return response.Body, nil
 }
 
+// Cancel an in-progress parse run.
+//
+// Note: Only parse runs with a status of `"PROCESSING"` can be cancelled. Parse runs that have already completed, failed, or been cancelled cannot be cancelled again.
+func (c *Client) Cancel(
+	ctx context.Context,
+	// The ID of the parse run to cancel.
+	//
+	// Example: `"pr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	id string,
+	request *extend.ParseRunsCancelRequest,
+	opts ...option.RequestOption,
+) (*extend.ParseRun, error) {
+	response, err := c.WithRawResponse.Cancel(
+		ctx,
+		id,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Submit up to **1,000 files** for parsing in a single request. Each file is processed as an independent parse run using the same configuration.
 //
-// Unlike the single [Parse File (Async)](https://docs.extend.ai/2026-02-09/developers/api-reference/endpoints/parse/create-parse-run) endpoint, this batch endpoint accepts an `inputs` array and immediately returns a `BatchRun` object containing a batch `id` and a `PENDING` status. The individual runs are then queued and processed asynchronously.
+// Unlike the single [Parse File (Async)](https://docs.extend.ai/2026-02-09/api-reference/endpoints/parse/create-parse-run) endpoint, this batch endpoint accepts an `inputs` array and immediately returns a `BatchRun` object containing a batch `id` and a `PENDING` status. The individual runs are then queued and processed asynchronously.
 //
 // **Monitoring results:**
 // - **Webhooks (recommended):** Subscribe to `batch_parse_run.processed` and `batch_parse_run.failed` events. The webhook payload indicates the batch has finished — fetch individual run results using `GET /parse_runs?batchId={id}`.

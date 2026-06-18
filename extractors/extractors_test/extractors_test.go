@@ -105,7 +105,7 @@ func TestExtractorsCreateWithWireMock(
 	request := &extend.ExtractorsCreateRequest{
 		Name: "Invoice Extractor",
 		Config: &extend.ExtractConfigJSON{
-			Schema: map[string]any{
+			Schema: &extend.JSONObject{
 				"properties": map[string]any{
 					"invoice_number": map[string]any{
 						"description": "The invoice number",
@@ -116,10 +116,26 @@ func TestExtractorsCreateWithWireMock(
 					},
 					"total_amount": map[string]any{
 						"description": "The total amount due",
-						"type": []any{
-							"number",
-							"null",
+						"extend:type": "currency",
+						"properties": map[string]any{
+							"amount": map[string]any{
+								"type": []any{
+									"number",
+									"null",
+								},
+							},
+							"iso_4217_currency_code": map[string]any{
+								"type": []any{
+									"string",
+									"null",
+								},
+							},
 						},
+						"required": []any{
+							"amount",
+							"iso_4217_currency_code",
+						},
+						"type": "object",
 					},
 					"vendor_name": map[string]any{
 						"description": "The name of the vendor",

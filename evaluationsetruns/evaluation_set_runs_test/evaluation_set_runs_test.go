@@ -109,7 +109,7 @@ func TestEvaluationSetRunsRetrieveWithWireMock(
 	request := &extend.EvaluationSetRunsRetrieveRequest{}
 	_, invocationErr := client.EvaluationSetRuns.Retrieve(
 		context.TODO(),
-		"evaluation_set_run_id_here",
+		"bpr_Xj8mK2pL9nR4vT7qY5wZ",
 		request,
 		option.WithHTTPHeader(
 			http.Header{"X-Test-Id": []string{"TestEvaluationSetRunsRetrieveWithWireMock"}},
@@ -117,5 +117,5 @@ func TestEvaluationSetRunsRetrieveWithWireMock(
 	)
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
-	VerifyRequestCount(t, "TestEvaluationSetRunsRetrieveWithWireMock", "GET", "/evaluation_set_runs/evaluation_set_run_id_here", nil, 1)
+	VerifyRequestCount(t, "TestEvaluationSetRunsRetrieveWithWireMock", "GET", "/evaluation_set_runs/bpr_Xj8mK2pL9nR4vT7qY5wZ", nil, 1)
 }
