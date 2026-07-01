@@ -146,7 +146,8 @@ var (
 	extractRequestFieldExtractor = big.NewInt(1 << 0)
 	extractRequestFieldConfig    = big.NewInt(1 << 1)
 	extractRequestFieldFile      = big.NewInt(1 << 2)
-	extractRequestFieldMetadata  = big.NewInt(1 << 3)
+	extractRequestFieldPackage   = big.NewInt(1 << 3)
+	extractRequestFieldMetadata  = big.NewInt(1 << 4)
 )
 
 type ExtractRequest struct {
@@ -154,9 +155,15 @@ type ExtractRequest struct {
 	Extractor *ExtractRequestExtractor `json:"extractor,omitempty" url:"-"`
 	// Inline extract configuration. Mutually exclusive with `extractor` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Config *ExtractConfigJSON `json:"config,omitempty" url:"-"`
-	// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
-	File     *ExtractRequestFile `json:"file" url:"-"`
-	Metadata *RunMetadata        `json:"metadata,omitempty" url:"-"`
+	// The file to be extracted from. Mutually exclusive with `package` — provide one or the other.
+	//
+	// Files can be provided as a URL, Extend file ID, or raw text.
+	File *ExtractRequestFile `json:"file,omitempty" url:"-"`
+	// A collection of files to extract from together in a single run. Mutually exclusive with `file` — provide one or the other.
+	//
+	// See [Multifile Extraction](https://docs.extend.ai/2026-02-09/extraction/multifile) for details.
+	Package  *MultiFileRunPackage `json:"package,omitempty" url:"-"`
+	Metadata *RunMetadata         `json:"metadata,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -188,6 +195,13 @@ func (e *ExtractRequest) SetConfig(config *ExtractConfigJSON) {
 func (e *ExtractRequest) SetFile(file *ExtractRequestFile) {
 	e.File = file
 	e.require(extractRequestFieldFile)
+}
+
+// SetPackage sets the Package field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractRequest) SetPackage(package_ *MultiFileRunPackage) {
+	e.Package = package_
+	e.require(extractRequestFieldPackage)
 }
 
 // SetMetadata sets the Metadata field and marks it as non-optional;
@@ -13367,7 +13381,9 @@ func (e *ExtractRequestExtractor) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
+// The file to be extracted from. Mutually exclusive with `package` — provide one or the other.
+//
+// Files can be provided as a URL, Extend file ID, or raw text.
 type ExtractRequestFile struct {
 	FileFromURL  *FileFromURL
 	FileFromID   *FileFromID
@@ -13468,11 +13484,12 @@ var (
 	extractRunFieldExtractor        = big.NewInt(1 << 12)
 	extractRunFieldExtractorVersion = big.NewInt(1 << 13)
 	extractRunFieldFile             = big.NewInt(1 << 14)
-	extractRunFieldParseRunID       = big.NewInt(1 << 15)
-	extractRunFieldDashboardURL     = big.NewInt(1 << 16)
-	extractRunFieldUsage            = big.NewInt(1 << 17)
-	extractRunFieldCreatedAt        = big.NewInt(1 << 18)
-	extractRunFieldUpdatedAt        = big.NewInt(1 << 19)
+	extractRunFieldFiles            = big.NewInt(1 << 15)
+	extractRunFieldParseRunID       = big.NewInt(1 << 16)
+	extractRunFieldDashboardURL     = big.NewInt(1 << 17)
+	extractRunFieldUsage            = big.NewInt(1 << 18)
+	extractRunFieldCreatedAt        = big.NewInt(1 << 19)
+	extractRunFieldUpdatedAt        = big.NewInt(1 << 20)
 )
 
 type ExtractRun struct {
@@ -13543,8 +13560,12 @@ type ExtractRun struct {
 	//
 	// **Availability:** Present when an extractor reference was provided. Not present when using inline `config`.
 	ExtractorVersion *ExtractorVersionSummary `json:"extractorVersion,omitempty" url:"extractorVersion,omitempty"`
-	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	// The file that was processed. `null` for multifile runs (use `files` instead), and `null` when the file could not be accessed or processed (for example, a run that failed during file ingestion).
 	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
+	// The files that were processed, in the order they were submitted. Only populated for multifile runs (created with `package`).
+	//
+	// For single-file runs, this is `null` — use `file` instead.
+	Files []*FileSummary `json:"files,omitempty" url:"files,omitempty"`
 	// The ID of the parse run that was used for this extract run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -13669,6 +13690,13 @@ func (e *ExtractRun) GetFile() *FileSummary {
 		return nil
 	}
 	return e.File
+}
+
+func (e *ExtractRun) GetFiles() []*FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Files
 }
 
 func (e *ExtractRun) GetParseRunID() *string {
@@ -13827,6 +13855,13 @@ func (e *ExtractRun) SetExtractorVersion(extractorVersion *ExtractorVersionSumma
 func (e *ExtractRun) SetFile(file *FileSummary) {
 	e.File = file
 	e.require(extractRunFieldFile)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractRun) SetFiles(files []*FileSummary) {
+	e.Files = files
+	e.require(extractRunFieldFiles)
 }
 
 // SetParseRunID sets the ParseRunID field and marks it as non-optional;
@@ -22182,6 +22217,156 @@ func NewMergeExtractStepDefinitionConfigMergeOrderFromString(s string) (MergeExt
 
 func (m MergeExtractStepDefinitionConfigMergeOrder) Ptr() *MergeExtractStepDefinitionConfigMergeOrder {
 	return &m
+}
+
+// An ordered collection of files to extract from together in a single run. Use this instead of `file` when you want to run extraction across multiple documents at once.
+//
+// Exactly one of `file` or `package` must be provided on a request — they are mutually exclusive.
+var (
+	multiFileRunPackageFieldFiles = big.NewInt(1 << 0)
+)
+
+type MultiFileRunPackage struct {
+	// The files to extract from. Each entry can be a URL or an existing Extend file ID.
+	Files []*MultiFileRunPackageFilesItem `json:"files" url:"files"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (m *MultiFileRunPackage) GetFiles() []*MultiFileRunPackageFilesItem {
+	if m == nil {
+		return nil
+	}
+	return m.Files
+}
+
+func (m *MultiFileRunPackage) GetExtraProperties() map[string]interface{} {
+	if m == nil {
+		return nil
+	}
+	return m.extraProperties
+}
+
+func (m *MultiFileRunPackage) require(field *big.Int) {
+	if m.explicitFields == nil {
+		m.explicitFields = big.NewInt(0)
+	}
+	m.explicitFields.Or(m.explicitFields, field)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (m *MultiFileRunPackage) SetFiles(files []*MultiFileRunPackageFilesItem) {
+	m.Files = files
+	m.require(multiFileRunPackageFieldFiles)
+}
+
+func (m *MultiFileRunPackage) UnmarshalJSON(data []byte) error {
+	type unmarshaler MultiFileRunPackage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*m = MultiFileRunPackage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *m)
+	if err != nil {
+		return err
+	}
+	m.extraProperties = extraProperties
+	m.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (m *MultiFileRunPackage) MarshalJSON() ([]byte, error) {
+	type embed MultiFileRunPackage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*m),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, m.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (m *MultiFileRunPackage) String() string {
+	if m == nil {
+		return "<nil>"
+	}
+	if len(m.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(m.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(m); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", m)
+}
+
+type MultiFileRunPackageFilesItem struct {
+	FileFromURL *FileFromURL
+	FileFromID  *FileFromID
+
+	typ string
+}
+
+func (m *MultiFileRunPackageFilesItem) GetFileFromURL() *FileFromURL {
+	if m == nil {
+		return nil
+	}
+	return m.FileFromURL
+}
+
+func (m *MultiFileRunPackageFilesItem) GetFileFromID() *FileFromID {
+	if m == nil {
+		return nil
+	}
+	return m.FileFromID
+}
+
+func (m *MultiFileRunPackageFilesItem) UnmarshalJSON(data []byte) error {
+	valueFileFromURL := new(FileFromURL)
+	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+		m.typ = "FileFromURL"
+		m.FileFromURL = valueFileFromURL
+		return nil
+	}
+	valueFileFromID := new(FileFromID)
+	if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+		m.typ = "FileFromID"
+		m.FileFromID = valueFileFromID
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, m)
+}
+
+func (m MultiFileRunPackageFilesItem) MarshalJSON() ([]byte, error) {
+	if m.typ == "FileFromURL" || m.FileFromURL != nil {
+		return json.Marshal(m.FileFromURL)
+	}
+	if m.typ == "FileFromID" || m.FileFromID != nil {
+		return json.Marshal(m.FileFromID)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", m)
+}
+
+type MultiFileRunPackageFilesItemVisitor interface {
+	VisitFileFromURL(*FileFromURL) error
+	VisitFileFromID(*FileFromID) error
+}
+
+func (m *MultiFileRunPackageFilesItem) Accept(visitor MultiFileRunPackageFilesItemVisitor) error {
+	if m.typ == "FileFromURL" || m.FileFromURL != nil {
+		return visitor.VisitFileFromURL(m.FileFromURL)
+	}
+	if m.typ == "FileFromID" || m.FileFromID != nil {
+		return visitor.VisitFileFromID(m.FileFromID)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", m)
 }
 
 // The token used to fetch the page of results from a previous request. We use cursor based pagination and will return a `nextPageToken` in the response if there are more results.
