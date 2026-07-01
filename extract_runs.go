@@ -40,8 +40,9 @@ var (
 	extractRunsCreateRequestFieldExtractor = big.NewInt(1 << 0)
 	extractRunsCreateRequestFieldConfig    = big.NewInt(1 << 1)
 	extractRunsCreateRequestFieldFile      = big.NewInt(1 << 2)
-	extractRunsCreateRequestFieldPriority  = big.NewInt(1 << 3)
-	extractRunsCreateRequestFieldMetadata  = big.NewInt(1 << 4)
+	extractRunsCreateRequestFieldPackage   = big.NewInt(1 << 3)
+	extractRunsCreateRequestFieldPriority  = big.NewInt(1 << 4)
+	extractRunsCreateRequestFieldMetadata  = big.NewInt(1 << 5)
 )
 
 type ExtractRunsCreateRequest struct {
@@ -49,10 +50,16 @@ type ExtractRunsCreateRequest struct {
 	Extractor *ExtractRunsCreateRequestExtractor `json:"extractor,omitempty" url:"-"`
 	// Inline extract configuration. Mutually exclusive with `extractor` — provide one or the other, or omit both to have Extend infer a schema from the document.
 	Config *ExtractConfigJSON `json:"config,omitempty" url:"-"`
-	// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
-	File     *ExtractRunsCreateRequestFile `json:"file" url:"-"`
-	Priority *RunPriority                  `json:"priority,omitempty" url:"-"`
-	Metadata *RunMetadata                  `json:"metadata,omitempty" url:"-"`
+	// The file to be extracted from. Mutually exclusive with `package` — provide one or the other.
+	//
+	// Files can be provided as a URL, Extend file ID, or raw text.
+	File *ExtractRunsCreateRequestFile `json:"file,omitempty" url:"-"`
+	// A collection of files to extract from together in a single run. Mutually exclusive with `file` — provide one or the other.
+	//
+	// See [Multifile Extraction](https://docs.extend.ai/2026-02-09/extraction/multifile) for details.
+	Package  *MultiFileRunPackage `json:"package,omitempty" url:"-"`
+	Priority *RunPriority         `json:"priority,omitempty" url:"-"`
+	Metadata *RunMetadata         `json:"metadata,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -84,6 +91,13 @@ func (e *ExtractRunsCreateRequest) SetConfig(config *ExtractConfigJSON) {
 func (e *ExtractRunsCreateRequest) SetFile(file *ExtractRunsCreateRequestFile) {
 	e.File = file
 	e.require(extractRunsCreateRequestFieldFile)
+}
+
+// SetPackage sets the Package field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractRunsCreateRequest) SetPackage(package_ *MultiFileRunPackage) {
+	e.Package = package_
+	e.require(extractRunsCreateRequestFieldPackage)
 }
 
 // SetPriority sets the Priority field and marks it as non-optional;
@@ -378,11 +392,12 @@ var (
 	extractRunSummaryFieldReviewed         = big.NewInt(1 << 7)
 	extractRunSummaryFieldEdited           = big.NewInt(1 << 8)
 	extractRunSummaryFieldFile             = big.NewInt(1 << 9)
-	extractRunSummaryFieldParseRunID       = big.NewInt(1 << 10)
-	extractRunSummaryFieldDashboardURL     = big.NewInt(1 << 11)
-	extractRunSummaryFieldUsage            = big.NewInt(1 << 12)
-	extractRunSummaryFieldCreatedAt        = big.NewInt(1 << 13)
-	extractRunSummaryFieldUpdatedAt        = big.NewInt(1 << 14)
+	extractRunSummaryFieldFiles            = big.NewInt(1 << 10)
+	extractRunSummaryFieldParseRunID       = big.NewInt(1 << 11)
+	extractRunSummaryFieldDashboardURL     = big.NewInt(1 << 12)
+	extractRunSummaryFieldUsage            = big.NewInt(1 << 13)
+	extractRunSummaryFieldCreatedAt        = big.NewInt(1 << 14)
+	extractRunSummaryFieldUpdatedAt        = big.NewInt(1 << 15)
 )
 
 type ExtractRunSummary struct {
@@ -427,8 +442,12 @@ type ExtractRunSummary struct {
 	Reviewed bool `json:"reviewed" url:"reviewed"`
 	// Indicates whether the run results have been edited during review.
 	Edited bool `json:"edited" url:"edited"`
-	// The file that was processed. `null` when the file could not be accessed or processed (for example a run that failed during file ingestion, or a multi-file batch run).
+	// The file that was processed. `null` for multifile runs (use `files` instead), and `null` when the file could not be accessed or processed (for example, a run that failed during file ingestion).
 	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
+	// The files that were processed, in the order they were submitted. Only populated for multifile runs (created with `package`).
+	//
+	// For single-file runs, this is `null` — use `file` instead.
+	Files []*FileSummary `json:"files,omitempty" url:"files,omitempty"`
 	// The ID of the parse run that was used for this extract run.
 	//
 	// **Availability:** Present when a parse run was created.
@@ -518,6 +537,13 @@ func (e *ExtractRunSummary) GetFile() *FileSummary {
 		return nil
 	}
 	return e.File
+}
+
+func (e *ExtractRunSummary) GetFiles() []*FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Files
 }
 
 func (e *ExtractRunSummary) GetParseRunID() *string {
@@ -641,6 +667,13 @@ func (e *ExtractRunSummary) SetEdited(edited bool) {
 func (e *ExtractRunSummary) SetFile(file *FileSummary) {
 	e.File = file
 	e.require(extractRunSummaryFieldFile)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractRunSummary) SetFiles(files []*FileSummary) {
+	e.Files = files
+	e.require(extractRunSummaryFieldFiles)
 }
 
 // SetParseRunID sets the ParseRunID field and marks it as non-optional;
@@ -1162,7 +1195,9 @@ func (e *ExtractRunsCreateRequestExtractor) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The file to be extracted from. Files can be provided as a URL, Extend file ID, or raw text.
+// The file to be extracted from. Mutually exclusive with `package` — provide one or the other.
+//
+// Files can be provided as a URL, Extend file ID, or raw text.
 type ExtractRunsCreateRequestFile struct {
 	FileFromURL  *FileFromURL
 	FileFromID   *FileFromID
