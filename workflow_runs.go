@@ -5195,9 +5195,10 @@ var (
 	workflowRunSummaryFieldEndTime         = big.NewInt(1 << 9)
 	workflowRunSummaryFieldBatchID         = big.NewInt(1 << 10)
 	workflowRunSummaryFieldRejectionNote   = big.NewInt(1 << 11)
-	workflowRunSummaryFieldCreatedAt       = big.NewInt(1 << 12)
-	workflowRunSummaryFieldUpdatedAt       = big.NewInt(1 << 13)
-	workflowRunSummaryFieldUsage           = big.NewInt(1 << 14)
+	workflowRunSummaryFieldFiles           = big.NewInt(1 << 12)
+	workflowRunSummaryFieldCreatedAt       = big.NewInt(1 << 13)
+	workflowRunSummaryFieldUpdatedAt       = big.NewInt(1 << 14)
+	workflowRunSummaryFieldUsage           = big.NewInt(1 << 15)
 )
 
 type WorkflowRunSummary struct {
@@ -5239,9 +5240,11 @@ type WorkflowRunSummary struct {
 	// The note that was added when the workflow run was rejected.
 	//
 	// Example: `"Invalid invoice format"`
-	RejectionNote *string   `json:"rejectionNote,omitempty" url:"rejectionNote,omitempty"`
-	CreatedAt     CreatedAt `json:"createdAt" url:"createdAt"`
-	UpdatedAt     UpdatedAt `json:"updatedAt" url:"updatedAt"`
+	RejectionNote *string `json:"rejectionNote,omitempty" url:"rejectionNote,omitempty"`
+	// The input files that this workflow run was executed on. Provided directly on the list response so you don't need to fetch each run individually to inspect its input.
+	Files     []*FileSummary `json:"files" url:"files"`
+	CreatedAt CreatedAt      `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt      `json:"updatedAt" url:"updatedAt"`
 	// Usage credits consumed by this workflow run. Omits `breakdown` — fetch the full workflow run by id to see the per-line items for every contributing child run.
 	//
 	// **Availability:** Will not be returned for runs created before October 7, 2025 or for customers on legacy billing systems.
@@ -5337,6 +5340,13 @@ func (w *WorkflowRunSummary) GetRejectionNote() *string {
 		return nil
 	}
 	return w.RejectionNote
+}
+
+func (w *WorkflowRunSummary) GetFiles() []*FileSummary {
+	if w == nil {
+		return nil
+	}
+	return w.Files
 }
 
 func (w *WorkflowRunSummary) GetCreatedAt() CreatedAt {
@@ -5460,6 +5470,13 @@ func (w *WorkflowRunSummary) SetBatchID(batchID *string) {
 func (w *WorkflowRunSummary) SetRejectionNote(rejectionNote *string) {
 	w.RejectionNote = rejectionNote
 	w.require(workflowRunSummaryFieldRejectionNote)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowRunSummary) SetFiles(files []*FileSummary) {
+	w.Files = files
+	w.require(workflowRunSummaryFieldFiles)
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;

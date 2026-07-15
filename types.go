@@ -87,6 +87,62 @@ func (c *ClassifyRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
+	detectFormRequestFieldFile   = big.NewInt(1 << 0)
+	detectFormRequestFieldConfig = big.NewInt(1 << 1)
+)
+
+type DetectFormRequest struct {
+	// The PDF form to analyze. Files can be provided as a URL or an Extend file ID.
+	File   *DetectFormRequestFile      `json:"file" url:"-"`
+	Config *EditSchemaGenerationConfig `json:"config,omitempty" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (d *DetectFormRequest) require(field *big.Int) {
+	if d.explicitFields == nil {
+		d.explicitFields = big.NewInt(0)
+	}
+	d.explicitFields.Or(d.explicitFields, field)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DetectFormRequest) SetFile(file *DetectFormRequestFile) {
+	d.File = file
+	d.require(detectFormRequestFieldFile)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DetectFormRequest) SetConfig(config *EditSchemaGenerationConfig) {
+	d.Config = config
+	d.require(detectFormRequestFieldConfig)
+}
+
+func (d *DetectFormRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler DetectFormRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*d = DetectFormRequest(body)
+	return nil
+}
+
+func (d *DetectFormRequest) MarshalJSON() ([]byte, error) {
+	type embed DetectFormRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*d),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, d.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+var (
 	editRequestFieldFile   = big.NewInt(1 << 0)
 	editRequestFieldConfig = big.NewInt(1 << 1)
 )
@@ -238,6 +294,7 @@ var (
 	parseRequestFieldFile              = big.NewInt(1 << 2)
 	parseRequestFieldConfig            = big.NewInt(1 << 3)
 	parseRequestFieldMetadata          = big.NewInt(1 << 4)
+	parseRequestFieldDataRetention     = big.NewInt(1 << 5)
 )
 
 type ParseRequest struct {
@@ -248,9 +305,10 @@ type ParseRequest struct {
 	// * `url` - Return a presigned URL to the parsed content in the response body
 	ResponseType *ParseRequestResponseType `json:"-" url:"responseType,omitempty"`
 	// The file to be parsed. Files can be provided as a URL or an Extend file ID.
-	File     *ParseRequestFile `json:"file" url:"-"`
-	Config   *ParseConfig      `json:"config,omitempty" url:"-"`
-	Metadata *RunMetadata      `json:"metadata,omitempty" url:"-"`
+	File          *ParseRequestFile `json:"file" url:"-"`
+	Config        *ParseConfig      `json:"config,omitempty" url:"-"`
+	Metadata      *RunMetadata      `json:"metadata,omitempty" url:"-"`
+	DataRetention *DataRetention    `json:"dataRetention,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -296,6 +354,13 @@ func (p *ParseRequest) SetConfig(config *ParseConfig) {
 func (p *ParseRequest) SetMetadata(metadata *RunMetadata) {
 	p.Metadata = metadata
 	p.require(parseRequestFieldMetadata)
+}
+
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRequest) SetDataRetention(dataRetention *DataRetention) {
+	p.DataRetention = dataRetention
+	p.require(parseRequestFieldDataRetention)
 }
 
 func (p *ParseRequest) UnmarshalJSON(data []byte) error {
@@ -403,6 +468,7 @@ var (
 	aPIErrorFieldMessage   = big.NewInt(1 << 1)
 	aPIErrorFieldRetryable = big.NewInt(1 << 2)
 	aPIErrorFieldRequestID = big.NewInt(1 << 3)
+	aPIErrorFieldDocURL    = big.NewInt(1 << 4)
 )
 
 type APIError struct {
@@ -417,6 +483,8 @@ type APIError struct {
 	// Unique request identifier for support purposes. Always include this
 	// when contacting Extend support about an error.
 	RequestID *string `json:"requestId,omitempty" url:"requestId,omitempty"`
+	// Link to relevant documentation when one is available.
+	DocURL *string `json:"docUrl,omitempty" url:"docUrl,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -451,6 +519,13 @@ func (a *APIError) GetRequestID() *string {
 		return nil
 	}
 	return a.RequestID
+}
+
+func (a *APIError) GetDocURL() *string {
+	if a == nil {
+		return nil
+	}
+	return a.DocURL
 }
 
 func (a *APIError) GetExtraProperties() map[string]interface{} {
@@ -493,6 +568,13 @@ func (a *APIError) SetRetryable(retryable bool) {
 func (a *APIError) SetRequestID(requestID *string) {
 	a.RequestID = requestID
 	a.require(aPIErrorFieldRequestID)
+}
+
+// SetDocURL sets the DocURL field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIError) SetDocURL(docURL *string) {
+	a.DocURL = docURL
+	a.require(aPIErrorFieldDocURL)
 }
 
 func (a *APIError) UnmarshalJSON(data []byte) error {
@@ -549,7 +631,7 @@ type ArrayStrategy struct {
 	//
 	// - `large_array_max_context`: Optimizes for accuracy over latency in documents with very large arrays.
 	//
-	//	This strategy will do multiple passes through the entire document to ensure there is no context loss across any chunks/pages, maximizing accuracy for complex array extraction, but adding material latency.
+	//	This strategy will do multiple passes through the entire document to ensure there is no context loss across any chunks/pages, maximizing accuracy for complex array extraction, but adding material latency. This strategy incurs additional extraction credits when enabled.
 	//
 	// - `large_array_overlap_context`: Balances accuracy and latency in documents with very large arrays.
 	//
@@ -640,7 +722,7 @@ func (a *ArrayStrategy) String() string {
 //
 // - `large_array_max_context`: Optimizes for accuracy over latency in documents with very large arrays.
 //
-//	This strategy will do multiple passes through the entire document to ensure there is no context loss across any chunks/pages, maximizing accuracy for complex array extraction, but adding material latency.
+//	This strategy will do multiple passes through the entire document to ensure there is no context loss across any chunks/pages, maximizing accuracy for complex array extraction, but adding material latency. This strategy incurs additional extraction credits when enabled.
 //
 // - `large_array_overlap_context`: Balances accuracy and latency in documents with very large arrays.
 //
@@ -1658,6 +1740,7 @@ func (b *Block) String() string {
 
 // Additional details specific to the block type. The schema depends on the block type.
 type BlockDetails struct {
+	TextDetails       *TextDetails
 	TableDetails      *TableDetails
 	TableCellDetails  *TableCellDetails
 	FigureDetails     *FigureDetails
@@ -1667,6 +1750,13 @@ type BlockDetails struct {
 	EmptyBlockDetails EmptyBlockDetails
 
 	typ string
+}
+
+func (b *BlockDetails) GetTextDetails() *TextDetails {
+	if b == nil {
+		return nil
+	}
+	return b.TextDetails
 }
 
 func (b *BlockDetails) GetTableDetails() *TableDetails {
@@ -1719,6 +1809,12 @@ func (b *BlockDetails) GetEmptyBlockDetails() EmptyBlockDetails {
 }
 
 func (b *BlockDetails) UnmarshalJSON(data []byte) error {
+	valueTextDetails := new(TextDetails)
+	if err := json.Unmarshal(data, &valueTextDetails); err == nil {
+		b.typ = "TextDetails"
+		b.TextDetails = valueTextDetails
+		return nil
+	}
 	valueTableDetails := new(TableDetails)
 	if err := json.Unmarshal(data, &valueTableDetails); err == nil {
 		b.typ = "TableDetails"
@@ -1765,6 +1861,9 @@ func (b *BlockDetails) UnmarshalJSON(data []byte) error {
 }
 
 func (b BlockDetails) MarshalJSON() ([]byte, error) {
+	if b.typ == "TextDetails" || b.TextDetails != nil {
+		return json.Marshal(b.TextDetails)
+	}
 	if b.typ == "TableDetails" || b.TableDetails != nil {
 		return json.Marshal(b.TableDetails)
 	}
@@ -1790,6 +1889,7 @@ func (b BlockDetails) MarshalJSON() ([]byte, error) {
 }
 
 type BlockDetailsVisitor interface {
+	VisitTextDetails(*TextDetails) error
 	VisitTableDetails(*TableDetails) error
 	VisitTableCellDetails(*TableCellDetails) error
 	VisitFigureDetails(*FigureDetails) error
@@ -1800,6 +1900,9 @@ type BlockDetailsVisitor interface {
 }
 
 func (b *BlockDetails) Accept(visitor BlockDetailsVisitor) error {
+	if b.typ == "TextDetails" || b.TextDetails != nil {
+		return visitor.VisitTextDetails(b.TextDetails)
+	}
 	if b.typ == "TableDetails" || b.TableDetails != nil {
 		return visitor.VisitTableDetails(b.TableDetails)
 	}
@@ -2530,6 +2633,143 @@ func (b *BoundingBox) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
+// Structured formatting for an Excel table cell
+var (
+	cellFormattingFieldBold            = big.NewInt(1 << 0)
+	cellFormattingFieldItalic          = big.NewInt(1 << 1)
+	cellFormattingFieldFontColor       = big.NewInt(1 << 2)
+	cellFormattingFieldBackgroundColor = big.NewInt(1 << 3)
+)
+
+type CellFormatting struct {
+	// Whether the cell text is bold.
+	Bold *bool `json:"bold,omitempty" url:"bold,omitempty"`
+	// Whether the cell text is italic.
+	Italic *bool `json:"italic,omitempty" url:"italic,omitempty"`
+	// Cell font color as a hex string.
+	FontColor *string `json:"fontColor,omitempty" url:"fontColor,omitempty"`
+	// Cell background color as a hex string.
+	BackgroundColor *string `json:"backgroundColor,omitempty" url:"backgroundColor,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CellFormatting) GetBold() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.Bold
+}
+
+func (c *CellFormatting) GetItalic() *bool {
+	if c == nil {
+		return nil
+	}
+	return c.Italic
+}
+
+func (c *CellFormatting) GetFontColor() *string {
+	if c == nil {
+		return nil
+	}
+	return c.FontColor
+}
+
+func (c *CellFormatting) GetBackgroundColor() *string {
+	if c == nil {
+		return nil
+	}
+	return c.BackgroundColor
+}
+
+func (c *CellFormatting) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *CellFormatting) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetBold sets the Bold field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CellFormatting) SetBold(bold *bool) {
+	c.Bold = bold
+	c.require(cellFormattingFieldBold)
+}
+
+// SetItalic sets the Italic field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CellFormatting) SetItalic(italic *bool) {
+	c.Italic = italic
+	c.require(cellFormattingFieldItalic)
+}
+
+// SetFontColor sets the FontColor field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CellFormatting) SetFontColor(fontColor *string) {
+	c.FontColor = fontColor
+	c.require(cellFormattingFieldFontColor)
+}
+
+// SetBackgroundColor sets the BackgroundColor field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CellFormatting) SetBackgroundColor(backgroundColor *string) {
+	c.BackgroundColor = backgroundColor
+	c.require(cellFormattingFieldBackgroundColor)
+}
+
+func (c *CellFormatting) UnmarshalJSON(data []byte) error {
+	type unmarshaler CellFormatting
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CellFormatting(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CellFormatting) MarshalJSON() ([]byte, error) {
+	type embed CellFormatting
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *CellFormatting) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 var (
 	chunkFieldType     = big.NewInt(1 << 0)
 	chunkFieldContent  = big.NewInt(1 << 1)
@@ -2932,13 +3172,16 @@ func (c ChunkType) Ptr() *ChunkType {
 }
 
 var (
-	citationFieldPage          = big.NewInt(1 << 0)
-	citationFieldReferenceText = big.NewInt(1 << 1)
-	citationFieldPolygon       = big.NewInt(1 << 2)
+	citationFieldFileID        = big.NewInt(1 << 0)
+	citationFieldPage          = big.NewInt(1 << 1)
+	citationFieldReferenceText = big.NewInt(1 << 2)
+	citationFieldPolygon       = big.NewInt(1 << 3)
 )
 
 type Citation struct {
-	Page *CitationPage `json:"page,omitempty" url:"page,omitempty"`
+	// ID of the file the cited content was found in. On multifile runs, join this against the run's `files` array to determine which input file the citation refers to; on single-file runs it equals the run's `file.id`.
+	FileID *string       `json:"fileId,omitempty" url:"fileId,omitempty"`
+	Page   *CitationPage `json:"page,omitempty" url:"page,omitempty"`
 	// The text that was referenced
 	ReferenceText *string `json:"referenceText,omitempty" url:"referenceText,omitempty"`
 	// Array of points defining the polygon around the referenced text
@@ -2949,6 +3192,13 @@ type Citation struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (c *Citation) GetFileID() *string {
+	if c == nil {
+		return nil
+	}
+	return c.FileID
 }
 
 func (c *Citation) GetPage() *CitationPage {
@@ -2984,6 +3234,13 @@ func (c *Citation) require(field *big.Int) {
 		c.explicitFields = big.NewInt(0)
 	}
 	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetFileID sets the FileID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *Citation) SetFileID(fileID *string) {
+	c.FileID = fileID
+	c.require(citationFieldFileID)
 }
 
 // SetPage sets the Page field and marks it as non-optional;
@@ -6052,7 +6309,10 @@ func (c *ClassifyRunProcessedWebhookEvent) String() string {
 
 // Classifies documents using a classifier. Routes to different next steps based on classification result.
 //
-// The classifier reference must include a pinned `version` — `"latest"` is not supported for `CLASSIFY` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
+// The step's classifier can be specified in one of two ways:
+//
+// - **Saved reference** (`classifier`): references a saved classifier by ID. The reference must include a pinned `version` — `"latest"` is not supported for `CLASSIFY` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
+// - **Inline config** (`classifierConfig`): embeds the full classifier configuration directly in the step. No saved classifier is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces. Routing (`next[].classificationId`) validates against the inline `classifications` array.
 //
 // See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 var (
@@ -6065,13 +6325,13 @@ type ClassifyStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 	//
-	// Reference to the classifier used by this step. The `next[].classificationId` values must match classification `id` values (not `type` strings) from the referenced classifier's configuration. For example, if the classifier defines `{ "id": "cls_invoice", "type": "invoice" }`, use `"cls_invoice"` as the `classificationId`.
+	// When present, must contain exactly one of `classifier` (saved processor reference) or `classifierConfig` (inline configuration) — not both.
 	//
-	// The classifier `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+	// The `next[].classificationId` values must match classification `id` values (not `type` strings) from the classifier's configuration — the referenced version's config for a saved reference, or the inline `classifications` array for an inline config. For example, if the classifier defines `{ "id": "cls_invoice", "type": "invoice" }`, use `"cls_invoice"` as the `classificationId`.
 	//
 	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 	Config *ClassifyStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
-	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a classification `id` from the referenced classifier's configuration. Use the classification's stable `id` (e.g. `"cls_invoice"`), not the `type` string.
+	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a classification `id` from the classifier's configuration (saved or inline). Use the classification's stable `id` (e.g. `"cls_invoice"`), not the `type` string.
 	//
 	// See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 	Next []*ClassificationNextEntry `json:"next,omitempty" url:"next,omitempty"`
@@ -6183,17 +6443,25 @@ func (c *ClassifyStepDefinition) String() string {
 
 // Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 //
-// Reference to the classifier used by this step. The `next[].classificationId` values must match classification `id` values (not `type` strings) from the referenced classifier's configuration. For example, if the classifier defines `{ "id": "cls_invoice", "type": "invoice" }`, use `"cls_invoice"` as the `classificationId`.
+// When present, must contain exactly one of `classifier` (saved processor reference) or `classifierConfig` (inline configuration) — not both.
 //
-// The classifier `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+// The `next[].classificationId` values must match classification `id` values (not `type` strings) from the classifier's configuration — the referenced version's config for a saved reference, or the inline `classifications` array for an inline config. For example, if the classifier defines `{ "id": "cls_invoice", "type": "invoice" }`, use `"cls_invoice"` as the `classificationId`.
 //
 // See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
 var (
-	classifyStepDefinitionConfigFieldClassifier = big.NewInt(1 << 0)
+	classifyStepDefinitionConfigFieldClassifier       = big.NewInt(1 << 0)
+	classifyStepDefinitionConfigFieldClassifierConfig = big.NewInt(1 << 1)
 )
 
 type ClassifyStepDefinitionConfig struct {
-	Classifier *ClassifierRef `json:"classifier" url:"classifier"`
+	// Reference to a saved classifier. Provide either this or `classifierConfig`, not both.
+	//
+	// The `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+	Classifier *ClassifierRef `json:"classifier,omitempty" url:"classifier,omitempty"`
+	// Inline classifier configuration. Provide either this or `classifier`, not both. Same shape as the `config` accepted by [Create Classify Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/classify/create-classify-run).
+	//
+	// Inline configs are returned verbatim in responses (there is no saved processor, so no `version` is involved).
+	ClassifierConfig *ClassifyConfig `json:"classifierConfig,omitempty" url:"classifierConfig,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -6207,6 +6475,13 @@ func (c *ClassifyStepDefinitionConfig) GetClassifier() *ClassifierRef {
 		return nil
 	}
 	return c.Classifier
+}
+
+func (c *ClassifyStepDefinitionConfig) GetClassifierConfig() *ClassifyConfig {
+	if c == nil {
+		return nil
+	}
+	return c.ClassifierConfig
 }
 
 func (c *ClassifyStepDefinitionConfig) GetExtraProperties() map[string]interface{} {
@@ -6228,6 +6503,13 @@ func (c *ClassifyStepDefinitionConfig) require(field *big.Int) {
 func (c *ClassifyStepDefinitionConfig) SetClassifier(classifier *ClassifierRef) {
 	c.Classifier = classifier
 	c.require(classifyStepDefinitionConfigFieldClassifier)
+}
+
+// SetClassifierConfig sets the ClassifierConfig field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyStepDefinitionConfig) SetClassifierConfig(classifierConfig *ClassifyConfig) {
+	c.ClassifierConfig = classifierConfig
+	c.require(classifyStepDefinitionConfigFieldClassifierConfig)
 }
 
 func (c *ClassifyStepDefinitionConfig) UnmarshalJSON(data []byte) error {
@@ -6377,7 +6659,7 @@ func (c *CollectStepDefinition) String() string {
 
 // Runs extractors based on formula conditions.
 //
-// Each extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`).
+// Each extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`). Rules only support saved extractor references — inline configs are not supported in `CONDITIONAL_EXTRACT` rules.
 //
 // See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract).
 var (
@@ -7243,6 +7525,184 @@ func (c ConditionalStepDefinitionConfigConditionsItemType) Ptr() *ConditionalSte
 //
 // Example: `"2024-03-21T16:45:00Z"`
 type CreatedAt = time.Time
+
+// Controls data retention for this run. When omitted or set to `workspace_default`, Extend uses your workspace's configured retention policy. Set `mode` to `zero` to request zero data retention for the run, which deletes supported run data after processing instead of retaining it under the workspace policy.
+//
+// Zero data retention is only available for eligible organizations and plans. If your organization is not eligible, the request will fail with a 400 error.
+var (
+	dataRetentionFieldMode = big.NewInt(1 << 0)
+)
+
+type DataRetention struct {
+	// The retention mode for this run:
+	// * `workspace_default` - Use the workspace's configured retention policy.
+	// * `zero` - Do not retain supported run data after processing.
+	Mode *DataRetentionMode `json:"mode,omitempty" url:"mode,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DataRetention) GetMode() *DataRetentionMode {
+	if d == nil {
+		return nil
+	}
+	return d.Mode
+}
+
+func (d *DataRetention) GetExtraProperties() map[string]interface{} {
+	if d == nil {
+		return nil
+	}
+	return d.extraProperties
+}
+
+func (d *DataRetention) require(field *big.Int) {
+	if d.explicitFields == nil {
+		d.explicitFields = big.NewInt(0)
+	}
+	d.explicitFields.Or(d.explicitFields, field)
+}
+
+// SetMode sets the Mode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DataRetention) SetMode(mode *DataRetentionMode) {
+	d.Mode = mode
+	d.require(dataRetentionFieldMode)
+}
+
+func (d *DataRetention) UnmarshalJSON(data []byte) error {
+	type unmarshaler DataRetention
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DataRetention(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DataRetention) MarshalJSON() ([]byte, error) {
+	type embed DataRetention
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*d),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, d.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (d *DataRetention) String() string {
+	if d == nil {
+		return "<nil>"
+	}
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
+// The retention mode for this run:
+// * `workspace_default` - Use the workspace's configured retention policy.
+// * `zero` - Do not retain supported run data after processing.
+type DataRetentionMode string
+
+const (
+	DataRetentionModeWorkspaceDefault DataRetentionMode = "workspace_default"
+	DataRetentionModeZero             DataRetentionMode = "zero"
+)
+
+func NewDataRetentionModeFromString(s string) (DataRetentionMode, error) {
+	switch s {
+	case "workspace_default":
+		return DataRetentionModeWorkspaceDefault, nil
+	case "zero":
+		return DataRetentionModeZero, nil
+	}
+	var t DataRetentionMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (d DataRetentionMode) Ptr() *DataRetentionMode {
+	return &d
+}
+
+// The PDF form to analyze. Files can be provided as a URL or an Extend file ID.
+type DetectFormRequestFile struct {
+	FileFromURL *FileFromURL
+	FileFromID  *FileFromID
+
+	typ string
+}
+
+func (d *DetectFormRequestFile) GetFileFromURL() *FileFromURL {
+	if d == nil {
+		return nil
+	}
+	return d.FileFromURL
+}
+
+func (d *DetectFormRequestFile) GetFileFromID() *FileFromID {
+	if d == nil {
+		return nil
+	}
+	return d.FileFromID
+}
+
+func (d *DetectFormRequestFile) UnmarshalJSON(data []byte) error {
+	valueFileFromURL := new(FileFromURL)
+	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+		d.typ = "FileFromURL"
+		d.FileFromURL = valueFileFromURL
+		return nil
+	}
+	valueFileFromID := new(FileFromID)
+	if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+		d.typ = "FileFromID"
+		d.FileFromID = valueFileFromID
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, d)
+}
+
+func (d DetectFormRequestFile) MarshalJSON() ([]byte, error) {
+	if d.typ == "FileFromURL" || d.FileFromURL != nil {
+		return json.Marshal(d.FileFromURL)
+	}
+	if d.typ == "FileFromID" || d.FileFromID != nil {
+		return json.Marshal(d.FileFromID)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", d)
+}
+
+type DetectFormRequestFileVisitor interface {
+	VisitFileFromURL(*FileFromURL) error
+	VisitFileFromID(*FileFromID) error
+}
+
+func (d *DetectFormRequestFile) Accept(visitor DetectFormRequestFileVisitor) error {
+	if d.typ == "FileFromURL" || d.FileFromURL != nil {
+		return visitor.VisitFileFromURL(d.FileFromURL)
+	}
+	if d.typ == "FileFromID" || d.FileFromID != nil {
+		return visitor.VisitFileFromID(d.FileFromID)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", d)
+}
 
 // Bounding box coordinates for the field location in the PDF (pixel coordinates)
 var (
@@ -8313,10 +8773,11 @@ func (e *EditConfig) String() string {
 
 // Advanced options for the edit operation.
 var (
-	editConfigAdvancedOptionsFieldTableParsingEnabled = big.NewInt(1 << 0)
-	editConfigAdvancedOptionsFieldFlattenPdf          = big.NewInt(1 << 1)
-	editConfigAdvancedOptionsFieldRadioEnumsEnabled   = big.NewInt(1 << 2)
-	editConfigAdvancedOptionsFieldNativeFieldsOnly    = big.NewInt(1 << 3)
+	editConfigAdvancedOptionsFieldTableParsingEnabled          = big.NewInt(1 << 0)
+	editConfigAdvancedOptionsFieldFlattenPdf                   = big.NewInt(1 << 1)
+	editConfigAdvancedOptionsFieldRadioEnumsEnabled            = big.NewInt(1 << 2)
+	editConfigAdvancedOptionsFieldNativeFieldsOnly             = big.NewInt(1 << 3)
+	editConfigAdvancedOptionsFieldConditionalGenerationEnabled = big.NewInt(1 << 4)
 )
 
 type EditConfigAdvancedOptions struct {
@@ -8328,6 +8789,8 @@ type EditConfigAdvancedOptions struct {
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm from the PDF will be imported and used in the schema (skips object detection). Defaults to false.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
+	// When enabled and no `config.schema` is supplied, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Has no effect when a schema is supplied. Defaults to `false`.
+	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -8362,6 +8825,13 @@ func (e *EditConfigAdvancedOptions) GetNativeFieldsOnly() *bool {
 		return nil
 	}
 	return e.NativeFieldsOnly
+}
+
+func (e *EditConfigAdvancedOptions) GetConditionalGenerationEnabled() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.ConditionalGenerationEnabled
 }
 
 func (e *EditConfigAdvancedOptions) GetExtraProperties() map[string]interface{} {
@@ -8404,6 +8874,13 @@ func (e *EditConfigAdvancedOptions) SetRadioEnumsEnabled(radioEnumsEnabled *bool
 func (e *EditConfigAdvancedOptions) SetNativeFieldsOnly(nativeFieldsOnly *bool) {
 	e.NativeFieldsOnly = nativeFieldsOnly
 	e.require(editConfigAdvancedOptionsFieldNativeFieldsOnly)
+}
+
+// SetConditionalGenerationEnabled sets the ConditionalGenerationEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditConfigAdvancedOptions) SetConditionalGenerationEnabled(conditionalGenerationEnabled *bool) {
+	e.ConditionalGenerationEnabled = conditionalGenerationEnabled
+	e.require(editConfigAdvancedOptionsFieldConditionalGenerationEnabled)
 }
 
 func (e *EditConfigAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -9491,6 +9968,7 @@ type EditRun struct {
 	// * `INVALID_OPTIONS` - The provided configuration options are invalid
 	// * `EMPTY_SCHEMA` - No schema was provided and no fields could be detected
 	// * `OUT_OF_CREDITS` - Insufficient credits to process the file
+	// * `SCHEMA_VALIDATION_ERROR` - The generated output value failed validation against the edit schema
 	//
 	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
 	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
@@ -10487,9 +10965,10 @@ func (e *EditSchemaGenerationConfig) String() string {
 
 // Advanced options for schema generation.
 var (
-	editSchemaGenerationConfigAdvancedOptionsFieldTableParsingEnabled = big.NewInt(1 << 0)
-	editSchemaGenerationConfigAdvancedOptionsFieldRadioEnumsEnabled   = big.NewInt(1 << 1)
-	editSchemaGenerationConfigAdvancedOptionsFieldNativeFieldsOnly    = big.NewInt(1 << 2)
+	editSchemaGenerationConfigAdvancedOptionsFieldTableParsingEnabled          = big.NewInt(1 << 0)
+	editSchemaGenerationConfigAdvancedOptionsFieldRadioEnumsEnabled            = big.NewInt(1 << 1)
+	editSchemaGenerationConfigAdvancedOptionsFieldNativeFieldsOnly             = big.NewInt(1 << 2)
+	editSchemaGenerationConfigAdvancedOptionsFieldConditionalGenerationEnabled = big.NewInt(1 << 3)
 )
 
 type EditSchemaGenerationConfigAdvancedOptions struct {
@@ -10499,6 +10978,8 @@ type EditSchemaGenerationConfigAdvancedOptions struct {
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm fields from the PDF will be imported and used in the schema, skipping object detection. Defaults to `false`.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
+	// When enabled, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. These rules validate form data when the schema is used for an edit; they do not add interactive UI behavior. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Defaults to `false`.
+	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -10526,6 +11007,13 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) GetNativeFieldsOnly() *bool 
 		return nil
 	}
 	return e.NativeFieldsOnly
+}
+
+func (e *EditSchemaGenerationConfigAdvancedOptions) GetConditionalGenerationEnabled() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.ConditionalGenerationEnabled
 }
 
 func (e *EditSchemaGenerationConfigAdvancedOptions) GetExtraProperties() map[string]interface{} {
@@ -10561,6 +11049,13 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) SetRadioEnumsEnabled(radioEn
 func (e *EditSchemaGenerationConfigAdvancedOptions) SetNativeFieldsOnly(nativeFieldsOnly *bool) {
 	e.NativeFieldsOnly = nativeFieldsOnly
 	e.require(editSchemaGenerationConfigAdvancedOptionsFieldNativeFieldsOnly)
+}
+
+// SetConditionalGenerationEnabled sets the ConditionalGenerationEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationConfigAdvancedOptions) SetConditionalGenerationEnabled(conditionalGenerationEnabled *bool) {
+	e.ConditionalGenerationEnabled = conditionalGenerationEnabled
+	e.require(editSchemaGenerationConfigAdvancedOptionsFieldConditionalGenerationEnabled)
 }
 
 func (e *EditSchemaGenerationConfigAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -10605,6 +11100,349 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// A successful mapping between an input schema path and a detected form field.
+var (
+	editSchemaGenerationMappingMatchFieldInputPath    = big.NewInt(1 << 0)
+	editSchemaGenerationMappingMatchFieldFormFieldKey = big.NewInt(1 << 1)
+)
+
+type EditSchemaGenerationMappingMatch struct {
+	// The path from the provided `inputSchema`.
+	InputPath string `json:"inputPath" url:"inputPath"`
+	// The detected form field key matched to the input path.
+	FormFieldKey string `json:"formFieldKey" url:"formFieldKey"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditSchemaGenerationMappingMatch) GetInputPath() string {
+	if e == nil {
+		return ""
+	}
+	return e.InputPath
+}
+
+func (e *EditSchemaGenerationMappingMatch) GetFormFieldKey() string {
+	if e == nil {
+		return ""
+	}
+	return e.FormFieldKey
+}
+
+func (e *EditSchemaGenerationMappingMatch) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditSchemaGenerationMappingMatch) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetInputPath sets the InputPath field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationMappingMatch) SetInputPath(inputPath string) {
+	e.InputPath = inputPath
+	e.require(editSchemaGenerationMappingMatchFieldInputPath)
+}
+
+// SetFormFieldKey sets the FormFieldKey field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationMappingMatch) SetFormFieldKey(formFieldKey string) {
+	e.FormFieldKey = formFieldKey
+	e.require(editSchemaGenerationMappingMatchFieldFormFieldKey)
+}
+
+func (e *EditSchemaGenerationMappingMatch) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditSchemaGenerationMappingMatch
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditSchemaGenerationMappingMatch(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditSchemaGenerationMappingMatch) MarshalJSON() ([]byte, error) {
+	type embed EditSchemaGenerationMappingMatch
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditSchemaGenerationMappingMatch) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Mapping information between an input schema and the detected form fields.
+var (
+	editSchemaGenerationMappingResultFieldMatches             = big.NewInt(1 << 0)
+	editSchemaGenerationMappingResultFieldUnmatchedInputPaths = big.NewInt(1 << 1)
+	editSchemaGenerationMappingResultFieldUnusedFormFieldKeys = big.NewInt(1 << 2)
+)
+
+type EditSchemaGenerationMappingResult struct {
+	// Fields from the input schema that were successfully mapped to detected form fields.
+	Matches []*EditSchemaGenerationMappingMatch `json:"matches" url:"matches"`
+	// Input schema field paths that could not be matched to the form.
+	UnmatchedInputPaths []string `json:"unmatchedInputPaths" url:"unmatchedInputPaths"`
+	// Detected form field keys that were not used by the input schema mapping.
+	UnusedFormFieldKeys []string `json:"unusedFormFieldKeys" url:"unusedFormFieldKeys"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditSchemaGenerationMappingResult) GetMatches() []*EditSchemaGenerationMappingMatch {
+	if e == nil {
+		return nil
+	}
+	return e.Matches
+}
+
+func (e *EditSchemaGenerationMappingResult) GetUnmatchedInputPaths() []string {
+	if e == nil {
+		return nil
+	}
+	return e.UnmatchedInputPaths
+}
+
+func (e *EditSchemaGenerationMappingResult) GetUnusedFormFieldKeys() []string {
+	if e == nil {
+		return nil
+	}
+	return e.UnusedFormFieldKeys
+}
+
+func (e *EditSchemaGenerationMappingResult) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditSchemaGenerationMappingResult) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetMatches sets the Matches field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationMappingResult) SetMatches(matches []*EditSchemaGenerationMappingMatch) {
+	e.Matches = matches
+	e.require(editSchemaGenerationMappingResultFieldMatches)
+}
+
+// SetUnmatchedInputPaths sets the UnmatchedInputPaths field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationMappingResult) SetUnmatchedInputPaths(unmatchedInputPaths []string) {
+	e.UnmatchedInputPaths = unmatchedInputPaths
+	e.require(editSchemaGenerationMappingResultFieldUnmatchedInputPaths)
+}
+
+// SetUnusedFormFieldKeys sets the UnusedFormFieldKeys field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationMappingResult) SetUnusedFormFieldKeys(unusedFormFieldKeys []string) {
+	e.UnusedFormFieldKeys = unusedFormFieldKeys
+	e.require(editSchemaGenerationMappingResultFieldUnusedFormFieldKeys)
+}
+
+func (e *EditSchemaGenerationMappingResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditSchemaGenerationMappingResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditSchemaGenerationMappingResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditSchemaGenerationMappingResult) MarshalJSON() ([]byte, error) {
+	type embed EditSchemaGenerationMappingResult
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditSchemaGenerationMappingResult) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// The generated schema and optional mapping metadata.
+var (
+	editSchemaGenerationResponseFieldSchema          = big.NewInt(1 << 0)
+	editSchemaGenerationResponseFieldAnnotatedSchema = big.NewInt(1 << 1)
+	editSchemaGenerationResponseFieldMappingResult   = big.NewInt(1 << 2)
+)
+
+type EditSchemaGenerationResponse struct {
+	// The final generated schema after mapping. If no input schema was provided this will be the same as the annotatedSchema.
+	Schema *EditRootJSON `json:"schema" url:"schema"`
+	// The original schema that was detected and annotated from the file.
+	AnnotatedSchema *EditRootJSON `json:"annotatedSchema,omitempty" url:"annotatedSchema,omitempty"`
+	// Mapping information between `inputSchema` paths and detected form fields when an input schema was provided.
+	MappingResult *EditSchemaGenerationMappingResult `json:"mappingResult,omitempty" url:"mappingResult,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditSchemaGenerationResponse) GetSchema() *EditRootJSON {
+	if e == nil {
+		return nil
+	}
+	return e.Schema
+}
+
+func (e *EditSchemaGenerationResponse) GetAnnotatedSchema() *EditRootJSON {
+	if e == nil {
+		return nil
+	}
+	return e.AnnotatedSchema
+}
+
+func (e *EditSchemaGenerationResponse) GetMappingResult() *EditSchemaGenerationMappingResult {
+	if e == nil {
+		return nil
+	}
+	return e.MappingResult
+}
+
+func (e *EditSchemaGenerationResponse) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditSchemaGenerationResponse) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationResponse) SetSchema(schema *EditRootJSON) {
+	e.Schema = schema
+	e.require(editSchemaGenerationResponseFieldSchema)
+}
+
+// SetAnnotatedSchema sets the AnnotatedSchema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationResponse) SetAnnotatedSchema(annotatedSchema *EditRootJSON) {
+	e.AnnotatedSchema = annotatedSchema
+	e.require(editSchemaGenerationResponseFieldAnnotatedSchema)
+}
+
+// SetMappingResult sets the MappingResult field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationResponse) SetMappingResult(mappingResult *EditSchemaGenerationMappingResult) {
+	e.MappingResult = mappingResult
+	e.require(editSchemaGenerationResponseFieldMappingResult)
+}
+
+func (e *EditSchemaGenerationResponse) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditSchemaGenerationResponse
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditSchemaGenerationResponse(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditSchemaGenerationResponse) MarshalJSON() ([]byte, error) {
+	type embed EditSchemaGenerationResponse
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditSchemaGenerationResponse) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
 // Text styling options for text fields
 var (
 	editTextOptionsFieldFontSize  = big.NewInt(1 << 0)
@@ -10612,6 +11450,7 @@ var (
 	editTextOptionsFieldFont      = big.NewInt(1 << 2)
 	editTextOptionsFieldCombing   = big.NewInt(1 << 3)
 	editTextOptionsFieldMaxLength = big.NewInt(1 << 4)
+	editTextOptionsFieldMultiLine = big.NewInt(1 << 5)
 )
 
 type EditTextOptions struct {
@@ -10625,6 +11464,8 @@ type EditTextOptions struct {
 	Combing *bool `json:"combing,omitempty" url:"combing,omitempty"`
 	// Maximum number of characters allowed
 	MaxLength *int `json:"maxLength,omitempty" url:"maxLength,omitempty"`
+	// Whether text can wrap across multiple lines
+	MultiLine *bool `json:"multiLine,omitempty" url:"multiLine,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -10666,6 +11507,13 @@ func (e *EditTextOptions) GetMaxLength() *int {
 		return nil
 	}
 	return e.MaxLength
+}
+
+func (e *EditTextOptions) GetMultiLine() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.MultiLine
 }
 
 func (e *EditTextOptions) GetExtraProperties() map[string]interface{} {
@@ -10715,6 +11563,13 @@ func (e *EditTextOptions) SetCombing(combing *bool) {
 func (e *EditTextOptions) SetMaxLength(maxLength *int) {
 	e.MaxLength = maxLength
 	e.require(editTextOptionsFieldMaxLength)
+}
+
+// SetMultiLine sets the MultiLine field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTextOptions) SetMultiLine(multiLine *bool) {
+	e.MultiLine = multiLine
+	e.require(editTextOptionsFieldMultiLine)
 }
 
 func (e *EditTextOptions) UnmarshalJSON(data []byte) error {
@@ -11540,7 +12395,9 @@ type ExtractAdvancedOptions struct {
 	// - `word`: Narrow each matched citation down to the relevant OCR word span when possible. Note: this might still return line citations in cases where the citation model is unable to reliably narrow down to a word-level citation. Typically, this only makes sense when you are doing array extraction and want precise word citations from a given cell in a table to match an array property, e.g. `line_items.total`.
 	// - `block`: Use parser blocks (e.g. full paragraphs, key-val regions, tables, lists, etc.) and return block-level polygons for each citation. Will have highest recall in terms of overlap with the extracted value source, but least granularity.
 	CitationMode *ExtractAdvancedOptionsCitationMode `json:"citationMode,omitempty" url:"citationMode,omitempty"`
-	// Granularity for array citations. This requires citationsEnabled=true and a base processor version that supports property-level array citations (extraction_performance ≥ 4.4.0).
+	// Granularity for array citations. Requires turning on citations: `citationsEnabled=true`.
+	// - `item`: Creates item-level citations for array fields. This will return a single bbox citation for each "item" in the array e.g. line_items[0], line_items[1], etc.
+	// - `property`: Creates property-level citations (cell-level citations) for array fields. This will return a citation for each property/cell for every item/row in the array, e.g. line_items[0].description, line_items[1].price, etc.
 	ArrayCitationStrategy *ExtractAdvancedOptionsArrayCitationStrategy `json:"arrayCitationStrategy,omitempty" url:"arrayCitationStrategy,omitempty"`
 	// Strategy for handling large arrays in documents.
 	ArrayStrategy   *ArrayStrategy          `json:"arrayStrategy,omitempty" url:"arrayStrategy,omitempty"`
@@ -11554,6 +12411,8 @@ type ExtractAdvancedOptions struct {
 	// When enabled, each field in the output metadata will include a `reviewAgentScore` (1-5)
 	// and may include additional `insights` of type `issue` or `review_summary` to help identify
 	// fields that may need manual review.
+	//
+	// Enabling the review agent incurs additional credits.
 	//
 	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgent *ExtractAdvancedOptionsReviewAgent `json:"reviewAgent,omitempty" url:"reviewAgent,omitempty"`
@@ -11791,7 +12650,9 @@ func (e *ExtractAdvancedOptions) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Granularity for array citations. This requires citationsEnabled=true and a base processor version that supports property-level array citations (extraction_performance ≥ 4.4.0).
+// Granularity for array citations. Requires turning on citations: `citationsEnabled=true`.
+// - `item`: Creates item-level citations for array fields. This will return a single bbox citation for each "item" in the array e.g. line_items[0], line_items[1], etc.
+// - `property`: Creates property-level citations (cell-level citations) for array fields. This will return a citation for each property/cell for every item/row in the array, e.g. line_items[0].description, line_items[1].price, etc.
 type ExtractAdvancedOptionsArrayCitationStrategy string
 
 const (
@@ -11876,6 +12737,8 @@ func (e ExtractAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *ExtractAdvance
 // When enabled, each field in the output metadata will include a `reviewAgentScore` (1-5)
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
 // fields that may need manual review.
+//
+// Enabling the review agent incurs additional credits.
 //
 // To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 var (
@@ -14164,7 +15027,10 @@ func (e *ExtractRunProcessedWebhookEvent) String() string {
 
 // Extracts structured data from parsed content using an extractor.
 //
-// The extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`).
+// The step's extractor can be specified in one of two ways:
+//
+// - **Saved reference** (`extractor`): references a saved extractor by ID. The reference must include an explicit `version` — `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`).
+// - **Inline config** (`extractorConfig`): embeds the full extractor configuration directly in the step. No saved extractor is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces.
 //
 // See the [Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#extract).
 var (
@@ -14176,6 +15042,8 @@ var (
 type ExtractStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
+	//
+	// When present, must contain exactly one of `extractor` (saved processor reference) or `extractorConfig` (inline configuration) — not both.
 	Config *ExtractStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
 	// Can only be set when `config` is present.
 	Next []*SimpleNextEntry `json:"next,omitempty" url:"next,omitempty"`
@@ -14286,12 +15154,20 @@ func (e *ExtractStepDefinition) String() string {
 }
 
 // Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
+//
+// When present, must contain exactly one of `extractor` (saved processor reference) or `extractorConfig` (inline configuration) — not both.
 var (
-	extractStepDefinitionConfigFieldExtractor = big.NewInt(1 << 0)
+	extractStepDefinitionConfigFieldExtractor       = big.NewInt(1 << 0)
+	extractStepDefinitionConfigFieldExtractorConfig = big.NewInt(1 << 1)
 )
 
 type ExtractStepDefinitionConfig struct {
-	Extractor *ExtractorRef `json:"extractor" url:"extractor"`
+	// Reference to a saved extractor. Provide either this or `extractorConfig`, not both.
+	Extractor *ExtractorRef `json:"extractor,omitempty" url:"extractor,omitempty"`
+	// Inline extractor configuration. Provide either this or `extractor`, not both. Unlike the run endpoints, `schema` is required — schema-less extraction is not supported in workflows.
+	//
+	// Inline configs are returned verbatim in responses (there is no saved processor, so no `version` is involved).
+	ExtractorConfig *WorkflowInlineExtractConfig `json:"extractorConfig,omitempty" url:"extractorConfig,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -14305,6 +15181,13 @@ func (e *ExtractStepDefinitionConfig) GetExtractor() *ExtractorRef {
 		return nil
 	}
 	return e.Extractor
+}
+
+func (e *ExtractStepDefinitionConfig) GetExtractorConfig() *WorkflowInlineExtractConfig {
+	if e == nil {
+		return nil
+	}
+	return e.ExtractorConfig
 }
 
 func (e *ExtractStepDefinitionConfig) GetExtraProperties() map[string]interface{} {
@@ -14326,6 +15209,13 @@ func (e *ExtractStepDefinitionConfig) require(field *big.Int) {
 func (e *ExtractStepDefinitionConfig) SetExtractor(extractor *ExtractorRef) {
 	e.Extractor = extractor
 	e.require(extractStepDefinitionConfigFieldExtractor)
+}
+
+// SetExtractorConfig sets the ExtractorConfig field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractStepDefinitionConfig) SetExtractorConfig(extractorConfig *WorkflowInlineExtractConfig) {
+	e.ExtractorConfig = extractorConfig
+	e.require(extractStepDefinitionConfigFieldExtractorConfig)
 }
 
 func (e *ExtractStepDefinitionConfig) UnmarshalJSON(data []byte) error {
@@ -18184,6 +19074,491 @@ func (f FileType) Ptr() *FileType {
 	return &f
 }
 
+// A run that detects fields in a PDF form and generates an edit schema.
+var (
+	formDetectionRunFieldID             = big.NewInt(1 << 0)
+	formDetectionRunFieldFile           = big.NewInt(1 << 1)
+	formDetectionRunFieldStatus         = big.NewInt(1 << 2)
+	formDetectionRunFieldFailureReason  = big.NewInt(1 << 3)
+	formDetectionRunFieldFailureMessage = big.NewInt(1 << 4)
+	formDetectionRunFieldConfig         = big.NewInt(1 << 5)
+	formDetectionRunFieldOutput         = big.NewInt(1 << 6)
+	formDetectionRunFieldMetrics        = big.NewInt(1 << 7)
+	formDetectionRunFieldUsage          = big.NewInt(1 << 8)
+)
+
+type FormDetectionRun struct {
+	// A unique identifier for the form detection run.
+	//
+	// Example: `"sgr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID string `json:"id" url:"id"`
+	// The input PDF submitted for form detection.
+	File *FileSummary `json:"file" url:"file"`
+	// The status of the form detection run:
+	// * `"PROCESSING"` - The form is still being analyzed
+	// * `"PROCESSED"` - Form detection completed successfully
+	// * `"FAILED"` - Form detection failed (see `failureReason` for details)
+	Status FormDetectionRunStatus `json:"status" url:"status"`
+	// The reason for failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	//
+	// Possible values include:
+	// * `UNABLE_TO_DOWNLOAD_FILE`
+	// * `FILE_TYPE_NOT_SUPPORTED`
+	// * `FILE_SIZE_TOO_LARGE`
+	// * `CORRUPT_FILE`
+	// * `FIELD_DETECTION_ERROR`
+	// * `PASSWORD_PROTECTED_FILE`
+	// * `FAILED_TO_CONVERT_TO_PDF`
+	// * `EMPTY_SCHEMA`
+	// * `INTERNAL_ERROR`
+	// * `INVALID_OPTIONS`
+	// * `OUT_OF_CREDITS`
+	//
+	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
+	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
+	// A human-readable description of the failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	FailureMessage *string `json:"failureMessage,omitempty" url:"failureMessage,omitempty"`
+	// The configuration used for this form detection run, including any default values that were applied.
+	Config *EditSchemaGenerationConfig `json:"config" url:"config"`
+	// The detected schema and optional mapping metadata.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`.
+	Output *EditSchemaGenerationResponse `json:"output,omitempty" url:"output,omitempty"`
+	// Metrics about the form detection process.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`.
+	Metrics *FormDetectionRunMetrics `json:"metrics,omitempty" url:"metrics,omitempty"`
+	// Usage credits consumed by this form detection run.
+	Usage *RunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FormDetectionRun) GetID() string {
+	if f == nil {
+		return ""
+	}
+	return f.ID
+}
+
+func (f *FormDetectionRun) GetFile() *FileSummary {
+	if f == nil {
+		return nil
+	}
+	return f.File
+}
+
+func (f *FormDetectionRun) GetStatus() FormDetectionRunStatus {
+	if f == nil {
+		return ""
+	}
+	return f.Status
+}
+
+func (f *FormDetectionRun) GetFailureReason() *string {
+	if f == nil {
+		return nil
+	}
+	return f.FailureReason
+}
+
+func (f *FormDetectionRun) GetFailureMessage() *string {
+	if f == nil {
+		return nil
+	}
+	return f.FailureMessage
+}
+
+func (f *FormDetectionRun) GetConfig() *EditSchemaGenerationConfig {
+	if f == nil {
+		return nil
+	}
+	return f.Config
+}
+
+func (f *FormDetectionRun) GetOutput() *EditSchemaGenerationResponse {
+	if f == nil {
+		return nil
+	}
+	return f.Output
+}
+
+func (f *FormDetectionRun) GetMetrics() *FormDetectionRunMetrics {
+	if f == nil {
+		return nil
+	}
+	return f.Metrics
+}
+
+func (f *FormDetectionRun) GetUsage() *RunUsage {
+	if f == nil {
+		return nil
+	}
+	return f.Usage
+}
+
+func (f *FormDetectionRun) Object() string {
+	return f.object
+}
+
+func (f *FormDetectionRun) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FormDetectionRun) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetID(id string) {
+	f.ID = id
+	f.require(formDetectionRunFieldID)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetFile(file *FileSummary) {
+	f.File = file
+	f.require(formDetectionRunFieldFile)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetStatus(status FormDetectionRunStatus) {
+	f.Status = status
+	f.require(formDetectionRunFieldStatus)
+}
+
+// SetFailureReason sets the FailureReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetFailureReason(failureReason *string) {
+	f.FailureReason = failureReason
+	f.require(formDetectionRunFieldFailureReason)
+}
+
+// SetFailureMessage sets the FailureMessage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetFailureMessage(failureMessage *string) {
+	f.FailureMessage = failureMessage
+	f.require(formDetectionRunFieldFailureMessage)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetConfig(config *EditSchemaGenerationConfig) {
+	f.Config = config
+	f.require(formDetectionRunFieldConfig)
+}
+
+// SetOutput sets the Output field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetOutput(output *EditSchemaGenerationResponse) {
+	f.Output = output
+	f.require(formDetectionRunFieldOutput)
+}
+
+// SetMetrics sets the Metrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetMetrics(metrics *FormDetectionRunMetrics) {
+	f.Metrics = metrics
+	f.require(formDetectionRunFieldMetrics)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRun) SetUsage(usage *RunUsage) {
+	f.Usage = usage
+	f.require(formDetectionRunFieldUsage)
+}
+
+func (f *FormDetectionRun) UnmarshalJSON(data []byte) error {
+	type embed FormDetectionRun
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*f),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*f = FormDetectionRun(unmarshaler.embed)
+	if unmarshaler.Object != "form_detection_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", f, "form_detection_run", unmarshaler.Object)
+	}
+	f.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *f, "object")
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FormDetectionRun) MarshalJSON() ([]byte, error) {
+	type embed FormDetectionRun
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*f),
+		Object: "form_detection_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FormDetectionRun) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// Metrics about the form detection process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
+var (
+	formDetectionRunMetricsFieldProcessingTimeMs      = big.NewInt(1 << 0)
+	formDetectionRunMetricsFieldPageCount             = big.NewInt(1 << 1)
+	formDetectionRunMetricsFieldFieldCount            = big.NewInt(1 << 2)
+	formDetectionRunMetricsFieldFieldsDetectedCount   = big.NewInt(1 << 3)
+	formDetectionRunMetricsFieldFieldsAnnotatedCount  = big.NewInt(1 << 4)
+	formDetectionRunMetricsFieldFieldDetectionTimeMs  = big.NewInt(1 << 5)
+	formDetectionRunMetricsFieldFieldAnnotationTimeMs = big.NewInt(1 << 6)
+)
+
+type FormDetectionRunMetrics struct {
+	// Total processing time in milliseconds.
+	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
+	// The number of pages in the document.
+	PageCount int `json:"pageCount" url:"pageCount"`
+	// The total number of fields in the generated schema.
+	FieldCount int `json:"fieldCount" url:"fieldCount"`
+	// The number of fields that were automatically detected.
+	FieldsDetectedCount int `json:"fieldsDetectedCount" url:"fieldsDetectedCount"`
+	// The number of fields annotated with positions.
+	FieldsAnnotatedCount int `json:"fieldsAnnotatedCount" url:"fieldsAnnotatedCount"`
+	// The time taken to detect fields, in milliseconds.
+	FieldDetectionTimeMs float64 `json:"fieldDetectionTimeMs" url:"fieldDetectionTimeMs"`
+	// The time taken to annotate field positions, in milliseconds.
+	FieldAnnotationTimeMs float64 `json:"fieldAnnotationTimeMs" url:"fieldAnnotationTimeMs"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FormDetectionRunMetrics) GetProcessingTimeMs() float64 {
+	if f == nil {
+		return 0
+	}
+	return f.ProcessingTimeMs
+}
+
+func (f *FormDetectionRunMetrics) GetPageCount() int {
+	if f == nil {
+		return 0
+	}
+	return f.PageCount
+}
+
+func (f *FormDetectionRunMetrics) GetFieldCount() int {
+	if f == nil {
+		return 0
+	}
+	return f.FieldCount
+}
+
+func (f *FormDetectionRunMetrics) GetFieldsDetectedCount() int {
+	if f == nil {
+		return 0
+	}
+	return f.FieldsDetectedCount
+}
+
+func (f *FormDetectionRunMetrics) GetFieldsAnnotatedCount() int {
+	if f == nil {
+		return 0
+	}
+	return f.FieldsAnnotatedCount
+}
+
+func (f *FormDetectionRunMetrics) GetFieldDetectionTimeMs() float64 {
+	if f == nil {
+		return 0
+	}
+	return f.FieldDetectionTimeMs
+}
+
+func (f *FormDetectionRunMetrics) GetFieldAnnotationTimeMs() float64 {
+	if f == nil {
+		return 0
+	}
+	return f.FieldAnnotationTimeMs
+}
+
+func (f *FormDetectionRunMetrics) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FormDetectionRunMetrics) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetProcessingTimeMs(processingTimeMs float64) {
+	f.ProcessingTimeMs = processingTimeMs
+	f.require(formDetectionRunMetricsFieldProcessingTimeMs)
+}
+
+// SetPageCount sets the PageCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetPageCount(pageCount int) {
+	f.PageCount = pageCount
+	f.require(formDetectionRunMetricsFieldPageCount)
+}
+
+// SetFieldCount sets the FieldCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetFieldCount(fieldCount int) {
+	f.FieldCount = fieldCount
+	f.require(formDetectionRunMetricsFieldFieldCount)
+}
+
+// SetFieldsDetectedCount sets the FieldsDetectedCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetFieldsDetectedCount(fieldsDetectedCount int) {
+	f.FieldsDetectedCount = fieldsDetectedCount
+	f.require(formDetectionRunMetricsFieldFieldsDetectedCount)
+}
+
+// SetFieldsAnnotatedCount sets the FieldsAnnotatedCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetFieldsAnnotatedCount(fieldsAnnotatedCount int) {
+	f.FieldsAnnotatedCount = fieldsAnnotatedCount
+	f.require(formDetectionRunMetricsFieldFieldsAnnotatedCount)
+}
+
+// SetFieldDetectionTimeMs sets the FieldDetectionTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetFieldDetectionTimeMs(fieldDetectionTimeMs float64) {
+	f.FieldDetectionTimeMs = fieldDetectionTimeMs
+	f.require(formDetectionRunMetricsFieldFieldDetectionTimeMs)
+}
+
+// SetFieldAnnotationTimeMs sets the FieldAnnotationTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunMetrics) SetFieldAnnotationTimeMs(fieldAnnotationTimeMs float64) {
+	f.FieldAnnotationTimeMs = fieldAnnotationTimeMs
+	f.require(formDetectionRunMetricsFieldFieldAnnotationTimeMs)
+}
+
+func (f *FormDetectionRunMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler FormDetectionRunMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FormDetectionRunMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FormDetectionRunMetrics) MarshalJSON() ([]byte, error) {
+	type embed FormDetectionRunMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FormDetectionRunMetrics) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// The status of the form detection run:
+// * `"PROCESSING"` - The form is still being analyzed
+// * `"PROCESSED"` - Form detection completed successfully
+// * `"FAILED"` - Form detection failed (see `failureReason` for details)
+type FormDetectionRunStatus string
+
+const (
+	FormDetectionRunStatusProcessing FormDetectionRunStatus = "PROCESSING"
+	FormDetectionRunStatusProcessed  FormDetectionRunStatus = "PROCESSED"
+	FormDetectionRunStatusFailed     FormDetectionRunStatus = "FAILED"
+)
+
+func NewFormDetectionRunStatusFromString(s string) (FormDetectionRunStatus, error) {
+	switch s {
+	case "PROCESSING":
+		return FormDetectionRunStatusProcessing, nil
+	case "PROCESSED":
+		return FormDetectionRunStatusProcessed, nil
+	case "FAILED":
+		return FormDetectionRunStatusFailed, nil
+	}
+	var t FormDetectionRunStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (f FormDetectionRunStatus) Ptr() *FormDetectionRunStatus {
+	return &f
+}
+
 // Details for formula blocks
 var (
 	formulaDetailsFieldLatex = big.NewInt(1 << 0)
@@ -19507,6 +20882,8 @@ type LegacyExtractionAdvancedOptions struct {
 	// and may include additional `insights` of type `issue` or `review_summary` to help identify
 	// fields that may need manual review.
 	//
+	// Enabling the review agent incurs additional credits.
+	//
 	// To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 	ReviewAgent *LegacyExtractionAdvancedOptionsReviewAgent `json:"reviewAgent,omitempty" url:"reviewAgent,omitempty"`
 	// Strategy for handling large arrays in documents.
@@ -19835,6 +21212,8 @@ func (l LegacyExtractionAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *Legac
 // When enabled, each field in the output metadata will include a `reviewAgentScore` (1-5)
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
 // fields that may need manual review.
+//
+// Enabling the review agent incurs additional credits.
 //
 // To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
 var (
@@ -22820,18 +24199,20 @@ func (p *ParseConfig) String() string {
 }
 
 var (
-	parseConfigAdvancedOptionsFieldPageRotationEnabled       = big.NewInt(1 << 0)
-	parseConfigAdvancedOptionsFieldPageRanges                = big.NewInt(1 << 1)
-	parseConfigAdvancedOptionsFieldExcelParsingMode          = big.NewInt(1 << 2)
-	parseConfigAdvancedOptionsFieldExcelSkipHiddenContent    = big.NewInt(1 << 3)
-	parseConfigAdvancedOptionsFieldExcelUseRawCellValues     = big.NewInt(1 << 4)
-	parseConfigAdvancedOptionsFieldExcelSkipCalculation      = big.NewInt(1 << 5)
-	parseConfigAdvancedOptionsFieldVerticalGroupingThreshold = big.NewInt(1 << 6)
-	parseConfigAdvancedOptionsFieldReturnOcr                 = big.NewInt(1 << 7)
-	parseConfigAdvancedOptionsFieldAlwaysConvertToPdf        = big.NewInt(1 << 8)
-	parseConfigAdvancedOptionsFieldEnrichmentFormat          = big.NewInt(1 << 9)
-	parseConfigAdvancedOptionsFieldImageConversionQuality    = big.NewInt(1 << 10)
-	parseConfigAdvancedOptionsFieldFormattingDetection       = big.NewInt(1 << 11)
+	parseConfigAdvancedOptionsFieldPageRotationEnabled        = big.NewInt(1 << 0)
+	parseConfigAdvancedOptionsFieldPageRanges                 = big.NewInt(1 << 1)
+	parseConfigAdvancedOptionsFieldExcelParsingMode           = big.NewInt(1 << 2)
+	parseConfigAdvancedOptionsFieldExcelSkipHiddenContent     = big.NewInt(1 << 3)
+	parseConfigAdvancedOptionsFieldExcelUseRawCellValues      = big.NewInt(1 << 4)
+	parseConfigAdvancedOptionsFieldExcelSkipCalculation       = big.NewInt(1 << 5)
+	parseConfigAdvancedOptionsFieldExcelIncludeCellMetadata   = big.NewInt(1 << 6)
+	parseConfigAdvancedOptionsFieldExcelIncludeCellFormatting = big.NewInt(1 << 7)
+	parseConfigAdvancedOptionsFieldVerticalGroupingThreshold  = big.NewInt(1 << 8)
+	parseConfigAdvancedOptionsFieldReturnOcr                  = big.NewInt(1 << 9)
+	parseConfigAdvancedOptionsFieldAlwaysConvertToPdf         = big.NewInt(1 << 10)
+	parseConfigAdvancedOptionsFieldEnrichmentFormat           = big.NewInt(1 << 11)
+	parseConfigAdvancedOptionsFieldImageConversionQuality     = big.NewInt(1 << 12)
+	parseConfigAdvancedOptionsFieldFormattingDetection        = big.NewInt(1 << 13)
 )
 
 type ParseConfigAdvancedOptions struct {
@@ -22841,7 +24222,7 @@ type ParseConfigAdvancedOptions struct {
 	// Controls how Excel files are parsed.
 	//
 	// * `basic`: Fast, deterministic parsing.
-	// * `advanced`: Enable layout block detection for complex spreadsheets.
+	// * `advanced`: Enable layout block detection for complex spreadsheets. This mode incurs additional credits when enabled.
 	//
 	// For `.xls` files, `basic` mode is always used.
 	ExcelParsingMode *ParseConfigAdvancedOptionsExcelParsingMode `json:"excelParsingMode,omitempty" url:"excelParsingMode,omitempty"`
@@ -22851,6 +24232,10 @@ type ParseConfigAdvancedOptions struct {
 	ExcelUseRawCellValues *bool `json:"excelUseRawCellValues,omitempty" url:"excelUseRawCellValues,omitempty"`
 	// Whether to skip formula recalculation when opening Excel workbooks. Significantly improves parsing speed for formula-heavy spreadsheets. Disable if cell values depend on volatile functions like NOW() or TODAY().
 	ExcelSkipCalculation *bool `json:"excelSkipCalculation,omitempty" url:"excelSkipCalculation,omitempty"`
+	// Whether to include spreadsheet cell provenance when parsing Excel files in advanced mode. When enabled, table cell block details include source cell references and formulas, text or heading block details can include source ranges, and HTML table output includes `data-cell` and `data-formula` attributes.
+	ExcelIncludeCellMetadata *bool `json:"excelIncludeCellMetadata,omitempty" url:"excelIncludeCellMetadata,omitempty"`
+	// Whether to include spreadsheet cell formatting when parsing Excel files in advanced mode. When enabled, table cell block details include structured formatting such as bold, italic, font color, and background color, and HTML table output preserves inline cell styles.
+	ExcelIncludeCellFormatting *bool `json:"excelIncludeCellFormatting,omitempty" url:"excelIncludeCellFormatting,omitempty"`
 	// Multiplier for the Y-axis threshold used to determine if text blocks should be placed on the same line or not (0.1-5.0, default 1.0). Higher values group elements that are further apart vertically. Only applies when the spatial target is set.
 	VerticalGroupingThreshold *float64 `json:"verticalGroupingThreshold,omitempty" url:"verticalGroupingThreshold,omitempty"`
 	// Options for returning raw OCR data in the response.
@@ -22924,6 +24309,20 @@ func (p *ParseConfigAdvancedOptions) GetExcelSkipCalculation() *bool {
 		return nil
 	}
 	return p.ExcelSkipCalculation
+}
+
+func (p *ParseConfigAdvancedOptions) GetExcelIncludeCellMetadata() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.ExcelIncludeCellMetadata
+}
+
+func (p *ParseConfigAdvancedOptions) GetExcelIncludeCellFormatting() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.ExcelIncludeCellFormatting
 }
 
 func (p *ParseConfigAdvancedOptions) GetVerticalGroupingThreshold() *float64 {
@@ -23022,6 +24421,20 @@ func (p *ParseConfigAdvancedOptions) SetExcelUseRawCellValues(excelUseRawCellVal
 func (p *ParseConfigAdvancedOptions) SetExcelSkipCalculation(excelSkipCalculation *bool) {
 	p.ExcelSkipCalculation = excelSkipCalculation
 	p.require(parseConfigAdvancedOptionsFieldExcelSkipCalculation)
+}
+
+// SetExcelIncludeCellMetadata sets the ExcelIncludeCellMetadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetExcelIncludeCellMetadata(excelIncludeCellMetadata *bool) {
+	p.ExcelIncludeCellMetadata = excelIncludeCellMetadata
+	p.require(parseConfigAdvancedOptionsFieldExcelIncludeCellMetadata)
+}
+
+// SetExcelIncludeCellFormatting sets the ExcelIncludeCellFormatting field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetExcelIncludeCellFormatting(excelIncludeCellFormatting *bool) {
+	p.ExcelIncludeCellFormatting = excelIncludeCellFormatting
+	p.require(parseConfigAdvancedOptionsFieldExcelIncludeCellFormatting)
 }
 
 // SetVerticalGroupingThreshold sets the VerticalGroupingThreshold field and marks it as non-optional;
@@ -23137,7 +24550,7 @@ func (p ParseConfigAdvancedOptionsEnrichmentFormat) Ptr() *ParseConfigAdvancedOp
 // Controls how Excel files are parsed.
 //
 // * `basic`: Fast, deterministic parsing.
-// * `advanced`: Enable layout block detection for complex spreadsheets.
+// * `advanced`: Enable layout block detection for complex spreadsheets. This mode incurs additional credits when enabled.
 //
 // For `.xls` files, `basic` mode is always used.
 type ParseConfigAdvancedOptionsExcelParsingMode string
@@ -23962,7 +25375,7 @@ type ParseConfigBlockOptionsTables struct {
 	TableHeaderContinuationEnabled *bool `json:"tableHeaderContinuationEnabled,omitempty" url:"tableHeaderContinuationEnabled,omitempty"`
 	// Whether to include individual table cell blocks in the output. When enabled, each cell in a table will be represented as a separate block with its own bounding box and content and will be `children` of the table block.
 	CellBlocksEnabled *bool `json:"cellBlocksEnabled,omitempty" url:"cellBlocksEnabled,omitempty"`
-	// Options for agentic table processing using VLM-based review and correction.
+	// Options for agentic table processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic table correction is triggered.
 	Agentic *ParseConfigBlockOptionsTablesAgentic `json:"agentic,omitempty" url:"agentic,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -24098,7 +25511,7 @@ func (p *ParseConfigBlockOptionsTables) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for agentic table processing using VLM-based review and correction.
+// Options for agentic table processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic table correction is triggered.
 var (
 	parseConfigBlockOptionsTablesAgenticFieldEnabled            = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTablesAgenticFieldCustomInstructions = big.NewInt(1 << 1)
@@ -24235,7 +25648,7 @@ var (
 type ParseConfigBlockOptionsText struct {
 	// Whether an additional vision model will be utilized for advanced signature detection. Recommended for most use cases, but should be disabled if signature detection is not necessary and latency is a concern.
 	SignatureDetectionEnabled *bool `json:"signatureDetectionEnabled,omitempty" url:"signatureDetectionEnabled,omitempty"`
-	// Options for agentic text processing using VLM-based review and correction.
+	// Options for agentic text processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic text correction is triggered.
 	Agentic *ParseConfigBlockOptionsTextAgentic `json:"agentic,omitempty" url:"agentic,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -24329,7 +25742,7 @@ func (p *ParseConfigBlockOptionsText) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for agentic text processing using VLM-based review and correction.
+// Options for agentic text processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic text correction is triggered.
 var (
 	parseConfigBlockOptionsTextAgenticFieldEnabled            = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTextAgenticFieldCustomInstructions = big.NewInt(1 << 1)
@@ -27411,7 +28824,7 @@ type RunSourceID = string
 // * Runs created before October 7, 2025
 // * Customers on legacy billing systems
 //
-// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/general/how-credits-work).
+// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
 var (
 	runUsageFieldCredits      = big.NewInt(1 << 0)
 	runUsageFieldTotalCredits = big.NewInt(1 << 1)
@@ -27832,11 +29245,12 @@ func (r *RunUsageBreakdownEntry) String() string {
 type RunUsageBreakdownEntryObject string
 
 const (
-	RunUsageBreakdownEntryObjectExtractRun  RunUsageBreakdownEntryObject = "extract_run"
-	RunUsageBreakdownEntryObjectClassifyRun RunUsageBreakdownEntryObject = "classify_run"
-	RunUsageBreakdownEntryObjectSplitRun    RunUsageBreakdownEntryObject = "split_run"
-	RunUsageBreakdownEntryObjectParseRun    RunUsageBreakdownEntryObject = "parse_run"
-	RunUsageBreakdownEntryObjectEditRun     RunUsageBreakdownEntryObject = "edit_run"
+	RunUsageBreakdownEntryObjectExtractRun       RunUsageBreakdownEntryObject = "extract_run"
+	RunUsageBreakdownEntryObjectClassifyRun      RunUsageBreakdownEntryObject = "classify_run"
+	RunUsageBreakdownEntryObjectSplitRun         RunUsageBreakdownEntryObject = "split_run"
+	RunUsageBreakdownEntryObjectParseRun         RunUsageBreakdownEntryObject = "parse_run"
+	RunUsageBreakdownEntryObjectEditRun          RunUsageBreakdownEntryObject = "edit_run"
+	RunUsageBreakdownEntryObjectFormDetectionRun RunUsageBreakdownEntryObject = "form_detection_run"
 )
 
 func NewRunUsageBreakdownEntryObjectFromString(s string) (RunUsageBreakdownEntryObject, error) {
@@ -27851,6 +29265,8 @@ func NewRunUsageBreakdownEntryObjectFromString(s string) (RunUsageBreakdownEntry
 		return RunUsageBreakdownEntryObjectParseRun, nil
 	case "edit_run":
 		return RunUsageBreakdownEntryObjectEditRun, nil
+	case "form_detection_run":
+		return RunUsageBreakdownEntryObjectFormDetectionRun, nil
 	}
 	var t RunUsageBreakdownEntryObject
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -27866,7 +29282,7 @@ func (r RunUsageBreakdownEntryObject) Ptr() *RunUsageBreakdownEntryObject {
 // * Runs created before October 7, 2025
 // * Customers on legacy billing systems
 //
-// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/2026-02-09/general/how-credits-work).
+// For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
 var (
 	runUsageSummaryFieldCredits      = big.NewInt(1 << 0)
 	runUsageSummaryFieldTotalCredits = big.NewInt(1 << 1)
@@ -29945,7 +31361,10 @@ func (s *SplitRunProcessedWebhookEvent) String() string {
 
 // Splits a multi-document file into individual documents using a splitter. Routes to different next steps based on split type.
 //
-// The splitter reference must include a pinned `version` — `"latest"` is not supported for `SPLIT` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
+// The step's splitter can be specified in one of two ways:
+//
+// - **Saved reference** (`splitter`): references a saved splitter by ID. The reference must include a pinned `version` — `"latest"` is not supported for `SPLIT` steps. Use a specific semver string (e.g. `"0.1"`) or `"draft"`. This is because classification IDs used for routing are tied to a specific processor version's config.
+// - **Inline config** (`splitterConfig`): embeds the full splitter configuration directly in the step. No saved splitter is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces. Routing (`next[].classificationId`) validates against the inline `splitClassifications` array.
 //
 // See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 var (
@@ -29958,13 +31377,13 @@ type SplitStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 	//
-	// Reference to the splitter used by this step. The `next[].classificationId` values must match split classification `id` values (not `type` strings) from the referenced splitter's configuration. For example, if the splitter defines `{ "id": "cls_receipt", "type": "receipt" }`, use `"cls_receipt"` as the `classificationId`.
+	// When present, must contain exactly one of `splitter` (saved processor reference) or `splitterConfig` (inline configuration) — not both.
 	//
-	// The splitter `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+	// The `next[].classificationId` values must match split classification `id` values (not `type` strings) from the splitter's configuration — the referenced version's config for a saved reference, or the inline `splitClassifications` array for an inline config. For example, if the splitter defines `{ "id": "cls_receipt", "type": "receipt" }`, use `"cls_receipt"` as the `classificationId`.
 	//
 	// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 	Config *SplitStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
-	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a split classification `id` from the referenced splitter's configuration. Use the classification's stable `id` (e.g. `"cls_receipt"`), not the `type` string.
+	// Can only be set when `config` is present. Each entry must include a `classificationId` matching a split classification `id` from the splitter's configuration (saved or inline). Use the classification's stable `id` (e.g. `"cls_receipt"`), not the `type` string.
 	//
 	// See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 	Next []*ClassificationNextEntry `json:"next,omitempty" url:"next,omitempty"`
@@ -30076,17 +31495,25 @@ func (s *SplitStepDefinition) String() string {
 
 // Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 //
-// Reference to the splitter used by this step. The `next[].classificationId` values must match split classification `id` values (not `type` strings) from the referenced splitter's configuration. For example, if the splitter defines `{ "id": "cls_receipt", "type": "receipt" }`, use `"cls_receipt"` as the `classificationId`.
+// When present, must contain exactly one of `splitter` (saved processor reference) or `splitterConfig` (inline configuration) — not both.
 //
-// The splitter `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+// The `next[].classificationId` values must match split classification `id` values (not `type` strings) from the splitter's configuration — the referenced version's config for a saved reference, or the inline `splitClassifications` array for an inline config. For example, if the splitter defines `{ "id": "cls_receipt", "type": "receipt" }`, use `"cls_receipt"` as the `classificationId`.
 //
 // See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
 var (
-	splitStepDefinitionConfigFieldSplitter = big.NewInt(1 << 0)
+	splitStepDefinitionConfigFieldSplitter       = big.NewInt(1 << 0)
+	splitStepDefinitionConfigFieldSplitterConfig = big.NewInt(1 << 1)
 )
 
 type SplitStepDefinitionConfig struct {
-	Splitter *SplitterRef `json:"splitter" url:"splitter"`
+	// Reference to a saved splitter. Provide either this or `splitterConfig`, not both.
+	//
+	// The `version` is required and must be a pinned version (semver like `"0.1"` or `"draft"`). `"latest"` is not allowed.
+	Splitter *SplitterRef `json:"splitter,omitempty" url:"splitter,omitempty"`
+	// Inline splitter configuration. Provide either this or `splitter`, not both. Same shape as the `config` accepted by [Create Split Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/split/create-split-run).
+	//
+	// Inline configs are returned verbatim in responses (there is no saved processor, so no `version` is involved).
+	SplitterConfig *SplitConfig `json:"splitterConfig,omitempty" url:"splitterConfig,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -30100,6 +31527,13 @@ func (s *SplitStepDefinitionConfig) GetSplitter() *SplitterRef {
 		return nil
 	}
 	return s.Splitter
+}
+
+func (s *SplitStepDefinitionConfig) GetSplitterConfig() *SplitConfig {
+	if s == nil {
+		return nil
+	}
+	return s.SplitterConfig
 }
 
 func (s *SplitStepDefinitionConfig) GetExtraProperties() map[string]interface{} {
@@ -30121,6 +31555,13 @@ func (s *SplitStepDefinitionConfig) require(field *big.Int) {
 func (s *SplitStepDefinitionConfig) SetSplitter(splitter *SplitterRef) {
 	s.Splitter = splitter
 	s.require(splitStepDefinitionConfigFieldSplitter)
+}
+
+// SetSplitterConfig sets the SplitterConfig field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitStepDefinitionConfig) SetSplitterConfig(splitterConfig *SplitConfig) {
+	s.SplitterConfig = splitterConfig
+	s.require(splitStepDefinitionConfigFieldSplitterConfig)
 }
 
 func (s *SplitStepDefinitionConfig) UnmarshalJSON(data []byte) error {
@@ -31314,13 +32755,22 @@ func (s *SplitterVersionSummary) String() string {
 
 // Details for table cell blocks
 var (
-	tableCellDetailsFieldRowIndex    = big.NewInt(1 << 0)
-	tableCellDetailsFieldColumnIndex = big.NewInt(1 << 1)
+	tableCellDetailsFieldRowIndex      = big.NewInt(1 << 0)
+	tableCellDetailsFieldColumnIndex   = big.NewInt(1 << 1)
+	tableCellDetailsFieldCellReference = big.NewInt(1 << 2)
+	tableCellDetailsFieldFormula       = big.NewInt(1 << 3)
+	tableCellDetailsFieldFormatting    = big.NewInt(1 << 4)
 )
 
 type TableCellDetails struct {
 	RowIndex    int `json:"rowIndex" url:"rowIndex"`
 	ColumnIndex int `json:"columnIndex" url:"columnIndex"`
+	// Source spreadsheet cell or range in A1 notation, such as `B2` or `A1:C1` for a merged cell. Only set for Excel table cells when `advancedOptions.excelIncludeCellMetadata` is enabled.
+	CellReference *string `json:"cellReference,omitempty" url:"cellReference,omitempty"`
+	// Source spreadsheet formula text with a leading `=`, when the cell has a formula. Only set for Excel table cells when `advancedOptions.excelIncludeCellMetadata` is enabled.
+	Formula *string `json:"formula,omitempty" url:"formula,omitempty"`
+	// Structured spreadsheet cell formatting. Only set when `advancedOptions.excelIncludeCellFormatting` is enabled and formatting is present.
+	Formatting *CellFormatting `json:"formatting,omitempty" url:"formatting,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -31342,6 +32792,27 @@ func (t *TableCellDetails) GetColumnIndex() int {
 		return 0
 	}
 	return t.ColumnIndex
+}
+
+func (t *TableCellDetails) GetCellReference() *string {
+	if t == nil {
+		return nil
+	}
+	return t.CellReference
+}
+
+func (t *TableCellDetails) GetFormula() *string {
+	if t == nil {
+		return nil
+	}
+	return t.Formula
+}
+
+func (t *TableCellDetails) GetFormatting() *CellFormatting {
+	if t == nil {
+		return nil
+	}
+	return t.Formatting
 }
 
 func (t *TableCellDetails) Type() string {
@@ -31374,6 +32845,27 @@ func (t *TableCellDetails) SetRowIndex(rowIndex int) {
 func (t *TableCellDetails) SetColumnIndex(columnIndex int) {
 	t.ColumnIndex = columnIndex
 	t.require(tableCellDetailsFieldColumnIndex)
+}
+
+// SetCellReference sets the CellReference field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (t *TableCellDetails) SetCellReference(cellReference *string) {
+	t.CellReference = cellReference
+	t.require(tableCellDetailsFieldCellReference)
+}
+
+// SetFormula sets the Formula field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (t *TableCellDetails) SetFormula(formula *string) {
+	t.Formula = formula
+	t.require(tableCellDetailsFieldFormula)
+}
+
+// SetFormatting sets the Formatting field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (t *TableCellDetails) SetFormatting(formatting *CellFormatting) {
+	t.Formatting = formatting
+	t.require(tableCellDetailsFieldFormatting)
 }
 
 func (t *TableCellDetails) UnmarshalJSON(data []byte) error {
@@ -31534,6 +33026,108 @@ func (t *TableDetails) MarshalJSON() ([]byte, error) {
 }
 
 func (t *TableDetails) String() string {
+	if t == nil {
+		return "<nil>"
+	}
+	if len(t.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(t.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(t); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", t)
+}
+
+// Details for text and heading blocks
+var (
+	textDetailsFieldCellReference = big.NewInt(1 << 0)
+)
+
+type TextDetails struct {
+	// Source spreadsheet cell or range in A1 notation for Excel-derived text or heading blocks. Only set when `advancedOptions.excelIncludeCellMetadata` is enabled.
+	CellReference *string `json:"cellReference,omitempty" url:"cellReference,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	type_          string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (t *TextDetails) GetCellReference() *string {
+	if t == nil {
+		return nil
+	}
+	return t.CellReference
+}
+
+func (t *TextDetails) Type() string {
+	return t.type_
+}
+
+func (t *TextDetails) GetExtraProperties() map[string]interface{} {
+	if t == nil {
+		return nil
+	}
+	return t.extraProperties
+}
+
+func (t *TextDetails) require(field *big.Int) {
+	if t.explicitFields == nil {
+		t.explicitFields = big.NewInt(0)
+	}
+	t.explicitFields.Or(t.explicitFields, field)
+}
+
+// SetCellReference sets the CellReference field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (t *TextDetails) SetCellReference(cellReference *string) {
+	t.CellReference = cellReference
+	t.require(textDetailsFieldCellReference)
+}
+
+func (t *TextDetails) UnmarshalJSON(data []byte) error {
+	type embed TextDetails
+	var unmarshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*t),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*t = TextDetails(unmarshaler.embed)
+	if unmarshaler.Type != "text_details" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", t, "text_details", unmarshaler.Type)
+	}
+	t.type_ = unmarshaler.Type
+	extraProperties, err := internal.ExtractExtraProperties(data, *t, "type")
+	if err != nil {
+		return err
+	}
+	t.extraProperties = extraProperties
+	t.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (t *TextDetails) MarshalJSON() ([]byte, error) {
+	type embed TextDetails
+	var marshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*t),
+		Type:  "text_details",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, t.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (t *TextDetails) String() string {
 	if t == nil {
 		return "<nil>"
 	}
@@ -33122,6 +34716,178 @@ func (w *WorkflowDeployedWebhookEvent) MarshalJSON() ([]byte, error) {
 }
 
 func (w *WorkflowDeployedWebhookEvent) String() string {
+	if w == nil {
+		return "<nil>"
+	}
+	if len(w.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(w.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(w); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+// An inline extractor configuration for an `EXTRACT` workflow step. Same shape as the `config` accepted by [Create Extract Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/extract/create-extract-run), except `schema` is required — schema-less extraction (inferring the schema from the file at run time) is not supported in workflows.
+var (
+	workflowInlineExtractConfigFieldBaseProcessor   = big.NewInt(1 << 0)
+	workflowInlineExtractConfigFieldBaseVersion     = big.NewInt(1 << 1)
+	workflowInlineExtractConfigFieldExtractionRules = big.NewInt(1 << 2)
+	workflowInlineExtractConfigFieldSchema          = big.NewInt(1 << 3)
+	workflowInlineExtractConfigFieldAdvancedOptions = big.NewInt(1 << 4)
+	workflowInlineExtractConfigFieldParseConfig     = big.NewInt(1 << 5)
+)
+
+type WorkflowInlineExtractConfig struct {
+	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
+	// Custom rules to guide the extraction process in natural language.
+	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
+	// JSON Schema definition of the data to extract. Required for inline workflow configs.
+	//
+	// See the [JSON Schema guide](https://docs.extend.ai/2026-02-09/extraction/schema) for details and examples of schema configuration.
+	Schema JSONObject `json:"schema" url:"schema"`
+	// Advanced configuration options.
+	AdvancedOptions *ExtractAdvancedOptions `json:"advancedOptions,omitempty" url:"advancedOptions,omitempty"`
+	// Configuration options for the parsing process.
+	ParseConfig *ParseConfig `json:"parseConfig,omitempty" url:"parseConfig,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowInlineExtractConfig) GetBaseProcessor() *ExtractBaseProcessor {
+	if w == nil {
+		return nil
+	}
+	return w.BaseProcessor
+}
+
+func (w *WorkflowInlineExtractConfig) GetBaseVersion() *string {
+	if w == nil {
+		return nil
+	}
+	return w.BaseVersion
+}
+
+func (w *WorkflowInlineExtractConfig) GetExtractionRules() *string {
+	if w == nil {
+		return nil
+	}
+	return w.ExtractionRules
+}
+
+func (w *WorkflowInlineExtractConfig) GetSchema() JSONObject {
+	if w == nil {
+		return nil
+	}
+	return w.Schema
+}
+
+func (w *WorkflowInlineExtractConfig) GetAdvancedOptions() *ExtractAdvancedOptions {
+	if w == nil {
+		return nil
+	}
+	return w.AdvancedOptions
+}
+
+func (w *WorkflowInlineExtractConfig) GetParseConfig() *ParseConfig {
+	if w == nil {
+		return nil
+	}
+	return w.ParseConfig
+}
+
+func (w *WorkflowInlineExtractConfig) GetExtraProperties() map[string]interface{} {
+	if w == nil {
+		return nil
+	}
+	return w.extraProperties
+}
+
+func (w *WorkflowInlineExtractConfig) require(field *big.Int) {
+	if w.explicitFields == nil {
+		w.explicitFields = big.NewInt(0)
+	}
+	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetBaseProcessor(baseProcessor *ExtractBaseProcessor) {
+	w.BaseProcessor = baseProcessor
+	w.require(workflowInlineExtractConfigFieldBaseProcessor)
+}
+
+// SetBaseVersion sets the BaseVersion field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetBaseVersion(baseVersion *string) {
+	w.BaseVersion = baseVersion
+	w.require(workflowInlineExtractConfigFieldBaseVersion)
+}
+
+// SetExtractionRules sets the ExtractionRules field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetExtractionRules(extractionRules *string) {
+	w.ExtractionRules = extractionRules
+	w.require(workflowInlineExtractConfigFieldExtractionRules)
+}
+
+// SetSchema sets the Schema field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetSchema(schema JSONObject) {
+	w.Schema = schema
+	w.require(workflowInlineExtractConfigFieldSchema)
+}
+
+// SetAdvancedOptions sets the AdvancedOptions field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetAdvancedOptions(advancedOptions *ExtractAdvancedOptions) {
+	w.AdvancedOptions = advancedOptions
+	w.require(workflowInlineExtractConfigFieldAdvancedOptions)
+}
+
+// SetParseConfig sets the ParseConfig field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowInlineExtractConfig) SetParseConfig(parseConfig *ParseConfig) {
+	w.ParseConfig = parseConfig
+	w.require(workflowInlineExtractConfigFieldParseConfig)
+}
+
+func (w *WorkflowInlineExtractConfig) UnmarshalJSON(data []byte) error {
+	type unmarshaler WorkflowInlineExtractConfig
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*w = WorkflowInlineExtractConfig(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *w)
+	if err != nil {
+		return err
+	}
+	w.extraProperties = extraProperties
+	w.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (w *WorkflowInlineExtractConfig) MarshalJSON() ([]byte, error) {
+	type embed WorkflowInlineExtractConfig
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*w),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (w *WorkflowInlineExtractConfig) String() string {
 	if w == nil {
 		return "<nil>"
 	}

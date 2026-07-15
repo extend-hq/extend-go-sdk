@@ -101,6 +101,14 @@ Controls the format of the response chunks. Defaults to `json` if not specified.
     
 </dd>
 </dl>
+
+<dl>
+<dd>
+
+**dataRetention:** `*extend.DataRetention` 
+    
+</dd>
+</dl>
 </dd>
 </dl>
 
@@ -127,7 +135,7 @@ Edit a file synchronously, waiting for the result before returning. This endpoin
 
 The Edit endpoint allows you to detect and fill form fields in PDF documents.
 
-For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/edit).
+For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview). See [Editing Error Handling](https://docs.extend.ai/2026-02-09/editing/error-handling) for HTTP errors and run failure reasons.
 </dd>
 </dl>
 </dd>
@@ -187,6 +195,91 @@ client.Edit(
 <dd>
 
 **config:** `*extend.EditConfig` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.DetectForm(request) -> *extend.FormDetectionRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Detect fields in a PDF form and wait for the generated edit schema before returning. This endpoint has a 5-minute timeout.
+
+For production workloads, use `POST /form_detection_runs` and poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.DetectFormRequest{
+        File: &extend.DetectFormRequestFile{
+            FileFromURL: &extend.FileFromURL{
+                URL: "https://example.com/form.pdf",
+            },
+        },
+        Config: &extend.EditSchemaGenerationConfig{
+            Instructions: extend.String(
+                "Detect the form fields and use human-readable field names.",
+            ),
+            AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+                RadioEnumsEnabled: extend.Bool(
+                    true,
+                ),
+            },
+        },
+    }
+client.DetectForm(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**file:** `*extend.DetectFormRequestFile` — The PDF form to analyze. Files can be provided as a URL or an Extend file ID.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**config:** `*extend.EditSchemaGenerationConfig` 
     
 </dd>
 </dl>
@@ -367,7 +460,7 @@ Classify a document synchronously, waiting for the result before returning. This
 
 The Classify endpoint allows you to classify documents using an existing classifier or an inline configuration.
 
-For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuring-a-classifier).
+For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuration).
 </dd>
 </dl>
 </dd>
@@ -481,7 +574,7 @@ Split a document synchronously, waiting for the result before returning. This en
 
 The Split endpoint allows you to split documents into multiple parts using an existing splitter or an inline configuration.
 
-For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuring-a-splitter).
+For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuration).
 </dd>
 </dl>
 </dd>
@@ -745,7 +838,7 @@ Example: `"file_Xj8mK2pL9nR4vT7qY5wZ"`
 
 **rawText:** `*bool` 
 
-**Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+**Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 
 If set to true, the raw text content of the file will be included in the response.
     
@@ -757,7 +850,7 @@ If set to true, the raw text content of the file will be included in the respons
 
 **markdown:** `*bool` 
 
-**Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+**Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 
 If set to true, the markdown content of the file will be included in the response.
 
@@ -771,7 +864,7 @@ Only available for files with a type of PDF, IMG, or DOCX files that were auto-c
 
 **html:** `*bool` 
 
-**Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+**Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 
 If set to true, the html content of the file will be included in the response.
 
@@ -1158,6 +1251,14 @@ client.ParseRuns.Create(
 <dd>
 
 **metadata:** `*extend.RunMetadata` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**dataRetention:** `*extend.DataRetention` 
     
 </dd>
 </dl>
@@ -1772,7 +1873,7 @@ Example: `"edr_xK9mLPqRtN3vS8wF5hB2cQ"`
 
 Retrieve a saved edit template by ID.
 
-Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. You can reuse the returned `config` with `POST /edit` or `POST /edit_runs`, and reuse `schemaConfig` with `POST /edit_schemas/generate`.
+Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. You can reuse the returned `config` with `POST /edit` or `POST /edit_runs`, and reuse `schemaConfig` with `POST /detect_form` or `POST /form_detection_runs`.
 </dd>
 </dl>
 </dd>
@@ -1845,13 +1946,15 @@ Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
 <dl>
 <dd>
 
+**Deprecated:** Use `POST /detect_form` for synchronous form detection or `POST /form_detection_runs` for asynchronous processing.
+
 Detect fields in a PDF form and synchronously return an edit schema payload.
 
 Use this endpoint when you want Extend to bootstrap an `EditRootJSON` schema from an existing form, optionally mapping an existing schema onto the detected fields.
 
 This endpoint returns the generated schema directly. There are no schema generation run resources to poll or delete.
 
-For more details, see the [Generate Edit Schema guide](https://docs.extend.ai/2026-02-09/editing/generate-edit-schema) and the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/edit).
+For more details, see the [Detect Form guide](https://docs.extend.ai/2026-02-09/editing/detect-form) and the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview).
 </dd>
 </dl>
 </dd>
@@ -1911,6 +2014,166 @@ client.EditSchemas.Generate(
 <dd>
 
 **config:** `*extend.EditSchemaGenerationConfig` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## FormDetectionRuns
+<details><summary><code>client.FormDetectionRuns.Create(request) -> *extend.FormDetectionRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Start detecting fields in a PDF form and return immediately with a `form_detection_run` resource, typically in the `PROCESSING` state.
+
+Poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.FormDetectionRunsCreateRequest{
+        File: &extend.FormDetectionRunsCreateRequestFile{
+            FileFromURL: &extend.FileFromURL{
+                URL: "https://example.com/form.pdf",
+            },
+        },
+        Config: &extend.EditSchemaGenerationConfig{
+            Instructions: extend.String(
+                "Detect the form fields and use human-readable field names.",
+            ),
+            AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+                RadioEnumsEnabled: extend.Bool(
+                    true,
+                ),
+            },
+        },
+    }
+client.FormDetectionRuns.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**file:** `*extend.FormDetectionRunsCreateRequestFile` — The PDF form to analyze. Files can be provided as a URL or an Extend file ID.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**config:** `*extend.EditSchemaGenerationConfig` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.FormDetectionRuns.Retrieve(ID) -> *extend.FormDetectionRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Retrieve the status and results of a form detection run.
+
+Use this endpoint to poll a run created with `POST /form_detection_runs`. When `status` is `PROCESSED`, `output.schema` contains the generated edit schema.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.FormDetectionRunsRetrieveRequest{}
+client.FormDetectionRuns.Retrieve(
+        context.TODO(),
+        "sgr_xK9mLPqRtN3vS8wF5hB2cQ",
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The unique identifier for the form detection run.
+
+Example: `"sgr_xK9mLPqRtN3vS8wF5hB2cQ"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
     
 </dd>
 </dl>

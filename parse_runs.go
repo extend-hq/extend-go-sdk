@@ -37,16 +37,18 @@ func (p *ParseRunsCancelRequest) SetExtendWorkspaceID(extendWorkspaceID *string)
 }
 
 var (
-	parseRunsCreateRequestFieldFile     = big.NewInt(1 << 0)
-	parseRunsCreateRequestFieldConfig   = big.NewInt(1 << 1)
-	parseRunsCreateRequestFieldMetadata = big.NewInt(1 << 2)
+	parseRunsCreateRequestFieldFile          = big.NewInt(1 << 0)
+	parseRunsCreateRequestFieldConfig        = big.NewInt(1 << 1)
+	parseRunsCreateRequestFieldMetadata      = big.NewInt(1 << 2)
+	parseRunsCreateRequestFieldDataRetention = big.NewInt(1 << 3)
 )
 
 type ParseRunsCreateRequest struct {
 	// The file to be parsed. Files can be provided as a URL or an Extend file ID.
-	File     *ParseRunsCreateRequestFile `json:"file" url:"-"`
-	Config   *ParseConfig                `json:"config,omitempty" url:"-"`
-	Metadata *RunMetadata                `json:"metadata,omitempty" url:"-"`
+	File          *ParseRunsCreateRequestFile `json:"file" url:"-"`
+	Config        *ParseConfig                `json:"config,omitempty" url:"-"`
+	Metadata      *RunMetadata                `json:"metadata,omitempty" url:"-"`
+	DataRetention *DataRetention              `json:"dataRetention,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -78,6 +80,13 @@ func (p *ParseRunsCreateRequest) SetConfig(config *ParseConfig) {
 func (p *ParseRunsCreateRequest) SetMetadata(metadata *RunMetadata) {
 	p.Metadata = metadata
 	p.require(parseRunsCreateRequestFieldMetadata)
+}
+
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunsCreateRequest) SetDataRetention(dataRetention *DataRetention) {
+	p.DataRetention = dataRetention
+	p.require(parseRunsCreateRequestFieldDataRetention)
 }
 
 func (p *ParseRunsCreateRequest) UnmarshalJSON(data []byte) error {
