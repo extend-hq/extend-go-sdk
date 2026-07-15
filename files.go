@@ -110,17 +110,17 @@ var (
 type FilesRetrieveRequest struct {
 	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
 	ExtendWorkspaceID *string `json:"-" url:"-"`
-	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 	//
 	// If set to true, the raw text content of the file will be included in the response.
 	RawText *bool `json:"-" url:"rawText,omitempty"`
-	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 	//
 	// If set to true, the markdown content of the file will be included in the response.
 	//
 	// Only available for files with a type of PDF, IMG, or DOCX files that were auto-converted to PDFs.
 	Markdown *bool `json:"-" url:"markdown,omitempty"`
-	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents.
+	// **Deprecated:** Use `POST /parse_runs` instead to parse file contents and get contents or `GET /parse_runs/{id}` to retrieve the results async if file is already parsed. Files parsed with versions >2.x will not support this parameter.
 	//
 	// If set to true, the html content of the file will be included in the response.
 	//

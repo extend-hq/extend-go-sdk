@@ -13,7 +13,7 @@
     "alwaysSendRequiredProperties": true,
     "useReaderForBytesRequest": true
   },
-  "originGitCommit": "a155514591918efab974910cfee4187442fa8f75",
+  "originGitCommit": "094c36681badc82afeb39a2c91a716461a5a0bd2",
   "originGitCommitIsDirty": false,
   "invokedBy": "ci",
   "requestedVersion": "0.3.0",

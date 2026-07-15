@@ -39,7 +39,7 @@ func NewClient(options *core.RequestOptions) *Client {
 
 // Retrieve a saved edit template by ID.
 //
-// Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. You can reuse the returned `config` with `POST /edit` or `POST /edit_runs`, and reuse `schemaConfig` with `POST /edit_schemas/generate`.
+// Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. You can reuse the returned `config` with `POST /edit` or `POST /edit_runs`, and reuse `schemaConfig` with `POST /detect_form` or `POST /form_detection_runs`.
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the edit template.

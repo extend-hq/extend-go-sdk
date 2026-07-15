@@ -23,6 +23,7 @@ import (
 	extractorversions "github.com/extend-hq/extend-go-sdk/extractorversions"
 	extractruns "github.com/extend-hq/extend-go-sdk/extractruns"
 	files "github.com/extend-hq/extend-go-sdk/files"
+	formdetectionruns "github.com/extend-hq/extend-go-sdk/formdetectionruns"
 	internal "github.com/extend-hq/extend-go-sdk/internal"
 	option "github.com/extend-hq/extend-go-sdk/option"
 	parseruns "github.com/extend-hq/extend-go-sdk/parseruns"
@@ -46,6 +47,7 @@ type Client struct {
 	EditRuns             *editruns.Client
 	EditTemplates        *edittemplates.Client
 	EditSchemas          *editschemas.Client
+	FormDetectionRuns    *formdetectionruns.Client
 	ExtractRuns          *extractruns.Client
 	Extractors           *extractors.Client
 	ExtractorVersions    *extractorversions.Client
@@ -85,6 +87,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		EditRuns:             editruns.NewClient(options),
 		EditTemplates:        edittemplates.NewClient(options),
 		EditSchemas:          editschemas.NewClient(options),
+		FormDetectionRuns:    formdetectionruns.NewClient(options),
 		ExtractRuns:          extractruns.NewClient(options),
 		Extractors:           extractors.NewClient(options),
 		ExtractorVersions:    extractorversions.NewClient(options),
@@ -148,13 +151,32 @@ func (c *Client) Parse(
 //
 // The Edit endpoint allows you to detect and fill form fields in PDF documents.
 //
-// For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/edit).
+// For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview). See [Editing Error Handling](https://docs.extend.ai/2026-02-09/editing/error-handling) for HTTP errors and run failure reasons.
 func (c *Client) Edit(
 	ctx context.Context,
 	request *extend.EditRequest,
 	opts ...option.RequestOption,
 ) (*extend.EditRun, error) {
 	response, err := c.WithRawResponse.Edit(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Detect fields in a PDF form and wait for the generated edit schema before returning. This endpoint has a 5-minute timeout.
+//
+// For production workloads, use `POST /form_detection_runs` and poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
+func (c *Client) DetectForm(
+	ctx context.Context,
+	request *extend.DetectFormRequest,
+	opts ...option.RequestOption,
+) (*extend.FormDetectionRun, error) {
+	response, err := c.WithRawResponse.DetectForm(
 		ctx,
 		request,
 		opts...,
@@ -196,7 +218,7 @@ func (c *Client) Extract(
 //
 // The Classify endpoint allows you to classify documents using an existing classifier or an inline configuration.
 //
-// For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuring-a-classifier).
+// For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuration).
 func (c *Client) Classify(
 	ctx context.Context,
 	request *extend.ClassifyRequest,
@@ -219,7 +241,7 @@ func (c *Client) Classify(
 //
 // The Split endpoint allows you to split documents into multiple parts using an existing splitter or an inline configuration.
 //
-// For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuring-a-splitter).
+// For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuration).
 func (c *Client) Split(
 	ctx context.Context,
 	request *extend.SplitRequest,

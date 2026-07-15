@@ -127,6 +127,49 @@ func (r *RawClient) Edit(
 	}, nil
 }
 
+func (r *RawClient) DetectForm(
+	ctx context.Context,
+	request *extend.DetectFormRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*extend.FormDetectionRun], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"https://api.extend.ai",
+	)
+	endpointURL := baseURL + "/detect_form"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	headers.Add("Content-Type", "application/json")
+	var response *extend.FormDetectionRun
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(extend.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*extend.FormDetectionRun]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) Extract(
 	ctx context.Context,
 	request *extend.ExtractRequest,

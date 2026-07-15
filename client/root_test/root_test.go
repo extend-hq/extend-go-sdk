@@ -136,6 +136,46 @@ func TestEditWithWireMock(
 	VerifyRequestCount(t, "TestEditWithWireMock", "POST", "/edit", nil, 1)
 }
 
+func TestDetectFormWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithToken("test-token"),
+	)
+	request := &extend.DetectFormRequest{
+		File: &extend.DetectFormRequestFile{
+			FileFromURL: &extend.FileFromURL{
+				URL: "https://example.com/form.pdf",
+			},
+		},
+		Config: &extend.EditSchemaGenerationConfig{
+			Instructions: extend.String(
+				"Detect the form fields and use human-readable field names.",
+			),
+			AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+				RadioEnumsEnabled: extend.Bool(
+					true,
+				),
+			},
+		},
+	}
+	_, invocationErr := client.DetectForm(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestDetectFormWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestDetectFormWithWireMock", "POST", "/detect_form", nil, 1)
+}
+
 func TestExtractWithWireMock(
 	t *testing.T,
 ) {

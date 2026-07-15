@@ -9,17 +9,17 @@ import (
 	testing "testing"
 )
 
-func TestSettersEditSchemasGenerateRequest(t *testing.T) {
+func TestSettersFormDetectionRunsCreateRequest(t *testing.T) {
 	t.Run("SetFile", func(t *testing.T) {
-		obj := &EditSchemasGenerateRequest{}
-		var fernTestValueFile *EditSchemasGenerateRequestFile
+		obj := &FormDetectionRunsCreateRequest{}
+		var fernTestValueFile *FormDetectionRunsCreateRequestFile
 		obj.SetFile(fernTestValueFile)
 		assert.Equal(t, fernTestValueFile, obj.File)
 		assert.NotNil(t, obj.explicitFields)
 	})
 
 	t.Run("SetConfig", func(t *testing.T) {
-		obj := &EditSchemasGenerateRequest{}
+		obj := &FormDetectionRunsCreateRequest{}
 		var fernTestValueConfig *EditSchemaGenerationConfig
 		obj.SetConfig(fernTestValueConfig)
 		assert.Equal(t, fernTestValueConfig, obj.Config)
@@ -28,12 +28,12 @@ func TestSettersEditSchemasGenerateRequest(t *testing.T) {
 
 }
 
-func TestSettersMarkExplicitEditSchemasGenerateRequest(t *testing.T) {
+func TestSettersMarkExplicitFormDetectionRunsCreateRequest(t *testing.T) {
 	t.Run("SetFile_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequest{}
-		var fernTestValueFile *EditSchemasGenerateRequestFile
+		obj := &FormDetectionRunsCreateRequest{}
+		var fernTestValueFile *FormDetectionRunsCreateRequestFile
 
 		// Act
 		obj.SetFile(fernTestValueFile)
@@ -63,7 +63,7 @@ func TestSettersMarkExplicitEditSchemasGenerateRequest(t *testing.T) {
 	t.Run("SetConfig_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequest{}
+		obj := &FormDetectionRunsCreateRequest{}
 		var fernTestValueConfig *EditSchemaGenerationConfig
 
 		// Act
@@ -93,11 +93,56 @@ func TestSettersMarkExplicitEditSchemasGenerateRequest(t *testing.T) {
 
 }
 
-func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
+func TestSettersFormDetectionRunsRetrieveRequest(t *testing.T) {
+	t.Run("SetExtendWorkspaceID", func(t *testing.T) {
+		obj := &FormDetectionRunsRetrieveRequest{}
+		var fernTestValueExtendWorkspaceID *string
+		obj.SetExtendWorkspaceID(fernTestValueExtendWorkspaceID)
+		assert.Equal(t, fernTestValueExtendWorkspaceID, obj.ExtendWorkspaceID)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+}
+
+func TestSettersMarkExplicitFormDetectionRunsRetrieveRequest(t *testing.T) {
+	t.Run("SetExtendWorkspaceID_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunsRetrieveRequest{}
+		var fernTestValueExtendWorkspaceID *string
+
+		// Act
+		obj.SetExtendWorkspaceID(fernTestValueExtendWorkspaceID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+}
+
+func TestGettersFormDetectionRunsCreateRequestFile(t *testing.T) {
 	t.Run("GetFileFromURL", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequestFile{}
+		obj := &FormDetectionRunsCreateRequestFile{}
 		var expected *FileFromURL
 		obj.FileFromURL = expected
 
@@ -108,7 +153,7 @@ func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
 	t.Run("GetFileFromURL_NilValue", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequestFile{}
+		obj := &FormDetectionRunsCreateRequestFile{}
 		obj.FileFromURL = nil
 
 		// Act & Assert
@@ -117,7 +162,7 @@ func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
 
 	t.Run("GetFileFromURL_NilReceiver", func(t *testing.T) {
 		t.Parallel()
-		var obj *EditSchemasGenerateRequestFile
+		var obj *FormDetectionRunsCreateRequestFile
 		// Should not panic - getters should handle nil receiver gracefully
 		defer func() {
 			if r := recover(); r != nil {
@@ -130,7 +175,7 @@ func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
 	t.Run("GetFileFromID", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequestFile{}
+		obj := &FormDetectionRunsCreateRequestFile{}
 		var expected *FileFromID
 		obj.FileFromID = expected
 
@@ -141,7 +186,7 @@ func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
 	t.Run("GetFileFromID_NilValue", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
-		obj := &EditSchemasGenerateRequestFile{}
+		obj := &FormDetectionRunsCreateRequestFile{}
 		obj.FileFromID = nil
 
 		// Act & Assert
@@ -150,7 +195,7 @@ func TestGettersEditSchemasGenerateRequestFile(t *testing.T) {
 
 	t.Run("GetFileFromID_NilReceiver", func(t *testing.T) {
 		t.Parallel()
-		var obj *EditSchemasGenerateRequestFile
+		var obj *FormDetectionRunsCreateRequestFile
 		// Should not panic - getters should handle nil receiver gracefully
 		defer func() {
 			if r := recover(); r != nil {

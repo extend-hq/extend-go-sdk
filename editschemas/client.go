@@ -37,13 +37,15 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
+// **Deprecated:** Use `POST /detect_form` for synchronous form detection or `POST /form_detection_runs` for asynchronous processing.
+//
 // Detect fields in a PDF form and synchronously return an edit schema payload.
 //
 // Use this endpoint when you want Extend to bootstrap an `EditRootJSON` schema from an existing form, optionally mapping an existing schema onto the detected fields.
 //
 // This endpoint returns the generated schema directly. There are no schema generation run resources to poll or delete.
 //
-// For more details, see the [Generate Edit Schema guide](https://docs.extend.ai/2026-02-09/editing/generate-edit-schema) and the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/edit).
+// For more details, see the [Detect Form guide](https://docs.extend.ai/2026-02-09/editing/detect-form) and the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview).
 func (c *Client) Generate(
 	ctx context.Context,
 	request *extend.EditSchemasGenerateRequest,
