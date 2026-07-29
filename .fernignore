@@ -2,3 +2,6 @@
 .fern/replay.lock
 .fern/replay.yml
 .gitattributes
+
+# Hand-written release automation; Fern's pull-request mode does not tag.
+.github/workflows/release.yml
