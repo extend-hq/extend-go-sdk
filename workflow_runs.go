@@ -39,17 +39,20 @@ func (w *WorkflowRunsCancelRequest) SetExtendWorkspaceID(extendWorkspaceID *stri
 var (
 	workflowRunsCreateRequestFieldWorkflow = big.NewInt(1 << 0)
 	workflowRunsCreateRequestFieldFile     = big.NewInt(1 << 1)
-	workflowRunsCreateRequestFieldOutputs  = big.NewInt(1 << 2)
-	workflowRunsCreateRequestFieldPriority = big.NewInt(1 << 3)
-	workflowRunsCreateRequestFieldMetadata = big.NewInt(1 << 4)
-	workflowRunsCreateRequestFieldSecrets  = big.NewInt(1 << 5)
+	workflowRunsCreateRequestFieldPackage  = big.NewInt(1 << 2)
+	workflowRunsCreateRequestFieldOutputs  = big.NewInt(1 << 3)
+	workflowRunsCreateRequestFieldPriority = big.NewInt(1 << 4)
+	workflowRunsCreateRequestFieldMetadata = big.NewInt(1 << 5)
+	workflowRunsCreateRequestFieldSecrets  = big.NewInt(1 << 6)
 )
 
 type WorkflowRunsCreateRequest struct {
 	Workflow *WorkflowReference `json:"workflow" url:"-"`
-	// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
-	File *WorkflowRunsCreateRequestFile `json:"file" url:"-"`
-	// Predetermined outputs to be used for the workflow run. Generally not recommended for most use cases, however, can be useful in cases of overriding a classification in a workflow, or a subset of extraction fields when data is known.
+	// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. Mutually exclusive with `package` — provide one or the other. If you wish to process many files as independent runs, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
+	File *WorkflowRunsCreateRequestFile `json:"file,omitempty" url:"-"`
+	// A set of 2–50 files to process together in a single workflow run. Mutually exclusive with `file` — provide one or the other.
+	Package *WorkflowRunPackage `json:"package,omitempty" url:"-"`
+	// Predetermined outputs to be used for the workflow run. Generally not recommended for most use cases, however, can be useful in cases of overriding a classification in a workflow, or a subset of extraction fields when data is known. Not supported on package runs — a package run produces a single merged result across all files and cannot accept pre-supplied per-processor outputs.
 	Outputs  []*WorkflowRunsCreateRequestOutputsItem `json:"outputs,omitempty" url:"-"`
 	Priority *RunPriority                            `json:"priority,omitempty" url:"-"`
 	Metadata *RunMetadata                            `json:"metadata,omitempty" url:"-"`
@@ -78,6 +81,13 @@ func (w *WorkflowRunsCreateRequest) SetWorkflow(workflow *WorkflowReference) {
 func (w *WorkflowRunsCreateRequest) SetFile(file *WorkflowRunsCreateRequestFile) {
 	w.File = file
 	w.require(workflowRunsCreateRequestFieldFile)
+}
+
+// SetPackage sets the Package field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowRunsCreateRequest) SetPackage(package_ *WorkflowRunPackage) {
+	w.Package = package_
+	w.require(workflowRunsCreateRequestFieldPackage)
 }
 
 // SetOutputs sets the Outputs field and marks it as non-optional;
@@ -4129,6 +4139,8 @@ type StepRun struct {
 	ConditionalExtract     *ConditionalExtractStepRun
 	RuleValidation         *RuleValidationStepRun
 	ExternalDataValidation *ExternalDataValidationStepRun
+
+	rawJSON json.RawMessage
 }
 
 func (s *StepRun) GetStepType() string {
@@ -4255,6 +4267,7 @@ func (s *StepRun) UnmarshalJSON(data []byte) error {
 		}
 		s.ExternalDataValidation = value
 	}
+	s.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -4285,6 +4298,9 @@ func (s StepRun) MarshalJSON() ([]byte, error) {
 	}
 	if s.ExternalDataValidation != nil {
 		return internal.MarshalJSONWithExtraProperty(s.ExternalDataValidation, "stepType", "EXTERNAL_DATA_VALIDATION")
+	}
+	if len(s.rawJSON) > 0 {
+		return s.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", s)
 }
@@ -4359,6 +4375,9 @@ func (s *StepRun) validate() error {
 	}
 	if len(fields) == 0 {
 		if s.StepType != "" {
+			if len(s.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", s, s.StepType)
 		}
 		return fmt.Errorf("type %T is empty", s)
@@ -5131,6 +5150,158 @@ func (w *WorkflowRun) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", w)
+}
+
+// An ordered collection of files to process together in a single workflow run. Use this instead of `file` when a set of documents should be treated as one package — every file is ingested up front, and the workflow's steps reason over the full set, producing a single `WorkflowRun`.
+//
+// Exactly one of `file` or `package` must be provided on a request — they are mutually exclusive.
+var (
+	workflowRunPackageFieldFiles = big.NewInt(1 << 0)
+)
+
+type WorkflowRunPackage struct {
+	// The files to process, in submission order. Each entry can be a URL or an existing Extend file ID. Raw text and base64 inputs are not supported for package runs.
+	//
+	// Duplicate file IDs and duplicate URLs are rejected — each file may appear only once. A URL and a file ID are never treated as duplicates of each other, even if they resolve to the same document.
+	Files []*WorkflowRunPackageFilesItem `json:"files" url:"files"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (w *WorkflowRunPackage) GetFiles() []*WorkflowRunPackageFilesItem {
+	if w == nil {
+		return nil
+	}
+	return w.Files
+}
+
+func (w *WorkflowRunPackage) GetExtraProperties() map[string]interface{} {
+	if w == nil {
+		return nil
+	}
+	return w.extraProperties
+}
+
+func (w *WorkflowRunPackage) require(field *big.Int) {
+	if w.explicitFields == nil {
+		w.explicitFields = big.NewInt(0)
+	}
+	w.explicitFields.Or(w.explicitFields, field)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowRunPackage) SetFiles(files []*WorkflowRunPackageFilesItem) {
+	w.Files = files
+	w.require(workflowRunPackageFieldFiles)
+}
+
+func (w *WorkflowRunPackage) UnmarshalJSON(data []byte) error {
+	type unmarshaler WorkflowRunPackage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*w = WorkflowRunPackage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *w)
+	if err != nil {
+		return err
+	}
+	w.extraProperties = extraProperties
+	w.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (w *WorkflowRunPackage) MarshalJSON() ([]byte, error) {
+	type embed WorkflowRunPackage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*w),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, w.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (w *WorkflowRunPackage) String() string {
+	if w == nil {
+		return "<nil>"
+	}
+	if len(w.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(w.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(w); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+type WorkflowRunPackageFilesItem struct {
+	FileFromURL *FileFromURL
+	FileFromID  *FileFromID
+
+	typ string
+}
+
+func (w *WorkflowRunPackageFilesItem) GetFileFromURL() *FileFromURL {
+	if w == nil {
+		return nil
+	}
+	return w.FileFromURL
+}
+
+func (w *WorkflowRunPackageFilesItem) GetFileFromID() *FileFromID {
+	if w == nil {
+		return nil
+	}
+	return w.FileFromID
+}
+
+func (w *WorkflowRunPackageFilesItem) UnmarshalJSON(data []byte) error {
+	valueFileFromURL := new(FileFromURL)
+	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+		w.typ = "FileFromURL"
+		w.FileFromURL = valueFileFromURL
+		return nil
+	}
+	valueFileFromID := new(FileFromID)
+	if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+		w.typ = "FileFromID"
+		w.FileFromID = valueFileFromID
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, w)
+}
+
+func (w WorkflowRunPackageFilesItem) MarshalJSON() ([]byte, error) {
+	if w.typ == "FileFromURL" || w.FileFromURL != nil {
+		return json.Marshal(w.FileFromURL)
+	}
+	if w.typ == "FileFromID" || w.FileFromID != nil {
+		return json.Marshal(w.FileFromID)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", w)
+}
+
+type WorkflowRunPackageFilesItemVisitor interface {
+	VisitFileFromURL(*FileFromURL) error
+	VisitFileFromID(*FileFromID) error
+}
+
+func (w *WorkflowRunPackageFilesItem) Accept(visitor WorkflowRunPackageFilesItemVisitor) error {
+	if w.typ == "FileFromURL" || w.FileFromURL != nil {
+		return visitor.VisitFileFromURL(w.FileFromURL)
+	}
+	if w.typ == "FileFromID" || w.FileFromID != nil {
+		return visitor.VisitFileFromID(w.FileFromID)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", w)
 }
 
 // The status of a workflow run:
@@ -5988,7 +6159,7 @@ func (w *WorkflowRunsCreateBatchResponse) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. If you wish to process more at a time, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
+// The file to be processed. Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types). Files can be provided as a URL, an Extend file ID, or raw text. Mutually exclusive with `package` — provide one or the other. If you wish to process many files as independent runs, consider using the [Batch Run Workflow](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/batch-create-workflow-runs) endpoint.
 type WorkflowRunsCreateRequestFile struct {
 	FileFromURL  *FileFromURL
 	FileFromID   *FileFromID

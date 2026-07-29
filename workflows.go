@@ -130,6 +130,7 @@ var (
 	workflowFieldCreatedAt    = big.NewInt(1 << 2)
 	workflowFieldUpdatedAt    = big.NewInt(1 << 3)
 	workflowFieldDraftVersion = big.NewInt(1 << 4)
+	workflowFieldCreatedBy    = big.NewInt(1 << 5)
 )
 
 type Workflow struct {
@@ -140,6 +141,7 @@ type Workflow struct {
 	CreatedAt    CreatedAt        `json:"createdAt" url:"createdAt"`
 	UpdatedAt    UpdatedAt        `json:"updatedAt" url:"updatedAt"`
 	DraftVersion *WorkflowVersion `json:"draftVersion" url:"draftVersion"`
+	CreatedBy    *CreatedBy       `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -182,6 +184,13 @@ func (w *Workflow) GetDraftVersion() *WorkflowVersion {
 		return nil
 	}
 	return w.DraftVersion
+}
+
+func (w *Workflow) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *Workflow) Object() string {
@@ -235,6 +244,13 @@ func (w *Workflow) SetUpdatedAt(updatedAt UpdatedAt) {
 func (w *Workflow) SetDraftVersion(draftVersion *WorkflowVersion) {
 	w.DraftVersion = draftVersion
 	w.require(workflowFieldDraftVersion)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *Workflow) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(workflowFieldCreatedBy)
 }
 
 func (w *Workflow) UnmarshalJSON(data []byte) error {

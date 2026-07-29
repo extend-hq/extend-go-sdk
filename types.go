@@ -1931,9 +1931,8 @@ func (b *BlockDetails) Accept(visitor BlockDetailsVisitor) error {
 var (
 	blockMetadataFieldPage             = big.NewInt(1 << 0)
 	blockMetadataFieldSheet            = big.NewInt(1 << 1)
-	blockMetadataFieldTextDirection    = big.NewInt(1 << 2)
-	blockMetadataFieldMinOcrConfidence = big.NewInt(1 << 3)
-	blockMetadataFieldAvgOcrConfidence = big.NewInt(1 << 4)
+	blockMetadataFieldMinOcrConfidence = big.NewInt(1 << 2)
+	blockMetadataFieldAvgOcrConfidence = big.NewInt(1 << 3)
 )
 
 type BlockMetadata struct {
@@ -1941,8 +1940,6 @@ type BlockMetadata struct {
 	Page *BlockMetadataPage `json:"page,omitempty" url:"page,omitempty"`
 	// Spreadsheet sheet metadata. Present for blocks parsed from spreadsheet files, such as Excel workbooks.
 	Sheet *BlockMetadataSheet `json:"sheet,omitempty" url:"sheet,omitempty"`
-	// Text direction for this block's content ("ltr" for left-to-right, "rtl" for right-to-left).
-	TextDirection *BlockMetadataTextDirection `json:"textDirection,omitempty" url:"textDirection,omitempty"`
 	// Lowest per-word OCR confidence across words in this block, or `null` when word-level confidence is unavailable.
 	MinOcrConfidence *float64 `json:"minOcrConfidence,omitempty" url:"minOcrConfidence,omitempty"`
 	// Average per-word OCR confidence across words in this block, or `null` when word-level confidence is unavailable.
@@ -1967,13 +1964,6 @@ func (b *BlockMetadata) GetSheet() *BlockMetadataSheet {
 		return nil
 	}
 	return b.Sheet
-}
-
-func (b *BlockMetadata) GetTextDirection() *BlockMetadataTextDirection {
-	if b == nil {
-		return nil
-	}
-	return b.TextDirection
 }
 
 func (b *BlockMetadata) GetMinOcrConfidence() *float64 {
@@ -2016,13 +2006,6 @@ func (b *BlockMetadata) SetPage(page *BlockMetadataPage) {
 func (b *BlockMetadata) SetSheet(sheet *BlockMetadataSheet) {
 	b.Sheet = sheet
 	b.require(blockMetadataFieldSheet)
-}
-
-// SetTextDirection sets the TextDirection field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (b *BlockMetadata) SetTextDirection(textDirection *BlockMetadataTextDirection) {
-	b.TextDirection = textDirection
-	b.require(blockMetadataFieldTextDirection)
 }
 
 // SetMinOcrConfidence sets the MinOcrConfidence field and marks it as non-optional;
@@ -2302,29 +2285,6 @@ func (b *BlockMetadataSheet) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", b)
-}
-
-// Text direction for this block's content ("ltr" for left-to-right, "rtl" for right-to-left).
-type BlockMetadataTextDirection string
-
-const (
-	BlockMetadataTextDirectionLtr BlockMetadataTextDirection = "ltr"
-	BlockMetadataTextDirectionRtl BlockMetadataTextDirection = "rtl"
-)
-
-func NewBlockMetadataTextDirectionFromString(s string) (BlockMetadataTextDirection, error) {
-	switch s {
-	case "ltr":
-		return BlockMetadataTextDirectionLtr, nil
-	case "rtl":
-		return BlockMetadataTextDirectionRtl, nil
-	}
-	var t BlockMetadataTextDirection
-	return "", fmt.Errorf("%s is not a valid %T", s, t)
-}
-
-func (b BlockMetadataTextDirection) Ptr() *BlockMetadataTextDirection {
-	return &b
 }
 
 var (
@@ -4328,6 +4288,7 @@ var (
 	classifierVersionFieldConfig       = big.NewInt(1 << 3)
 	classifierVersionFieldClassifierID = big.NewInt(1 << 4)
 	classifierVersionFieldCreatedAt    = big.NewInt(1 << 5)
+	classifierVersionFieldCreatedBy    = big.NewInt(1 << 6)
 )
 
 type ClassifierVersion struct {
@@ -4348,8 +4309,9 @@ type ClassifierVersion struct {
 	// The ID of the classifier that this version belongs to.
 	//
 	// Example: `"cl_Xj8mK2pL9nR4vT7qY5wZ"`
-	ClassifierID string    `json:"classifierId" url:"classifierId"`
-	CreatedAt    CreatedAt `json:"createdAt" url:"createdAt"`
+	ClassifierID string     `json:"classifierId" url:"classifierId"`
+	CreatedAt    CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy    *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -4399,6 +4361,13 @@ func (c *ClassifierVersion) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return c.CreatedAt
+}
+
+func (c *ClassifierVersion) GetCreatedBy() *CreatedBy {
+	if c == nil {
+		return nil
+	}
+	return c.CreatedBy
 }
 
 func (c *ClassifierVersion) Object() string {
@@ -4459,6 +4428,13 @@ func (c *ClassifierVersion) SetClassifierID(classifierID string) {
 func (c *ClassifierVersion) SetCreatedAt(createdAt CreatedAt) {
 	c.CreatedAt = createdAt
 	c.require(classifierVersionFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifierVersion) SetCreatedBy(createdBy *CreatedBy) {
+	c.CreatedBy = createdBy
+	c.require(classifierVersionFieldCreatedBy)
 }
 
 func (c *ClassifierVersion) UnmarshalJSON(data []byte) error {
@@ -4625,6 +4601,7 @@ var (
 	classifierVersionSummaryFieldVersion      = big.NewInt(1 << 2)
 	classifierVersionSummaryFieldClassifierID = big.NewInt(1 << 3)
 	classifierVersionSummaryFieldCreatedAt    = big.NewInt(1 << 4)
+	classifierVersionSummaryFieldCreatedBy    = big.NewInt(1 << 5)
 )
 
 type ClassifierVersionSummary struct {
@@ -4643,8 +4620,9 @@ type ClassifierVersionSummary struct {
 	// The ID of the classifier that this version belongs to.
 	//
 	// Example: `"cl_Xj8mK2pL9nR4vT7qY5wZ"`
-	ClassifierID string    `json:"classifierId" url:"classifierId"`
-	CreatedAt    CreatedAt `json:"createdAt" url:"createdAt"`
+	ClassifierID string     `json:"classifierId" url:"classifierId"`
+	CreatedAt    CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy    *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -4687,6 +4665,13 @@ func (c *ClassifierVersionSummary) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return c.CreatedAt
+}
+
+func (c *ClassifierVersionSummary) GetCreatedBy() *CreatedBy {
+	if c == nil {
+		return nil
+	}
+	return c.CreatedBy
 }
 
 func (c *ClassifierVersionSummary) Object() string {
@@ -4740,6 +4725,13 @@ func (c *ClassifierVersionSummary) SetClassifierID(classifierID string) {
 func (c *ClassifierVersionSummary) SetCreatedAt(createdAt CreatedAt) {
 	c.CreatedAt = createdAt
 	c.require(classifierVersionSummaryFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifierVersionSummary) SetCreatedBy(createdBy *CreatedBy) {
+	c.CreatedBy = createdBy
+	c.require(classifierVersionSummaryFieldCreatedBy)
 }
 
 func (c *ClassifierVersionSummary) UnmarshalJSON(data []byte) error {
@@ -7525,6 +7517,310 @@ func (c ConditionalStepDefinitionConfigConditionsItemType) Ptr() *ConditionalSte
 //
 // Example: `"2024-03-21T16:45:00Z"`
 type CreatedAt = time.Time
+
+// The actor that created this resource.
+//
+// * `user` — the resource was created via the studio by a logged-in user. The user's `email` is exposed.
+// * `api_key` — the resource was created via the API using an API key. The key's `name` is exposed.
+//
+// May be `null` for resources created before attribution.
+type CreatedBy struct {
+	Type   string
+	User   *CreatedByUser
+	APIKey *CreatedByAPIKey
+
+	rawJSON json.RawMessage
+}
+
+func (c *CreatedBy) GetType() string {
+	if c == nil {
+		return ""
+	}
+	return c.Type
+}
+
+func (c *CreatedBy) GetUser() *CreatedByUser {
+	if c == nil {
+		return nil
+	}
+	return c.User
+}
+
+func (c *CreatedBy) GetAPIKey() *CreatedByAPIKey {
+	if c == nil {
+		return nil
+	}
+	return c.APIKey
+}
+
+func (c *CreatedBy) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	c.Type = unmarshaler.Type
+	if unmarshaler.Type == "" {
+		return fmt.Errorf("%T did not include discriminant type", c)
+	}
+	switch unmarshaler.Type {
+	case "user":
+		value := new(CreatedByUser)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		c.User = value
+	case "api_key":
+		value := new(CreatedByAPIKey)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		c.APIKey = value
+	}
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c CreatedBy) MarshalJSON() ([]byte, error) {
+	if err := c.validate(); err != nil {
+		return nil, err
+	}
+	if c.User != nil {
+		return internal.MarshalJSONWithExtraProperty(c.User, "type", "user")
+	}
+	if c.APIKey != nil {
+		return internal.MarshalJSONWithExtraProperty(c.APIKey, "type", "api_key")
+	}
+	if len(c.rawJSON) > 0 {
+		return c.rawJSON, nil
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", c)
+}
+
+type CreatedByVisitor interface {
+	VisitUser(*CreatedByUser) error
+	VisitAPIKey(*CreatedByAPIKey) error
+}
+
+func (c *CreatedBy) Accept(visitor CreatedByVisitor) error {
+	if c.User != nil {
+		return visitor.VisitUser(c.User)
+	}
+	if c.APIKey != nil {
+		return visitor.VisitAPIKey(c.APIKey)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", c)
+}
+
+func (c *CreatedBy) validate() error {
+	if c == nil {
+		return fmt.Errorf("type %T is nil", c)
+	}
+	var fields []string
+	if c.User != nil {
+		fields = append(fields, "user")
+	}
+	if c.APIKey != nil {
+		fields = append(fields, "api_key")
+	}
+	if len(fields) == 0 {
+		if c.Type != "" {
+			if len(c.rawJSON) > 0 {
+				return nil
+			}
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", c, c.Type)
+		}
+		return fmt.Errorf("type %T is empty", c)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", c, fields)
+	}
+	if c.Type != "" {
+		field := fields[0]
+		if c.Type != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				c,
+				c.Type,
+				c,
+			)
+		}
+	}
+	return nil
+}
+
+// Attribution for a resource created via the API using an API key.
+var (
+	createdByAPIKeyFieldName = big.NewInt(1 << 0)
+)
+
+type CreatedByAPIKey struct {
+	// The name of the API key that created the resource.
+	Name string `json:"name" url:"name"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreatedByAPIKey) GetName() string {
+	if c == nil {
+		return ""
+	}
+	return c.Name
+}
+
+func (c *CreatedByAPIKey) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *CreatedByAPIKey) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CreatedByAPIKey) SetName(name string) {
+	c.Name = name
+	c.require(createdByAPIKeyFieldName)
+}
+
+func (c *CreatedByAPIKey) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreatedByAPIKey
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreatedByAPIKey(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreatedByAPIKey) MarshalJSON() ([]byte, error) {
+	type embed CreatedByAPIKey
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *CreatedByAPIKey) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Attribution for a resource created via the studio by a logged-in user.
+var (
+	createdByUserFieldEmail = big.NewInt(1 << 0)
+)
+
+type CreatedByUser struct {
+	// The email address of the user who created the resource.
+	Email string `json:"email" url:"email"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *CreatedByUser) GetEmail() string {
+	if c == nil {
+		return ""
+	}
+	return c.Email
+}
+
+func (c *CreatedByUser) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *CreatedByUser) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetEmail sets the Email field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *CreatedByUser) SetEmail(email string) {
+	c.Email = email
+	c.require(createdByUserFieldEmail)
+}
+
+func (c *CreatedByUser) UnmarshalJSON(data []byte) error {
+	type unmarshaler CreatedByUser
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = CreatedByUser(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *CreatedByUser) MarshalJSON() ([]byte, error) {
+	type embed CreatedByUser
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *CreatedByUser) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
 
 // Controls data retention for this run. When omitted or set to `workspace_default`, Extend uses your workspace's configured retention policy. Set `mode` to `zero` to request zero data retention for the run, which deletes supported run data after processing instead of retaining it under the workspace policy.
 //
@@ -16669,6 +16965,7 @@ var (
 	extractorVersionFieldConfig      = big.NewInt(1 << 3)
 	extractorVersionFieldExtractorID = big.NewInt(1 << 4)
 	extractorVersionFieldCreatedAt   = big.NewInt(1 << 5)
+	extractorVersionFieldCreatedBy   = big.NewInt(1 << 6)
 )
 
 type ExtractorVersion struct {
@@ -16692,8 +16989,9 @@ type ExtractorVersion struct {
 	// The ID of the extractor that this version belongs to.
 	//
 	// Example: `"ex_Xj8mK2pL9nR4vT7qY5wZ"`
-	ExtractorID string    `json:"extractorId" url:"extractorId"`
-	CreatedAt   CreatedAt `json:"createdAt" url:"createdAt"`
+	ExtractorID string     `json:"extractorId" url:"extractorId"`
+	CreatedAt   CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy   *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -16743,6 +17041,13 @@ func (e *ExtractorVersion) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return e.CreatedAt
+}
+
+func (e *ExtractorVersion) GetCreatedBy() *CreatedBy {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedBy
 }
 
 func (e *ExtractorVersion) Object() string {
@@ -16803,6 +17108,13 @@ func (e *ExtractorVersion) SetExtractorID(extractorID string) {
 func (e *ExtractorVersion) SetCreatedAt(createdAt CreatedAt) {
 	e.CreatedAt = createdAt
 	e.require(extractorVersionFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractorVersion) SetCreatedBy(createdBy *CreatedBy) {
+	e.CreatedBy = createdBy
+	e.require(extractorVersionFieldCreatedBy)
 }
 
 func (e *ExtractorVersion) UnmarshalJSON(data []byte) error {
@@ -16969,6 +17281,7 @@ var (
 	extractorVersionSummaryFieldVersion     = big.NewInt(1 << 2)
 	extractorVersionSummaryFieldExtractorID = big.NewInt(1 << 3)
 	extractorVersionSummaryFieldCreatedAt   = big.NewInt(1 << 4)
+	extractorVersionSummaryFieldCreatedBy   = big.NewInt(1 << 5)
 )
 
 type ExtractorVersionSummary struct {
@@ -16987,8 +17300,9 @@ type ExtractorVersionSummary struct {
 	// The ID of the extractor that this version belongs to.
 	//
 	// Example: `"ex_Xj8mK2pL9nR4vT7qY5wZ"`
-	ExtractorID string    `json:"extractorId" url:"extractorId"`
-	CreatedAt   CreatedAt `json:"createdAt" url:"createdAt"`
+	ExtractorID string     `json:"extractorId" url:"extractorId"`
+	CreatedAt   CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy   *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -17031,6 +17345,13 @@ func (e *ExtractorVersionSummary) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return e.CreatedAt
+}
+
+func (e *ExtractorVersionSummary) GetCreatedBy() *CreatedBy {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedBy
 }
 
 func (e *ExtractorVersionSummary) Object() string {
@@ -17084,6 +17405,13 @@ func (e *ExtractorVersionSummary) SetExtractorID(extractorID string) {
 func (e *ExtractorVersionSummary) SetCreatedAt(createdAt CreatedAt) {
 	e.CreatedAt = createdAt
 	e.require(extractorVersionSummaryFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractorVersionSummary) SetCreatedBy(createdBy *CreatedBy) {
+	e.CreatedBy = createdBy
+	e.require(extractorVersionSummaryFieldCreatedBy)
 }
 
 func (e *ExtractorVersionSummary) UnmarshalJSON(data []byte) error {
@@ -22031,6 +22359,8 @@ type LegacyProcessorVersionConfig struct {
 	Classify *LegacyClassificationConfig
 	Extract  *LegacyExtractionConfig
 	Splitter *LegacySplitterConfig
+
+	rawJSON json.RawMessage
 }
 
 func (l *LegacyProcessorVersionConfig) GetType() string {
@@ -22092,6 +22422,7 @@ func (l *LegacyProcessorVersionConfig) UnmarshalJSON(data []byte) error {
 		}
 		l.Splitter = value
 	}
+	l.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -22107,6 +22438,9 @@ func (l LegacyProcessorVersionConfig) MarshalJSON() ([]byte, error) {
 	}
 	if l.Splitter != nil {
 		return internal.MarshalJSONWithExtraProperty(l.Splitter, "type", "SPLITTER")
+	}
+	if len(l.rawJSON) > 0 {
+		return l.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", l)
 }
@@ -22146,6 +22480,9 @@ func (l *LegacyProcessorVersionConfig) validate() error {
 	}
 	if len(fields) == 0 {
 		if l.Type != "" {
+			if len(l.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", l, l.Type)
 		}
 		return fmt.Errorf("type %T is empty", l)
@@ -32282,6 +32619,7 @@ var (
 	splitterVersionFieldConfig      = big.NewInt(1 << 3)
 	splitterVersionFieldSplitterID  = big.NewInt(1 << 4)
 	splitterVersionFieldCreatedAt   = big.NewInt(1 << 5)
+	splitterVersionFieldCreatedBy   = big.NewInt(1 << 6)
 )
 
 type SplitterVersion struct {
@@ -32302,8 +32640,9 @@ type SplitterVersion struct {
 	// The ID of the splitter that this version belongs to.
 	//
 	// Example: `"spl_Xj8mK2pL9nR4vT7qY5wZ"`
-	SplitterID string    `json:"splitterId" url:"splitterId"`
-	CreatedAt  CreatedAt `json:"createdAt" url:"createdAt"`
+	SplitterID string     `json:"splitterId" url:"splitterId"`
+	CreatedAt  CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy  *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -32353,6 +32692,13 @@ func (s *SplitterVersion) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return s.CreatedAt
+}
+
+func (s *SplitterVersion) GetCreatedBy() *CreatedBy {
+	if s == nil {
+		return nil
+	}
+	return s.CreatedBy
 }
 
 func (s *SplitterVersion) Object() string {
@@ -32413,6 +32759,13 @@ func (s *SplitterVersion) SetSplitterID(splitterID string) {
 func (s *SplitterVersion) SetCreatedAt(createdAt CreatedAt) {
 	s.CreatedAt = createdAt
 	s.require(splitterVersionFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterVersion) SetCreatedBy(createdBy *CreatedBy) {
+	s.CreatedBy = createdBy
+	s.require(splitterVersionFieldCreatedBy)
 }
 
 func (s *SplitterVersion) UnmarshalJSON(data []byte) error {
@@ -32579,6 +32932,7 @@ var (
 	splitterVersionSummaryFieldVersion     = big.NewInt(1 << 2)
 	splitterVersionSummaryFieldSplitterID  = big.NewInt(1 << 3)
 	splitterVersionSummaryFieldCreatedAt   = big.NewInt(1 << 4)
+	splitterVersionSummaryFieldCreatedBy   = big.NewInt(1 << 5)
 )
 
 type SplitterVersionSummary struct {
@@ -32597,8 +32951,9 @@ type SplitterVersionSummary struct {
 	// The ID of the splitter that this version belongs to.
 	//
 	// Example: `"spl_Xj8mK2pL9nR4vT7qY5wZ"`
-	SplitterID string    `json:"splitterId" url:"splitterId"`
-	CreatedAt  CreatedAt `json:"createdAt" url:"createdAt"`
+	SplitterID string     `json:"splitterId" url:"splitterId"`
+	CreatedAt  CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy  *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -32641,6 +32996,13 @@ func (s *SplitterVersionSummary) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return s.CreatedAt
+}
+
+func (s *SplitterVersionSummary) GetCreatedBy() *CreatedBy {
+	if s == nil {
+		return nil
+	}
+	return s.CreatedBy
 }
 
 func (s *SplitterVersionSummary) Object() string {
@@ -32694,6 +33056,13 @@ func (s *SplitterVersionSummary) SetSplitterID(splitterID string) {
 func (s *SplitterVersionSummary) SetCreatedAt(createdAt CreatedAt) {
 	s.CreatedAt = createdAt
 	s.require(splitterVersionSummaryFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterVersionSummary) SetCreatedBy(createdBy *CreatedBy) {
+	s.CreatedBy = createdBy
+	s.require(splitterVersionSummaryFieldCreatedBy)
 }
 
 func (s *SplitterVersionSummary) UnmarshalJSON(data []byte) error {
@@ -33399,6 +33768,8 @@ type WebhookEvent struct {
 	SplitterDeleted             *SplitterDeletedWebhookEvent
 	SplitterDraftUpdated        *SplitterDraftUpdatedWebhookEvent
 	SplitterVersionPublished    *SplitterVersionPublishedWebhookEvent
+
+	rawJSON json.RawMessage
 }
 
 func (w *WebhookEvent) GetEventType() string {
@@ -33915,6 +34286,7 @@ func (w *WebhookEvent) UnmarshalJSON(data []byte) error {
 		}
 		w.SplitterVersionPublished = value
 	}
+	w.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -34035,6 +34407,9 @@ func (w WebhookEvent) MarshalJSON() ([]byte, error) {
 	}
 	if w.SplitterVersionPublished != nil {
 		return internal.MarshalJSONWithExtraProperty(w.SplitterVersionPublished, "eventType", "splitter.version.published")
+	}
+	if len(w.rawJSON) > 0 {
+		return w.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", w)
 }
@@ -34319,6 +34694,9 @@ func (w *WebhookEvent) validate() error {
 	}
 	if len(fields) == 0 {
 		if w.EventType != "" {
+			if len(w.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", w, w.EventType)
 		}
 		return fmt.Errorf("type %T is empty", w)
@@ -35527,6 +35905,8 @@ type WorkflowStepDefinition struct {
 	HumanReview            *HumanReviewStepDefinition
 	Collect                *CollectStepDefinition
 	FileConversion         *FileConversionStepDefinition
+
+	rawJSON json.RawMessage
 }
 
 func (w *WorkflowStepDefinition) GetType() string {
@@ -35731,6 +36111,7 @@ func (w *WorkflowStepDefinition) UnmarshalJSON(data []byte) error {
 		}
 		w.FileConversion = value
 	}
+	w.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -35779,6 +36160,9 @@ func (w WorkflowStepDefinition) MarshalJSON() ([]byte, error) {
 	}
 	if w.FileConversion != nil {
 		return internal.MarshalJSONWithExtraProperty(w.FileConversion, "type", "FILE_CONVERSION")
+	}
+	if len(w.rawJSON) > 0 {
+		return w.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", w)
 }
@@ -35895,6 +36279,9 @@ func (w *WorkflowStepDefinition) validate() error {
 	}
 	if len(fields) == 0 {
 		if w.Type != "" {
+			if len(w.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", w, w.Type)
 		}
 		return fmt.Errorf("type %T is empty", w)
@@ -35922,15 +36309,17 @@ var (
 	workflowSummaryFieldName      = big.NewInt(1 << 1)
 	workflowSummaryFieldCreatedAt = big.NewInt(1 << 2)
 	workflowSummaryFieldUpdatedAt = big.NewInt(1 << 3)
+	workflowSummaryFieldCreatedBy = big.NewInt(1 << 4)
 )
 
 type WorkflowSummary struct {
 	// The ID of the workflow.
 	ID string `json:"id" url:"id"`
 	// The name of the workflow.
-	Name      string    `json:"name" url:"name"`
-	CreatedAt CreatedAt `json:"createdAt" url:"createdAt"`
-	UpdatedAt UpdatedAt `json:"updatedAt" url:"updatedAt"`
+	Name      string     `json:"name" url:"name"`
+	CreatedAt CreatedAt  `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt  `json:"updatedAt" url:"updatedAt"`
+	CreatedBy *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -35966,6 +36355,13 @@ func (w *WorkflowSummary) GetUpdatedAt() UpdatedAt {
 		return time.Time{}
 	}
 	return w.UpdatedAt
+}
+
+func (w *WorkflowSummary) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *WorkflowSummary) Object() string {
@@ -36012,6 +36408,13 @@ func (w *WorkflowSummary) SetCreatedAt(createdAt CreatedAt) {
 func (w *WorkflowSummary) SetUpdatedAt(updatedAt UpdatedAt) {
 	w.UpdatedAt = updatedAt
 	w.require(workflowSummaryFieldUpdatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowSummary) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(workflowSummaryFieldCreatedBy)
 }
 
 func (w *WorkflowSummary) UnmarshalJSON(data []byte) error {
@@ -36082,6 +36485,7 @@ var (
 	workflowVersionFieldName      = big.NewInt(1 << 2)
 	workflowVersionFieldSteps     = big.NewInt(1 << 3)
 	workflowVersionFieldCreatedAt = big.NewInt(1 << 4)
+	workflowVersionFieldCreatedBy = big.NewInt(1 << 5)
 )
 
 type WorkflowVersion struct {
@@ -36094,6 +36498,7 @@ type WorkflowVersion struct {
 	// The step definitions for this version.
 	Steps     []*WorkflowStepDefinition `json:"steps" url:"steps"`
 	CreatedAt CreatedAt                 `json:"createdAt" url:"createdAt"`
+	CreatedBy *CreatedBy                `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -36136,6 +36541,13 @@ func (w *WorkflowVersion) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return w.CreatedAt
+}
+
+func (w *WorkflowVersion) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *WorkflowVersion) Object() string {
@@ -36189,6 +36601,13 @@ func (w *WorkflowVersion) SetSteps(steps []*WorkflowStepDefinition) {
 func (w *WorkflowVersion) SetCreatedAt(createdAt CreatedAt) {
 	w.CreatedAt = createdAt
 	w.require(workflowVersionFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowVersion) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(workflowVersionFieldCreatedBy)
 }
 
 func (w *WorkflowVersion) UnmarshalJSON(data []byte) error {
@@ -36254,6 +36673,7 @@ var (
 	workflowVersionSummaryFieldVersion   = big.NewInt(1 << 1)
 	workflowVersionSummaryFieldName      = big.NewInt(1 << 2)
 	workflowVersionSummaryFieldCreatedAt = big.NewInt(1 << 3)
+	workflowVersionSummaryFieldCreatedBy = big.NewInt(1 << 4)
 )
 
 type WorkflowVersionSummary struct {
@@ -36262,8 +36682,9 @@ type WorkflowVersionSummary struct {
 	// The version number as a string, or `"draft"` for the draft version.
 	Version string `json:"version" url:"version"`
 	// The name of the workflow version.
-	Name      *string   `json:"name,omitempty" url:"name,omitempty"`
-	CreatedAt CreatedAt `json:"createdAt" url:"createdAt"`
+	Name      *string    `json:"name,omitempty" url:"name,omitempty"`
+	CreatedAt CreatedAt  `json:"createdAt" url:"createdAt"`
+	CreatedBy *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -36299,6 +36720,13 @@ func (w *WorkflowVersionSummary) GetCreatedAt() CreatedAt {
 		return time.Time{}
 	}
 	return w.CreatedAt
+}
+
+func (w *WorkflowVersionSummary) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *WorkflowVersionSummary) Object() string {
@@ -36345,6 +36773,13 @@ func (w *WorkflowVersionSummary) SetName(name *string) {
 func (w *WorkflowVersionSummary) SetCreatedAt(createdAt CreatedAt) {
 	w.CreatedAt = createdAt
 	w.require(workflowVersionSummaryFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WorkflowVersionSummary) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(workflowVersionSummaryFieldCreatedBy)
 }
 
 func (w *WorkflowVersionSummary) UnmarshalJSON(data []byte) error {

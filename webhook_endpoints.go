@@ -332,6 +332,7 @@ var (
 	webhookEndpointFieldAPIVersion      = big.NewInt(1 << 5)
 	webhookEndpointFieldAdvancedOptions = big.NewInt(1 << 6)
 	webhookEndpointFieldCreatedAt       = big.NewInt(1 << 7)
+	webhookEndpointFieldCreatedBy       = big.NewInt(1 << 8)
 )
 
 type WebhookEndpoint struct {
@@ -348,7 +349,8 @@ type WebhookEndpoint struct {
 	// Advanced configuration options for the webhook endpoint, including custom headers and payload delivery settings.
 	AdvancedOptions *WebhookAdvancedOptions `json:"advancedOptions,omitempty" url:"advancedOptions,omitempty"`
 	// The date and time the webhook endpoint was created.
-	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	CreatedAt time.Time  `json:"createdAt" url:"createdAt"`
+	CreatedBy *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -412,6 +414,13 @@ func (w *WebhookEndpoint) GetCreatedAt() time.Time {
 		return time.Time{}
 	}
 	return w.CreatedAt
+}
+
+func (w *WebhookEndpoint) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *WebhookEndpoint) Object() string {
@@ -488,6 +497,13 @@ func (w *WebhookEndpoint) SetCreatedAt(createdAt time.Time) {
 	w.require(webhookEndpointFieldCreatedAt)
 }
 
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhookEndpoint) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(webhookEndpointFieldCreatedBy)
+}
+
 func (w *WebhookEndpoint) UnmarshalJSON(data []byte) error {
 	type embed WebhookEndpoint
 	var unmarshaler = struct {
@@ -556,6 +572,7 @@ var (
 	webhookEndpointCreateFieldAdvancedOptions = big.NewInt(1 << 6)
 	webhookEndpointCreateFieldSigningSecret   = big.NewInt(1 << 7)
 	webhookEndpointCreateFieldCreatedAt       = big.NewInt(1 << 8)
+	webhookEndpointCreateFieldCreatedBy       = big.NewInt(1 << 9)
 )
 
 type WebhookEndpointCreate struct {
@@ -576,7 +593,8 @@ type WebhookEndpointCreate struct {
 	// Store it securely — you will need it to verify webhook signatures.
 	SigningSecret string `json:"signingSecret" url:"signingSecret"`
 	// The date and time the webhook endpoint was created.
-	CreatedAt time.Time `json:"createdAt" url:"createdAt"`
+	CreatedAt time.Time  `json:"createdAt" url:"createdAt"`
+	CreatedBy *CreatedBy `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -647,6 +665,13 @@ func (w *WebhookEndpointCreate) GetCreatedAt() time.Time {
 		return time.Time{}
 	}
 	return w.CreatedAt
+}
+
+func (w *WebhookEndpointCreate) GetCreatedBy() *CreatedBy {
+	if w == nil {
+		return nil
+	}
+	return w.CreatedBy
 }
 
 func (w *WebhookEndpointCreate) Object() string {
@@ -728,6 +753,13 @@ func (w *WebhookEndpointCreate) SetSigningSecret(signingSecret string) {
 func (w *WebhookEndpointCreate) SetCreatedAt(createdAt time.Time) {
 	w.CreatedAt = createdAt
 	w.require(webhookEndpointCreateFieldCreatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (w *WebhookEndpointCreate) SetCreatedBy(createdBy *CreatedBy) {
+	w.CreatedBy = createdBy
+	w.require(webhookEndpointCreateFieldCreatedBy)
 }
 
 func (w *WebhookEndpointCreate) UnmarshalJSON(data []byte) error {

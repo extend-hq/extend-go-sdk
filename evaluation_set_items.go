@@ -185,6 +185,7 @@ var (
 	evaluationSetItemFieldEvaluationSetID = big.NewInt(1 << 1)
 	evaluationSetItemFieldFile            = big.NewInt(1 << 2)
 	evaluationSetItemFieldExpectedOutput  = big.NewInt(1 << 3)
+	evaluationSetItemFieldCreatedBy       = big.NewInt(1 << 4)
 )
 
 type EvaluationSetItem struct {
@@ -200,6 +201,7 @@ type EvaluationSetItem struct {
 	File *FileSummary `json:"file" url:"file"`
 	// The expected output that will be used to evaluate the performance of the extractor, classifier, or splitter associated with the evaluation set. This must conform to the output schema of the entity associated with the evaluation set.
 	ExpectedOutput *ProvidedProcessorOutput `json:"expectedOutput" url:"expectedOutput"`
+	CreatedBy      *CreatedBy               `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -235,6 +237,13 @@ func (e *EvaluationSetItem) GetExpectedOutput() *ProvidedProcessorOutput {
 		return nil
 	}
 	return e.ExpectedOutput
+}
+
+func (e *EvaluationSetItem) GetCreatedBy() *CreatedBy {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedBy
 }
 
 func (e *EvaluationSetItem) Object() string {
@@ -281,6 +290,13 @@ func (e *EvaluationSetItem) SetFile(file *FileSummary) {
 func (e *EvaluationSetItem) SetExpectedOutput(expectedOutput *ProvidedProcessorOutput) {
 	e.ExpectedOutput = expectedOutput
 	e.require(evaluationSetItemFieldExpectedOutput)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetItem) SetCreatedBy(createdBy *CreatedBy) {
+	e.CreatedBy = createdBy
+	e.require(evaluationSetItemFieldCreatedBy)
 }
 
 func (e *EvaluationSetItem) UnmarshalJSON(data []byte) error {
@@ -337,8 +353,9 @@ func (e *EvaluationSetItem) String() string {
 }
 
 var (
-	evaluationSetItemSummaryFieldID   = big.NewInt(1 << 0)
-	evaluationSetItemSummaryFieldFile = big.NewInt(1 << 1)
+	evaluationSetItemSummaryFieldID        = big.NewInt(1 << 0)
+	evaluationSetItemSummaryFieldFile      = big.NewInt(1 << 1)
+	evaluationSetItemSummaryFieldCreatedBy = big.NewInt(1 << 2)
 )
 
 type EvaluationSetItemSummary struct {
@@ -347,7 +364,8 @@ type EvaluationSetItemSummary struct {
 	// Example: `"evi_kR9mNP12Qw4yTv8BdR3H"`
 	ID string `json:"id" url:"id"`
 	// A summary of the file associated with the evaluation set item.
-	File *FileSummary `json:"file" url:"file"`
+	File      *FileSummary `json:"file" url:"file"`
+	CreatedBy *CreatedBy   `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -369,6 +387,13 @@ func (e *EvaluationSetItemSummary) GetFile() *FileSummary {
 		return nil
 	}
 	return e.File
+}
+
+func (e *EvaluationSetItemSummary) GetCreatedBy() *CreatedBy {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedBy
 }
 
 func (e *EvaluationSetItemSummary) Object() string {
@@ -401,6 +426,13 @@ func (e *EvaluationSetItemSummary) SetID(id string) {
 func (e *EvaluationSetItemSummary) SetFile(file *FileSummary) {
 	e.File = file
 	e.require(evaluationSetItemSummaryFieldFile)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetItemSummary) SetCreatedBy(createdBy *CreatedBy) {
+	e.CreatedBy = createdBy
+	e.require(evaluationSetItemSummaryFieldCreatedBy)
 }
 
 func (e *EvaluationSetItemSummary) UnmarshalJSON(data []byte) error {

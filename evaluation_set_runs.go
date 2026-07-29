@@ -113,6 +113,433 @@ func (e *EvaluationSetRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceI
 	e.require(evaluationSetRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
+// Per-class precision, recall, and F1 for a classify evaluation run.
+var (
+	classificationMetricFieldCountExpected  = big.NewInt(1 << 0)
+	classificationMetricFieldCountPredicted = big.NewInt(1 << 1)
+	classificationMetricFieldCountCorrect   = big.NewInt(1 << 2)
+	classificationMetricFieldPrecision      = big.NewInt(1 << 3)
+	classificationMetricFieldRecall         = big.NewInt(1 << 4)
+	classificationMetricFieldF1             = big.NewInt(1 << 5)
+)
+
+type ClassificationMetric struct {
+	// The number of files whose expected classification was this class.
+	CountExpected *float64 `json:"countExpected,omitempty" url:"countExpected,omitempty"`
+	// The number of files the model classified as this class.
+	CountPredicted *float64 `json:"countPredicted,omitempty" url:"countPredicted,omitempty"`
+	// The number of files correctly classified as this class.
+	CountCorrect *float64 `json:"countCorrect,omitempty" url:"countCorrect,omitempty"`
+	// `countCorrect / countPredicted` for this class.
+	Precision *float64 `json:"precision,omitempty" url:"precision,omitempty"`
+	// `countCorrect / countExpected` for this class.
+	Recall *float64 `json:"recall,omitempty" url:"recall,omitempty"`
+	// Harmonic mean of `precision` and `recall`.
+	F1 *float64 `json:"f1,omitempty" url:"f1,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *ClassificationMetric) GetCountExpected() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.CountExpected
+}
+
+func (c *ClassificationMetric) GetCountPredicted() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.CountPredicted
+}
+
+func (c *ClassificationMetric) GetCountCorrect() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.CountCorrect
+}
+
+func (c *ClassificationMetric) GetPrecision() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.Precision
+}
+
+func (c *ClassificationMetric) GetRecall() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.Recall
+}
+
+func (c *ClassificationMetric) GetF1() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.F1
+}
+
+func (c *ClassificationMetric) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *ClassificationMetric) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetCountExpected sets the CountExpected field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetCountExpected(countExpected *float64) {
+	c.CountExpected = countExpected
+	c.require(classificationMetricFieldCountExpected)
+}
+
+// SetCountPredicted sets the CountPredicted field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetCountPredicted(countPredicted *float64) {
+	c.CountPredicted = countPredicted
+	c.require(classificationMetricFieldCountPredicted)
+}
+
+// SetCountCorrect sets the CountCorrect field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetCountCorrect(countCorrect *float64) {
+	c.CountCorrect = countCorrect
+	c.require(classificationMetricFieldCountCorrect)
+}
+
+// SetPrecision sets the Precision field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetPrecision(precision *float64) {
+	c.Precision = precision
+	c.require(classificationMetricFieldPrecision)
+}
+
+// SetRecall sets the Recall field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetRecall(recall *float64) {
+	c.Recall = recall
+	c.require(classificationMetricFieldRecall)
+}
+
+// SetF1 sets the F1 field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassificationMetric) SetF1(f1 *float64) {
+	c.F1 = f1
+	c.require(classificationMetricFieldF1)
+}
+
+func (c *ClassificationMetric) UnmarshalJSON(data []byte) error {
+	type unmarshaler ClassificationMetric
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = ClassificationMetric(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *ClassificationMetric) MarshalJSON() ([]byte, error) {
+	type embed ClassificationMetric
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *ClassificationMetric) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
+// Metrics for an evaluation set run against a classifier.
+var (
+	classifyEvaluationSetRunMetricsFieldNumFilesTotal         = big.NewInt(1 << 0)
+	classifyEvaluationSetRunMetricsFieldNumFilesProcessed     = big.NewInt(1 << 1)
+	classifyEvaluationSetRunMetricsFieldNumFiles              = big.NewInt(1 << 2)
+	classifyEvaluationSetRunMetricsFieldNumPages              = big.NewInt(1 << 3)
+	classifyEvaluationSetRunMetricsFieldMeanLatencyMs         = big.NewInt(1 << 4)
+	classifyEvaluationSetRunMetricsFieldP50LatencyMs          = big.NewInt(1 << 5)
+	classifyEvaluationSetRunMetricsFieldP90LatencyMs          = big.NewInt(1 << 6)
+	classifyEvaluationSetRunMetricsFieldP95LatencyMs          = big.NewInt(1 << 7)
+	classifyEvaluationSetRunMetricsFieldP99LatencyMs          = big.NewInt(1 << 8)
+	classifyEvaluationSetRunMetricsFieldAccuracy              = big.NewInt(1 << 9)
+	classifyEvaluationSetRunMetricsFieldClassificationMetrics = big.NewInt(1 << 10)
+)
+
+type ClassifyEvaluationSetRunMetrics struct {
+	// The total number of files that will be processed in this evaluation set run.
+	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
+	// The number of files that have finished processing.
+	NumFilesProcessed *float64 `json:"numFilesProcessed,omitempty" url:"numFilesProcessed,omitempty"`
+	// Deprecated. Use `numFilesProcessed` instead.
+	NumFiles *float64 `json:"numFiles,omitempty" url:"numFiles,omitempty"`
+	// The total number of pages processed across the completed files.
+	NumPages *float64 `json:"numPages,omitempty" url:"numPages,omitempty"`
+	// Mean per-file latency in milliseconds.
+	MeanLatencyMs *float64 `json:"meanLatencyMs,omitempty" url:"meanLatencyMs,omitempty"`
+	// 50th percentile per-file latency in milliseconds.
+	P50LatencyMs *float64 `json:"p50LatencyMs,omitempty" url:"p50LatencyMs,omitempty"`
+	// 90th percentile per-file latency in milliseconds.
+	P90LatencyMs *float64 `json:"p90LatencyMs,omitempty" url:"p90LatencyMs,omitempty"`
+	// 95th percentile per-file latency in milliseconds.
+	P95LatencyMs *float64 `json:"p95LatencyMs,omitempty" url:"p95LatencyMs,omitempty"`
+	// 99th percentile per-file latency in milliseconds.
+	P99LatencyMs *float64 `json:"p99LatencyMs,omitempty" url:"p99LatencyMs,omitempty"`
+	// Overall accuracy across the evaluation set, computed as the share of files whose predicted class matched the expected class.
+	Accuracy *float64 `json:"accuracy,omitempty" url:"accuracy,omitempty"`
+	// Per-class precision, recall, and F1. Keys are the classifier's classification types as defined in the classifier configuration.
+	ClassificationMetrics map[string]*ClassificationMetric `json:"classificationMetrics,omitempty" url:"classificationMetrics,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetNumFilesTotal() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.NumFilesTotal
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetNumFilesProcessed() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.NumFilesProcessed
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetNumFiles() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.NumFiles
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetNumPages() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.NumPages
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetMeanLatencyMs() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.MeanLatencyMs
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetP50LatencyMs() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.P50LatencyMs
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetP90LatencyMs() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.P90LatencyMs
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetP95LatencyMs() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.P95LatencyMs
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetP99LatencyMs() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.P99LatencyMs
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetAccuracy() *float64 {
+	if c == nil {
+		return nil
+	}
+	return c.Accuracy
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetClassificationMetrics() map[string]*ClassificationMetric {
+	if c == nil {
+		return nil
+	}
+	return c.ClassificationMetrics
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) GetExtraProperties() map[string]interface{} {
+	if c == nil {
+		return nil
+	}
+	return c.extraProperties
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) require(field *big.Int) {
+	if c.explicitFields == nil {
+		c.explicitFields = big.NewInt(0)
+	}
+	c.explicitFields.Or(c.explicitFields, field)
+}
+
+// SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetNumFilesTotal(numFilesTotal *float64) {
+	c.NumFilesTotal = numFilesTotal
+	c.require(classifyEvaluationSetRunMetricsFieldNumFilesTotal)
+}
+
+// SetNumFilesProcessed sets the NumFilesProcessed field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetNumFilesProcessed(numFilesProcessed *float64) {
+	c.NumFilesProcessed = numFilesProcessed
+	c.require(classifyEvaluationSetRunMetricsFieldNumFilesProcessed)
+}
+
+// SetNumFiles sets the NumFiles field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetNumFiles(numFiles *float64) {
+	c.NumFiles = numFiles
+	c.require(classifyEvaluationSetRunMetricsFieldNumFiles)
+}
+
+// SetNumPages sets the NumPages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetNumPages(numPages *float64) {
+	c.NumPages = numPages
+	c.require(classifyEvaluationSetRunMetricsFieldNumPages)
+}
+
+// SetMeanLatencyMs sets the MeanLatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetMeanLatencyMs(meanLatencyMs *float64) {
+	c.MeanLatencyMs = meanLatencyMs
+	c.require(classifyEvaluationSetRunMetricsFieldMeanLatencyMs)
+}
+
+// SetP50LatencyMs sets the P50LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetP50LatencyMs(p50LatencyMs *float64) {
+	c.P50LatencyMs = p50LatencyMs
+	c.require(classifyEvaluationSetRunMetricsFieldP50LatencyMs)
+}
+
+// SetP90LatencyMs sets the P90LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetP90LatencyMs(p90LatencyMs *float64) {
+	c.P90LatencyMs = p90LatencyMs
+	c.require(classifyEvaluationSetRunMetricsFieldP90LatencyMs)
+}
+
+// SetP95LatencyMs sets the P95LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetP95LatencyMs(p95LatencyMs *float64) {
+	c.P95LatencyMs = p95LatencyMs
+	c.require(classifyEvaluationSetRunMetricsFieldP95LatencyMs)
+}
+
+// SetP99LatencyMs sets the P99LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetP99LatencyMs(p99LatencyMs *float64) {
+	c.P99LatencyMs = p99LatencyMs
+	c.require(classifyEvaluationSetRunMetricsFieldP99LatencyMs)
+}
+
+// SetAccuracy sets the Accuracy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetAccuracy(accuracy *float64) {
+	c.Accuracy = accuracy
+	c.require(classifyEvaluationSetRunMetricsFieldAccuracy)
+}
+
+// SetClassificationMetrics sets the ClassificationMetrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *ClassifyEvaluationSetRunMetrics) SetClassificationMetrics(classificationMetrics map[string]*ClassificationMetric) {
+	c.ClassificationMetrics = classificationMetrics
+	c.require(classifyEvaluationSetRunMetricsFieldClassificationMetrics)
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler ClassifyEvaluationSetRunMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*c = ClassifyEvaluationSetRunMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *c)
+	if err != nil {
+		return err
+	}
+	c.extraProperties = extraProperties
+	c.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
+	type embed ClassifyEvaluationSetRunMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*c),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, c.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (c *ClassifyEvaluationSetRunMetrics) String() string {
+	if c == nil {
+		return "<nil>"
+	}
+	if len(c.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(c.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(c); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", c)
+}
+
 var (
 	evaluationSetRunFieldID              = big.NewInt(1 << 0)
 	evaluationSetRunFieldEvaluationSetID = big.NewInt(1 << 1)
@@ -138,8 +565,9 @@ type EvaluationSetRun struct {
 	Entity *EvaluationSetRunEntity `json:"entity" url:"entity"`
 	// The version of the extractor, classifier, or splitter that was run.
 	EntityVersion *EvaluationSetRunEntityVersion `json:"entityVersion" url:"entityVersion"`
-	Metrics       *EvaluationSetRunMetrics       `json:"metrics" url:"metrics"`
-	Status        BatchRunStatus                 `json:"status" url:"status"`
+	// Metrics for the evaluation set run. The shape depends on the entity type.
+	Metrics *EvaluationSetRunMetrics `json:"metrics" url:"metrics"`
+	Status  BatchRunStatus           `json:"status" url:"status"`
 	// The options for the evaluation set run.
 	Options   *EvaluationSetRunOptions `json:"options" url:"options"`
 	CreatedAt CreatedAt                `json:"createdAt" url:"createdAt"`
@@ -364,6 +792,8 @@ type EvaluationSetRunEntity struct {
 	Extractor  *ExtractorSummary
 	Classifier *ClassifierSummary
 	Splitter   *SplitterSummary
+
+	rawJSON json.RawMessage
 }
 
 func (e *EvaluationSetRunEntity) GetObject() string {
@@ -425,6 +855,7 @@ func (e *EvaluationSetRunEntity) UnmarshalJSON(data []byte) error {
 		}
 		e.Splitter = value
 	}
+	e.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -440,6 +871,9 @@ func (e EvaluationSetRunEntity) MarshalJSON() ([]byte, error) {
 	}
 	if e.Splitter != nil {
 		return internal.MarshalJSONWithExtraProperty(e.Splitter, "object", "splitter")
+	}
+	if len(e.rawJSON) > 0 {
+		return e.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", e)
 }
@@ -479,6 +913,9 @@ func (e *EvaluationSetRunEntity) validate() error {
 	}
 	if len(fields) == 0 {
 		if e.Object != "" {
+			if len(e.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", e, e.Object)
 		}
 		return fmt.Errorf("type %T is empty", e)
@@ -506,6 +943,8 @@ type EvaluationSetRunEntityVersion struct {
 	ExtractorVersion  *ExtractorVersionSummary
 	ClassifierVersion *ClassifierVersionSummary
 	SplitterVersion   *SplitterVersionSummary
+
+	rawJSON json.RawMessage
 }
 
 func (e *EvaluationSetRunEntityVersion) GetObject() string {
@@ -567,6 +1006,7 @@ func (e *EvaluationSetRunEntityVersion) UnmarshalJSON(data []byte) error {
 		}
 		e.SplitterVersion = value
 	}
+	e.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -582,6 +1022,9 @@ func (e EvaluationSetRunEntityVersion) MarshalJSON() ([]byte, error) {
 	}
 	if e.SplitterVersion != nil {
 		return internal.MarshalJSONWithExtraProperty(e.SplitterVersion, "object", "splitter_version")
+	}
+	if len(e.rawJSON) > 0 {
+		return e.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", e)
 }
@@ -621,6 +1064,9 @@ func (e *EvaluationSetRunEntityVersion) validate() error {
 	}
 	if len(fields) == 0 {
 		if e.Object != "" {
+			if len(e.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", e, e.Object)
 		}
 		return fmt.Errorf("type %T is empty", e)
@@ -642,16 +1088,26 @@ func (e *EvaluationSetRunEntityVersion) validate() error {
 	return nil
 }
 
+// Per-field accuracy statistics for an extract evaluation run.
 var (
-	evaluationSetRunMetricsFieldNumFiles = big.NewInt(1 << 0)
-	evaluationSetRunMetricsFieldNumPages = big.NewInt(1 << 1)
+	evaluationSetRunFieldMetricFieldCountTotal    = big.NewInt(1 << 0)
+	evaluationSetRunFieldMetricFieldCountPresent  = big.NewInt(1 << 1)
+	evaluationSetRunFieldMetricFieldCountExpected = big.NewInt(1 << 2)
+	evaluationSetRunFieldMetricFieldCountAccurate = big.NewInt(1 << 3)
+	evaluationSetRunFieldMetricFieldAccuracy      = big.NewInt(1 << 4)
 )
 
-type EvaluationSetRunMetrics struct {
-	// The total number of files processed in this evaluation set run
-	NumFiles *float64 `json:"numFiles,omitempty" url:"numFiles,omitempty"`
-	// The total number of pages processed in this evaluation set run
-	NumPages *float64 `json:"numPages,omitempty" url:"numPages,omitempty"`
+type EvaluationSetRunFieldMetric struct {
+	// The number of runs that included this field in the schema.
+	CountTotal *float64 `json:"countTotal,omitempty" url:"countTotal,omitempty"`
+	// The number of runs where the model produced a non-null value for this field.
+	CountPresent *float64 `json:"countPresent,omitempty" url:"countPresent,omitempty"`
+	// The number of runs where an expected value was provided.
+	CountExpected *float64 `json:"countExpected,omitempty" url:"countExpected,omitempty"`
+	// The number of runs where the extracted value matched the expected value.
+	CountAccurate *float64 `json:"countAccurate,omitempty" url:"countAccurate,omitempty"`
+	// Accuracy for this field, computed as `countAccurate / countExpected`. Omitted when `countExpected` is `0`.
+	Accuracy *float64 `json:"accuracy,omitempty" url:"accuracy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -660,55 +1116,97 @@ type EvaluationSetRunMetrics struct {
 	rawJSON         json.RawMessage
 }
 
-func (e *EvaluationSetRunMetrics) GetNumFiles() *float64 {
+func (e *EvaluationSetRunFieldMetric) GetCountTotal() *float64 {
 	if e == nil {
 		return nil
 	}
-	return e.NumFiles
+	return e.CountTotal
 }
 
-func (e *EvaluationSetRunMetrics) GetNumPages() *float64 {
+func (e *EvaluationSetRunFieldMetric) GetCountPresent() *float64 {
 	if e == nil {
 		return nil
 	}
-	return e.NumPages
+	return e.CountPresent
 }
 
-func (e *EvaluationSetRunMetrics) GetExtraProperties() map[string]interface{} {
+func (e *EvaluationSetRunFieldMetric) GetCountExpected() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.CountExpected
+}
+
+func (e *EvaluationSetRunFieldMetric) GetCountAccurate() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.CountAccurate
+}
+
+func (e *EvaluationSetRunFieldMetric) GetAccuracy() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.Accuracy
+}
+
+func (e *EvaluationSetRunFieldMetric) GetExtraProperties() map[string]interface{} {
 	if e == nil {
 		return nil
 	}
 	return e.extraProperties
 }
 
-func (e *EvaluationSetRunMetrics) require(field *big.Int) {
+func (e *EvaluationSetRunFieldMetric) require(field *big.Int) {
 	if e.explicitFields == nil {
 		e.explicitFields = big.NewInt(0)
 	}
 	e.explicitFields.Or(e.explicitFields, field)
 }
 
-// SetNumFiles sets the NumFiles field and marks it as non-optional;
+// SetCountTotal sets the CountTotal field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EvaluationSetRunMetrics) SetNumFiles(numFiles *float64) {
-	e.NumFiles = numFiles
-	e.require(evaluationSetRunMetricsFieldNumFiles)
+func (e *EvaluationSetRunFieldMetric) SetCountTotal(countTotal *float64) {
+	e.CountTotal = countTotal
+	e.require(evaluationSetRunFieldMetricFieldCountTotal)
 }
 
-// SetNumPages sets the NumPages field and marks it as non-optional;
+// SetCountPresent sets the CountPresent field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EvaluationSetRunMetrics) SetNumPages(numPages *float64) {
-	e.NumPages = numPages
-	e.require(evaluationSetRunMetricsFieldNumPages)
+func (e *EvaluationSetRunFieldMetric) SetCountPresent(countPresent *float64) {
+	e.CountPresent = countPresent
+	e.require(evaluationSetRunFieldMetricFieldCountPresent)
 }
 
-func (e *EvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
-	type unmarshaler EvaluationSetRunMetrics
+// SetCountExpected sets the CountExpected field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunFieldMetric) SetCountExpected(countExpected *float64) {
+	e.CountExpected = countExpected
+	e.require(evaluationSetRunFieldMetricFieldCountExpected)
+}
+
+// SetCountAccurate sets the CountAccurate field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunFieldMetric) SetCountAccurate(countAccurate *float64) {
+	e.CountAccurate = countAccurate
+	e.require(evaluationSetRunFieldMetricFieldCountAccurate)
+}
+
+// SetAccuracy sets the Accuracy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunFieldMetric) SetAccuracy(accuracy *float64) {
+	e.Accuracy = accuracy
+	e.require(evaluationSetRunFieldMetricFieldAccuracy)
+}
+
+func (e *EvaluationSetRunFieldMetric) UnmarshalJSON(data []byte) error {
+	type unmarshaler EvaluationSetRunFieldMetric
 	var value unmarshaler
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	*e = EvaluationSetRunMetrics(value)
+	*e = EvaluationSetRunFieldMetric(value)
 	extraProperties, err := internal.ExtractExtraProperties(data, *e)
 	if err != nil {
 		return err
@@ -718,8 +1216,8 @@ func (e *EvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (e *EvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
-	type embed EvaluationSetRunMetrics
+func (e *EvaluationSetRunFieldMetric) MarshalJSON() ([]byte, error) {
+	type embed EvaluationSetRunFieldMetric
 	var marshaler = struct {
 		embed
 	}{
@@ -729,7 +1227,380 @@ func (e *EvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
 	return json.Marshal(explicitMarshaler)
 }
 
-func (e *EvaluationSetRunMetrics) String() string {
+func (e *EvaluationSetRunFieldMetric) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Metrics for the evaluation set run. The shape depends on the entity type.
+type EvaluationSetRunMetrics struct {
+	Type     string
+	Extract  *ExtractEvaluationSetRunMetrics
+	Classify *ClassifyEvaluationSetRunMetrics
+	Splitter *SplitterEvaluationSetRunMetrics
+
+	rawJSON json.RawMessage
+}
+
+func (e *EvaluationSetRunMetrics) GetType() string {
+	if e == nil {
+		return ""
+	}
+	return e.Type
+}
+
+func (e *EvaluationSetRunMetrics) GetExtract() *ExtractEvaluationSetRunMetrics {
+	if e == nil {
+		return nil
+	}
+	return e.Extract
+}
+
+func (e *EvaluationSetRunMetrics) GetClassify() *ClassifyEvaluationSetRunMetrics {
+	if e == nil {
+		return nil
+	}
+	return e.Classify
+}
+
+func (e *EvaluationSetRunMetrics) GetSplitter() *SplitterEvaluationSetRunMetrics {
+	if e == nil {
+		return nil
+	}
+	return e.Splitter
+}
+
+func (e *EvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	e.Type = unmarshaler.Type
+	if unmarshaler.Type == "" {
+		return fmt.Errorf("%T did not include discriminant type", e)
+	}
+	switch unmarshaler.Type {
+	case "EXTRACT":
+		value := new(ExtractEvaluationSetRunMetrics)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		e.Extract = value
+	case "CLASSIFY":
+		value := new(ClassifyEvaluationSetRunMetrics)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		e.Classify = value
+	case "SPLITTER":
+		value := new(SplitterEvaluationSetRunMetrics)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		e.Splitter = value
+	}
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e EvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
+	if err := e.validate(); err != nil {
+		return nil, err
+	}
+	if e.Extract != nil {
+		return internal.MarshalJSONWithExtraProperty(e.Extract, "type", "EXTRACT")
+	}
+	if e.Classify != nil {
+		return internal.MarshalJSONWithExtraProperty(e.Classify, "type", "CLASSIFY")
+	}
+	if e.Splitter != nil {
+		return internal.MarshalJSONWithExtraProperty(e.Splitter, "type", "SPLITTER")
+	}
+	if len(e.rawJSON) > 0 {
+		return e.rawJSON, nil
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", e)
+}
+
+type EvaluationSetRunMetricsVisitor interface {
+	VisitExtract(*ExtractEvaluationSetRunMetrics) error
+	VisitClassify(*ClassifyEvaluationSetRunMetrics) error
+	VisitSplitter(*SplitterEvaluationSetRunMetrics) error
+}
+
+func (e *EvaluationSetRunMetrics) Accept(visitor EvaluationSetRunMetricsVisitor) error {
+	if e.Extract != nil {
+		return visitor.VisitExtract(e.Extract)
+	}
+	if e.Classify != nil {
+		return visitor.VisitClassify(e.Classify)
+	}
+	if e.Splitter != nil {
+		return visitor.VisitSplitter(e.Splitter)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", e)
+}
+
+func (e *EvaluationSetRunMetrics) validate() error {
+	if e == nil {
+		return fmt.Errorf("type %T is nil", e)
+	}
+	var fields []string
+	if e.Extract != nil {
+		fields = append(fields, "EXTRACT")
+	}
+	if e.Classify != nil {
+		fields = append(fields, "CLASSIFY")
+	}
+	if e.Splitter != nil {
+		fields = append(fields, "SPLITTER")
+	}
+	if len(fields) == 0 {
+		if e.Type != "" {
+			if len(e.rawJSON) > 0 {
+				return nil
+			}
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", e, e.Type)
+		}
+		return fmt.Errorf("type %T is empty", e)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", e, fields)
+	}
+	if e.Type != "" {
+		field := fields[0]
+		if e.Type != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				e,
+				e.Type,
+				e,
+			)
+		}
+	}
+	return nil
+}
+
+// Fields common to every evaluation set run metrics variant.
+var (
+	evaluationSetRunMetricsBaseFieldNumFilesTotal     = big.NewInt(1 << 0)
+	evaluationSetRunMetricsBaseFieldNumFilesProcessed = big.NewInt(1 << 1)
+	evaluationSetRunMetricsBaseFieldNumFiles          = big.NewInt(1 << 2)
+	evaluationSetRunMetricsBaseFieldNumPages          = big.NewInt(1 << 3)
+	evaluationSetRunMetricsBaseFieldMeanLatencyMs     = big.NewInt(1 << 4)
+	evaluationSetRunMetricsBaseFieldP50LatencyMs      = big.NewInt(1 << 5)
+	evaluationSetRunMetricsBaseFieldP90LatencyMs      = big.NewInt(1 << 6)
+	evaluationSetRunMetricsBaseFieldP95LatencyMs      = big.NewInt(1 << 7)
+	evaluationSetRunMetricsBaseFieldP99LatencyMs      = big.NewInt(1 << 8)
+)
+
+type EvaluationSetRunMetricsBase struct {
+	// The total number of files that will be processed in this evaluation set run.
+	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
+	// The number of files that have finished processing.
+	NumFilesProcessed *float64 `json:"numFilesProcessed,omitempty" url:"numFilesProcessed,omitempty"`
+	// Deprecated. Use `numFilesProcessed` instead.
+	NumFiles *float64 `json:"numFiles,omitempty" url:"numFiles,omitempty"`
+	// The total number of pages processed across the completed files.
+	NumPages *float64 `json:"numPages,omitempty" url:"numPages,omitempty"`
+	// Mean per-file latency in milliseconds.
+	MeanLatencyMs *float64 `json:"meanLatencyMs,omitempty" url:"meanLatencyMs,omitempty"`
+	// 50th percentile per-file latency in milliseconds.
+	P50LatencyMs *float64 `json:"p50LatencyMs,omitempty" url:"p50LatencyMs,omitempty"`
+	// 90th percentile per-file latency in milliseconds.
+	P90LatencyMs *float64 `json:"p90LatencyMs,omitempty" url:"p90LatencyMs,omitempty"`
+	// 95th percentile per-file latency in milliseconds.
+	P95LatencyMs *float64 `json:"p95LatencyMs,omitempty" url:"p95LatencyMs,omitempty"`
+	// 99th percentile per-file latency in milliseconds.
+	P99LatencyMs *float64 `json:"p99LatencyMs,omitempty" url:"p99LatencyMs,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EvaluationSetRunMetricsBase) GetNumFilesTotal() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFilesTotal
+}
+
+func (e *EvaluationSetRunMetricsBase) GetNumFilesProcessed() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFilesProcessed
+}
+
+func (e *EvaluationSetRunMetricsBase) GetNumFiles() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFiles
+}
+
+func (e *EvaluationSetRunMetricsBase) GetNumPages() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumPages
+}
+
+func (e *EvaluationSetRunMetricsBase) GetMeanLatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.MeanLatencyMs
+}
+
+func (e *EvaluationSetRunMetricsBase) GetP50LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P50LatencyMs
+}
+
+func (e *EvaluationSetRunMetricsBase) GetP90LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P90LatencyMs
+}
+
+func (e *EvaluationSetRunMetricsBase) GetP95LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P95LatencyMs
+}
+
+func (e *EvaluationSetRunMetricsBase) GetP99LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P99LatencyMs
+}
+
+func (e *EvaluationSetRunMetricsBase) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EvaluationSetRunMetricsBase) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetNumFilesTotal(numFilesTotal *float64) {
+	e.NumFilesTotal = numFilesTotal
+	e.require(evaluationSetRunMetricsBaseFieldNumFilesTotal)
+}
+
+// SetNumFilesProcessed sets the NumFilesProcessed field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetNumFilesProcessed(numFilesProcessed *float64) {
+	e.NumFilesProcessed = numFilesProcessed
+	e.require(evaluationSetRunMetricsBaseFieldNumFilesProcessed)
+}
+
+// SetNumFiles sets the NumFiles field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetNumFiles(numFiles *float64) {
+	e.NumFiles = numFiles
+	e.require(evaluationSetRunMetricsBaseFieldNumFiles)
+}
+
+// SetNumPages sets the NumPages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetNumPages(numPages *float64) {
+	e.NumPages = numPages
+	e.require(evaluationSetRunMetricsBaseFieldNumPages)
+}
+
+// SetMeanLatencyMs sets the MeanLatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetMeanLatencyMs(meanLatencyMs *float64) {
+	e.MeanLatencyMs = meanLatencyMs
+	e.require(evaluationSetRunMetricsBaseFieldMeanLatencyMs)
+}
+
+// SetP50LatencyMs sets the P50LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetP50LatencyMs(p50LatencyMs *float64) {
+	e.P50LatencyMs = p50LatencyMs
+	e.require(evaluationSetRunMetricsBaseFieldP50LatencyMs)
+}
+
+// SetP90LatencyMs sets the P90LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetP90LatencyMs(p90LatencyMs *float64) {
+	e.P90LatencyMs = p90LatencyMs
+	e.require(evaluationSetRunMetricsBaseFieldP90LatencyMs)
+}
+
+// SetP95LatencyMs sets the P95LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetP95LatencyMs(p95LatencyMs *float64) {
+	e.P95LatencyMs = p95LatencyMs
+	e.require(evaluationSetRunMetricsBaseFieldP95LatencyMs)
+}
+
+// SetP99LatencyMs sets the P99LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunMetricsBase) SetP99LatencyMs(p99LatencyMs *float64) {
+	e.P99LatencyMs = p99LatencyMs
+	e.require(evaluationSetRunMetricsBaseFieldP99LatencyMs)
+}
+
+func (e *EvaluationSetRunMetricsBase) UnmarshalJSON(data []byte) error {
+	type unmarshaler EvaluationSetRunMetricsBase
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EvaluationSetRunMetricsBase(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EvaluationSetRunMetricsBase) MarshalJSON() ([]byte, error) {
+	type embed EvaluationSetRunMetricsBase
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EvaluationSetRunMetricsBase) String() string {
 	if e == nil {
 		return "<nil>"
 	}
@@ -845,6 +1716,586 @@ func (e *EvaluationSetRunOptions) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", e)
+}
+
+// Metrics for an evaluation set run against an extractor.
+var (
+	extractEvaluationSetRunMetricsFieldNumFilesTotal     = big.NewInt(1 << 0)
+	extractEvaluationSetRunMetricsFieldNumFilesProcessed = big.NewInt(1 << 1)
+	extractEvaluationSetRunMetricsFieldNumFiles          = big.NewInt(1 << 2)
+	extractEvaluationSetRunMetricsFieldNumPages          = big.NewInt(1 << 3)
+	extractEvaluationSetRunMetricsFieldMeanLatencyMs     = big.NewInt(1 << 4)
+	extractEvaluationSetRunMetricsFieldP50LatencyMs      = big.NewInt(1 << 5)
+	extractEvaluationSetRunMetricsFieldP90LatencyMs      = big.NewInt(1 << 6)
+	extractEvaluationSetRunMetricsFieldP95LatencyMs      = big.NewInt(1 << 7)
+	extractEvaluationSetRunMetricsFieldP99LatencyMs      = big.NewInt(1 << 8)
+	extractEvaluationSetRunMetricsFieldAccuracy          = big.NewInt(1 << 9)
+	extractEvaluationSetRunMetricsFieldFieldMetrics      = big.NewInt(1 << 10)
+)
+
+type ExtractEvaluationSetRunMetrics struct {
+	// The total number of files that will be processed in this evaluation set run.
+	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
+	// The number of files that have finished processing.
+	NumFilesProcessed *float64 `json:"numFilesProcessed,omitempty" url:"numFilesProcessed,omitempty"`
+	// Deprecated. Use `numFilesProcessed` instead.
+	NumFiles *float64 `json:"numFiles,omitempty" url:"numFiles,omitempty"`
+	// The total number of pages processed across the completed files.
+	NumPages *float64 `json:"numPages,omitempty" url:"numPages,omitempty"`
+	// Mean per-file latency in milliseconds.
+	MeanLatencyMs *float64 `json:"meanLatencyMs,omitempty" url:"meanLatencyMs,omitempty"`
+	// 50th percentile per-file latency in milliseconds.
+	P50LatencyMs *float64 `json:"p50LatencyMs,omitempty" url:"p50LatencyMs,omitempty"`
+	// 90th percentile per-file latency in milliseconds.
+	P90LatencyMs *float64 `json:"p90LatencyMs,omitempty" url:"p90LatencyMs,omitempty"`
+	// 95th percentile per-file latency in milliseconds.
+	P95LatencyMs *float64 `json:"p95LatencyMs,omitempty" url:"p95LatencyMs,omitempty"`
+	// 99th percentile per-file latency in milliseconds.
+	P99LatencyMs *float64 `json:"p99LatencyMs,omitempty" url:"p99LatencyMs,omitempty"`
+	// Aggregate accuracy across every reviewed field in `fieldMetrics`.
+	Accuracy *float64 `json:"accuracy,omitempty" url:"accuracy,omitempty"`
+	// Per-field accuracy statistics. Keys are the extractor schema's field names — nested fields are flattened to dot-joined paths. See [Extraction response format](https://docs.extend.ai/2026-02-09/extraction/response-format#output-value-and-metadata) for more on how extractor field paths are structured.
+	FieldMetrics map[string]*EvaluationSetRunFieldMetric `json:"fieldMetrics,omitempty" url:"fieldMetrics,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetNumFilesTotal() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFilesTotal
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetNumFilesProcessed() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFilesProcessed
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetNumFiles() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumFiles
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetNumPages() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.NumPages
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetMeanLatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.MeanLatencyMs
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetP50LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P50LatencyMs
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetP90LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P90LatencyMs
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetP95LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P95LatencyMs
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetP99LatencyMs() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.P99LatencyMs
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetAccuracy() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.Accuracy
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetFieldMetrics() map[string]*EvaluationSetRunFieldMetric {
+	if e == nil {
+		return nil
+	}
+	return e.FieldMetrics
+}
+
+func (e *ExtractEvaluationSetRunMetrics) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *ExtractEvaluationSetRunMetrics) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetNumFilesTotal(numFilesTotal *float64) {
+	e.NumFilesTotal = numFilesTotal
+	e.require(extractEvaluationSetRunMetricsFieldNumFilesTotal)
+}
+
+// SetNumFilesProcessed sets the NumFilesProcessed field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetNumFilesProcessed(numFilesProcessed *float64) {
+	e.NumFilesProcessed = numFilesProcessed
+	e.require(extractEvaluationSetRunMetricsFieldNumFilesProcessed)
+}
+
+// SetNumFiles sets the NumFiles field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetNumFiles(numFiles *float64) {
+	e.NumFiles = numFiles
+	e.require(extractEvaluationSetRunMetricsFieldNumFiles)
+}
+
+// SetNumPages sets the NumPages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetNumPages(numPages *float64) {
+	e.NumPages = numPages
+	e.require(extractEvaluationSetRunMetricsFieldNumPages)
+}
+
+// SetMeanLatencyMs sets the MeanLatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetMeanLatencyMs(meanLatencyMs *float64) {
+	e.MeanLatencyMs = meanLatencyMs
+	e.require(extractEvaluationSetRunMetricsFieldMeanLatencyMs)
+}
+
+// SetP50LatencyMs sets the P50LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetP50LatencyMs(p50LatencyMs *float64) {
+	e.P50LatencyMs = p50LatencyMs
+	e.require(extractEvaluationSetRunMetricsFieldP50LatencyMs)
+}
+
+// SetP90LatencyMs sets the P90LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetP90LatencyMs(p90LatencyMs *float64) {
+	e.P90LatencyMs = p90LatencyMs
+	e.require(extractEvaluationSetRunMetricsFieldP90LatencyMs)
+}
+
+// SetP95LatencyMs sets the P95LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetP95LatencyMs(p95LatencyMs *float64) {
+	e.P95LatencyMs = p95LatencyMs
+	e.require(extractEvaluationSetRunMetricsFieldP95LatencyMs)
+}
+
+// SetP99LatencyMs sets the P99LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetP99LatencyMs(p99LatencyMs *float64) {
+	e.P99LatencyMs = p99LatencyMs
+	e.require(extractEvaluationSetRunMetricsFieldP99LatencyMs)
+}
+
+// SetAccuracy sets the Accuracy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetAccuracy(accuracy *float64) {
+	e.Accuracy = accuracy
+	e.require(extractEvaluationSetRunMetricsFieldAccuracy)
+}
+
+// SetFieldMetrics sets the FieldMetrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *ExtractEvaluationSetRunMetrics) SetFieldMetrics(fieldMetrics map[string]*EvaluationSetRunFieldMetric) {
+	e.FieldMetrics = fieldMetrics
+	e.require(extractEvaluationSetRunMetricsFieldFieldMetrics)
+}
+
+func (e *ExtractEvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler ExtractEvaluationSetRunMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = ExtractEvaluationSetRunMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *ExtractEvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
+	type embed ExtractEvaluationSetRunMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *ExtractEvaluationSetRunMetrics) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Metrics for an evaluation set run against a splitter.
+var (
+	splitterEvaluationSetRunMetricsFieldNumFilesTotal      = big.NewInt(1 << 0)
+	splitterEvaluationSetRunMetricsFieldNumFilesProcessed  = big.NewInt(1 << 1)
+	splitterEvaluationSetRunMetricsFieldNumFiles           = big.NewInt(1 << 2)
+	splitterEvaluationSetRunMetricsFieldNumPages           = big.NewInt(1 << 3)
+	splitterEvaluationSetRunMetricsFieldMeanLatencyMs      = big.NewInt(1 << 4)
+	splitterEvaluationSetRunMetricsFieldP50LatencyMs       = big.NewInt(1 << 5)
+	splitterEvaluationSetRunMetricsFieldP90LatencyMs       = big.NewInt(1 << 6)
+	splitterEvaluationSetRunMetricsFieldP95LatencyMs       = big.NewInt(1 << 7)
+	splitterEvaluationSetRunMetricsFieldP99LatencyMs       = big.NewInt(1 << 8)
+	splitterEvaluationSetRunMetricsFieldPrecision          = big.NewInt(1 << 9)
+	splitterEvaluationSetRunMetricsFieldRecall             = big.NewInt(1 << 10)
+	splitterEvaluationSetRunMetricsFieldF1                 = big.NewInt(1 << 11)
+	splitterEvaluationSetRunMetricsFieldNumSplitsExpected  = big.NewInt(1 << 12)
+	splitterEvaluationSetRunMetricsFieldNumSplitsPredicted = big.NewInt(1 << 13)
+	splitterEvaluationSetRunMetricsFieldNumSplitsCorrect   = big.NewInt(1 << 14)
+)
+
+type SplitterEvaluationSetRunMetrics struct {
+	// The total number of files that will be processed in this evaluation set run.
+	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
+	// The number of files that have finished processing.
+	NumFilesProcessed *float64 `json:"numFilesProcessed,omitempty" url:"numFilesProcessed,omitempty"`
+	// Deprecated. Use `numFilesProcessed` instead.
+	NumFiles *float64 `json:"numFiles,omitempty" url:"numFiles,omitempty"`
+	// The total number of pages processed across the completed files.
+	NumPages *float64 `json:"numPages,omitempty" url:"numPages,omitempty"`
+	// Mean per-file latency in milliseconds.
+	MeanLatencyMs *float64 `json:"meanLatencyMs,omitempty" url:"meanLatencyMs,omitempty"`
+	// 50th percentile per-file latency in milliseconds.
+	P50LatencyMs *float64 `json:"p50LatencyMs,omitempty" url:"p50LatencyMs,omitempty"`
+	// 90th percentile per-file latency in milliseconds.
+	P90LatencyMs *float64 `json:"p90LatencyMs,omitempty" url:"p90LatencyMs,omitempty"`
+	// 95th percentile per-file latency in milliseconds.
+	P95LatencyMs *float64 `json:"p95LatencyMs,omitempty" url:"p95LatencyMs,omitempty"`
+	// 99th percentile per-file latency in milliseconds.
+	P99LatencyMs *float64 `json:"p99LatencyMs,omitempty" url:"p99LatencyMs,omitempty"`
+	// `numSplitsCorrect / numSplitsPredicted`.
+	Precision *float64 `json:"precision,omitempty" url:"precision,omitempty"`
+	// `numSplitsCorrect / numSplitsExpected`.
+	Recall *float64 `json:"recall,omitempty" url:"recall,omitempty"`
+	// Harmonic mean of `precision` and `recall`.
+	F1 *float64 `json:"f1,omitempty" url:"f1,omitempty"`
+	// The total number of expected split documents across the evaluation set.
+	NumSplitsExpected *float64 `json:"numSplitsExpected,omitempty" url:"numSplitsExpected,omitempty"`
+	// The total number of split documents the model produced.
+	NumSplitsPredicted *float64 `json:"numSplitsPredicted,omitempty" url:"numSplitsPredicted,omitempty"`
+	// The number of predicted splits that exactly matched an expected split.
+	NumSplitsCorrect *float64 `json:"numSplitsCorrect,omitempty" url:"numSplitsCorrect,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumFilesTotal() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumFilesTotal
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumFilesProcessed() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumFilesProcessed
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumFiles() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumFiles
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumPages() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumPages
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetMeanLatencyMs() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.MeanLatencyMs
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetP50LatencyMs() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.P50LatencyMs
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetP90LatencyMs() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.P90LatencyMs
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetP95LatencyMs() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.P95LatencyMs
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetP99LatencyMs() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.P99LatencyMs
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetPrecision() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.Precision
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetRecall() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.Recall
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetF1() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.F1
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumSplitsExpected() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumSplitsExpected
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumSplitsPredicted() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumSplitsPredicted
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetNumSplitsCorrect() *float64 {
+	if s == nil {
+		return nil
+	}
+	return s.NumSplitsCorrect
+}
+
+func (s *SplitterEvaluationSetRunMetrics) GetExtraProperties() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+	return s.extraProperties
+}
+
+func (s *SplitterEvaluationSetRunMetrics) require(field *big.Int) {
+	if s.explicitFields == nil {
+		s.explicitFields = big.NewInt(0)
+	}
+	s.explicitFields.Or(s.explicitFields, field)
+}
+
+// SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumFilesTotal(numFilesTotal *float64) {
+	s.NumFilesTotal = numFilesTotal
+	s.require(splitterEvaluationSetRunMetricsFieldNumFilesTotal)
+}
+
+// SetNumFilesProcessed sets the NumFilesProcessed field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumFilesProcessed(numFilesProcessed *float64) {
+	s.NumFilesProcessed = numFilesProcessed
+	s.require(splitterEvaluationSetRunMetricsFieldNumFilesProcessed)
+}
+
+// SetNumFiles sets the NumFiles field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumFiles(numFiles *float64) {
+	s.NumFiles = numFiles
+	s.require(splitterEvaluationSetRunMetricsFieldNumFiles)
+}
+
+// SetNumPages sets the NumPages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumPages(numPages *float64) {
+	s.NumPages = numPages
+	s.require(splitterEvaluationSetRunMetricsFieldNumPages)
+}
+
+// SetMeanLatencyMs sets the MeanLatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetMeanLatencyMs(meanLatencyMs *float64) {
+	s.MeanLatencyMs = meanLatencyMs
+	s.require(splitterEvaluationSetRunMetricsFieldMeanLatencyMs)
+}
+
+// SetP50LatencyMs sets the P50LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetP50LatencyMs(p50LatencyMs *float64) {
+	s.P50LatencyMs = p50LatencyMs
+	s.require(splitterEvaluationSetRunMetricsFieldP50LatencyMs)
+}
+
+// SetP90LatencyMs sets the P90LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetP90LatencyMs(p90LatencyMs *float64) {
+	s.P90LatencyMs = p90LatencyMs
+	s.require(splitterEvaluationSetRunMetricsFieldP90LatencyMs)
+}
+
+// SetP95LatencyMs sets the P95LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetP95LatencyMs(p95LatencyMs *float64) {
+	s.P95LatencyMs = p95LatencyMs
+	s.require(splitterEvaluationSetRunMetricsFieldP95LatencyMs)
+}
+
+// SetP99LatencyMs sets the P99LatencyMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetP99LatencyMs(p99LatencyMs *float64) {
+	s.P99LatencyMs = p99LatencyMs
+	s.require(splitterEvaluationSetRunMetricsFieldP99LatencyMs)
+}
+
+// SetPrecision sets the Precision field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetPrecision(precision *float64) {
+	s.Precision = precision
+	s.require(splitterEvaluationSetRunMetricsFieldPrecision)
+}
+
+// SetRecall sets the Recall field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetRecall(recall *float64) {
+	s.Recall = recall
+	s.require(splitterEvaluationSetRunMetricsFieldRecall)
+}
+
+// SetF1 sets the F1 field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetF1(f1 *float64) {
+	s.F1 = f1
+	s.require(splitterEvaluationSetRunMetricsFieldF1)
+}
+
+// SetNumSplitsExpected sets the NumSplitsExpected field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumSplitsExpected(numSplitsExpected *float64) {
+	s.NumSplitsExpected = numSplitsExpected
+	s.require(splitterEvaluationSetRunMetricsFieldNumSplitsExpected)
+}
+
+// SetNumSplitsPredicted sets the NumSplitsPredicted field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumSplitsPredicted(numSplitsPredicted *float64) {
+	s.NumSplitsPredicted = numSplitsPredicted
+	s.require(splitterEvaluationSetRunMetricsFieldNumSplitsPredicted)
+}
+
+// SetNumSplitsCorrect sets the NumSplitsCorrect field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitterEvaluationSetRunMetrics) SetNumSplitsCorrect(numSplitsCorrect *float64) {
+	s.NumSplitsCorrect = numSplitsCorrect
+	s.require(splitterEvaluationSetRunMetricsFieldNumSplitsCorrect)
+}
+
+func (s *SplitterEvaluationSetRunMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler SplitterEvaluationSetRunMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*s = SplitterEvaluationSetRunMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *s)
+	if err != nil {
+		return err
+	}
+	s.extraProperties = extraProperties
+	s.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (s *SplitterEvaluationSetRunMetrics) MarshalJSON() ([]byte, error) {
+	type embed SplitterEvaluationSetRunMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*s),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, s.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (s *SplitterEvaluationSetRunMetrics) String() string {
+	if s == nil {
+		return "<nil>"
+	}
+	if len(s.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(s.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(s); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", s)
 }
 
 // Optional processor and version to run against the evaluation set. If omitted, the evaluation set's processor is run at its draft version.
