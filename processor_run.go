@@ -2114,6 +2114,8 @@ type LegacyProcessorRunConfig struct {
 	Classify *LegacyClassificationConfig
 	Extract  *LegacyExtractionConfig
 	Splitter *LegacySplitterConfig
+
+	rawJSON json.RawMessage
 }
 
 func (l *LegacyProcessorRunConfig) GetType() string {
@@ -2175,6 +2177,7 @@ func (l *LegacyProcessorRunConfig) UnmarshalJSON(data []byte) error {
 		}
 		l.Splitter = value
 	}
+	l.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -2190,6 +2193,9 @@ func (l LegacyProcessorRunConfig) MarshalJSON() ([]byte, error) {
 	}
 	if l.Splitter != nil {
 		return internal.MarshalJSONWithExtraProperty(l.Splitter, "type", "SPLITTER")
+	}
+	if len(l.rawJSON) > 0 {
+		return l.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", l)
 }
@@ -2229,6 +2235,9 @@ func (l *LegacyProcessorRunConfig) validate() error {
 	}
 	if len(fields) == 0 {
 		if l.Type != "" {
+			if len(l.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", l, l.Type)
 		}
 		return fmt.Errorf("type %T is empty", l)
@@ -3305,6 +3314,8 @@ type ProcessorRunCreateRequestConfig struct {
 	Classify *LegacyClassificationConfig
 	Extract  *LegacyExtractionConfig
 	Splitter *LegacySplitterConfig
+
+	rawJSON json.RawMessage
 }
 
 func (p *ProcessorRunCreateRequestConfig) GetType() string {
@@ -3366,6 +3377,7 @@ func (p *ProcessorRunCreateRequestConfig) UnmarshalJSON(data []byte) error {
 		}
 		p.Splitter = value
 	}
+	p.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -3381,6 +3393,9 @@ func (p ProcessorRunCreateRequestConfig) MarshalJSON() ([]byte, error) {
 	}
 	if p.Splitter != nil {
 		return internal.MarshalJSONWithExtraProperty(p.Splitter, "type", "SPLITTER")
+	}
+	if len(p.rawJSON) > 0 {
+		return p.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", p)
 }
@@ -3420,6 +3435,9 @@ func (p *ProcessorRunCreateRequestConfig) validate() error {
 	}
 	if len(fields) == 0 {
 		if p.Type != "" {
+			if len(p.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", p, p.Type)
 		}
 		return fmt.Errorf("type %T is empty", p)

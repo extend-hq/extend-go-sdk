@@ -72,6 +72,14 @@ func TestSettersWorkflowRunsCreateRequest(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetPackage", func(t *testing.T) {
+		obj := &WorkflowRunsCreateRequest{}
+		var fernTestValuePackage *WorkflowRunPackage
+		obj.SetPackage(fernTestValuePackage)
+		assert.Equal(t, fernTestValuePackage, obj.Package)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetOutputs", func(t *testing.T) {
 		obj := &WorkflowRunsCreateRequest{}
 		var fernTestValueOutputs []*WorkflowRunsCreateRequestOutputsItem
@@ -146,6 +154,37 @@ func TestSettersMarkExplicitWorkflowRunsCreateRequest(t *testing.T) {
 
 		// Act
 		obj.SetFile(fernTestValueFile)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetPackage_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunsCreateRequest{}
+		var fernTestValuePackage *WorkflowRunPackage
+
+		// Act
+		obj.SetPackage(fernTestValuePackage)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -8703,6 +8742,156 @@ func TestSettersMarkExplicitWorkflowRun(t *testing.T) {
 
 }
 
+func TestSettersWorkflowRunPackage(t *testing.T) {
+	t.Run("SetFiles", func(t *testing.T) {
+		obj := &WorkflowRunPackage{}
+		var fernTestValueFiles []*WorkflowRunPackageFilesItem
+		obj.SetFiles(fernTestValueFiles)
+		assert.Equal(t, fernTestValueFiles, obj.Files)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+}
+
+func TestGettersWorkflowRunPackage(t *testing.T) {
+	t.Run("GetFiles", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackage{}
+		var expected []*WorkflowRunPackageFilesItem
+		obj.Files = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFiles(), "getter should return the property value")
+	})
+
+	t.Run("GetFiles_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackage{}
+		obj.Files = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFiles(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFiles_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WorkflowRunPackage
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFiles() // Should return zero value
+	})
+
+}
+
+func TestSettersMarkExplicitWorkflowRunPackage(t *testing.T) {
+	t.Run("SetFiles_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackage{}
+		var fernTestValueFiles []*WorkflowRunPackageFilesItem
+
+		// Act
+		obj.SetFiles(fernTestValueFiles)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+}
+
+func TestGettersWorkflowRunPackageFilesItem(t *testing.T) {
+	t.Run("GetFileFromURL", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackageFilesItem{}
+		var expected *FileFromURL
+		obj.FileFromURL = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFileFromURL(), "getter should return the property value")
+	})
+
+	t.Run("GetFileFromURL_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackageFilesItem{}
+		obj.FileFromURL = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFileFromURL(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFileFromURL_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WorkflowRunPackageFilesItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFileFromURL() // Should return zero value
+	})
+
+	t.Run("GetFileFromID", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackageFilesItem{}
+		var expected *FileFromID
+		obj.FileFromID = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFileFromID(), "getter should return the property value")
+	})
+
+	t.Run("GetFileFromID_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackageFilesItem{}
+		obj.FileFromID = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFileFromID(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFileFromID_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WorkflowRunPackageFilesItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFileFromID() // Should return zero value
+	})
+
+}
+
 func TestSettersWorkflowRunSummary(t *testing.T) {
 	t.Run("SetID", func(t *testing.T) {
 		obj := &WorkflowRunSummary{}
@@ -11819,6 +12008,39 @@ func TestJSONMarshalingWorkflowRun(t *testing.T) {
 
 }
 
+func TestJSONMarshalingWorkflowRunPackage(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WorkflowRunPackage{}
+
+		// Act - Marshal to JSON
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		assert.NotNil(t, data, "marshaled data should not be nil")
+		assert.NotEmpty(t, data, "marshaled data should not be empty")
+
+		// Unmarshal back and verify round-trip
+		var unmarshaled WorkflowRunPackage
+		err = json.Unmarshal(data, &unmarshaled)
+		assert.NoError(t, err, "round-trip unmarshal should succeed")
+	})
+
+	t.Run("UnmarshalInvalidJSON", func(t *testing.T) {
+		t.Parallel()
+		var obj WorkflowRunPackage
+		err := json.Unmarshal([]byte(`{invalid json}`), &obj)
+		assert.Error(t, err, "unmarshaling invalid JSON should return an error")
+	})
+
+	t.Run("UnmarshalEmptyObject", func(t *testing.T) {
+		t.Parallel()
+		var obj WorkflowRunPackage
+		err := json.Unmarshal([]byte(`{}`), &obj)
+		assert.NoError(t, err, "unmarshaling empty object should succeed")
+	})
+}
+
 func TestJSONMarshalingWorkflowRunSummary(t *testing.T) {
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		t.Parallel()
@@ -12507,6 +12729,22 @@ func TestStringWorkflowRun(t *testing.T) {
 	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *WorkflowRun
+		result := obj.String()
+		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestStringWorkflowRunPackage(t *testing.T) {
+	t.Run("StringMethod", func(t *testing.T) {
+		t.Parallel()
+		obj := &WorkflowRunPackage{}
+		result := obj.String()
+		assert.NotEmpty(t, result, "String() should return a non-empty representation")
+	})
+
+	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WorkflowRunPackage
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
 	})
@@ -13473,6 +13711,29 @@ func TestExtraPropertiesWorkflowRun(t *testing.T) {
 	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *WorkflowRun
+		extraProps := obj.GetExtraProperties()
+		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
+	})
+}
+
+func TestExtraPropertiesWorkflowRunPackage(t *testing.T) {
+	t.Run("GetExtraProperties", func(t *testing.T) {
+		t.Parallel()
+		obj := &WorkflowRunPackage{}
+		// Should not panic when calling GetExtraProperties()
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("GetExtraProperties() panicked: %v", r)
+			}
+		}()
+		extraProps := obj.GetExtraProperties()
+		// Result can be nil or an empty/non-empty map
+		_ = extraProps
+	})
+
+	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WorkflowRunPackage
 		extraProps := obj.GetExtraProperties()
 		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
 	})

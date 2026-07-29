@@ -190,6 +190,7 @@ var (
 	evaluationSetFieldEntity      = big.NewInt(1 << 3)
 	evaluationSetFieldCreatedAt   = big.NewInt(1 << 4)
 	evaluationSetFieldUpdatedAt   = big.NewInt(1 << 5)
+	evaluationSetFieldCreatedBy   = big.NewInt(1 << 6)
 )
 
 type EvaluationSet struct {
@@ -209,6 +210,7 @@ type EvaluationSet struct {
 	Entity    *EvaluationSetEntity `json:"entity" url:"entity"`
 	CreatedAt CreatedAt            `json:"createdAt" url:"createdAt"`
 	UpdatedAt UpdatedAt            `json:"updatedAt" url:"updatedAt"`
+	CreatedBy *CreatedBy           `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -258,6 +260,13 @@ func (e *EvaluationSet) GetUpdatedAt() UpdatedAt {
 		return time.Time{}
 	}
 	return e.UpdatedAt
+}
+
+func (e *EvaluationSet) GetCreatedBy() *CreatedBy {
+	if e == nil {
+		return nil
+	}
+	return e.CreatedBy
 }
 
 func (e *EvaluationSet) Object() string {
@@ -318,6 +327,13 @@ func (e *EvaluationSet) SetCreatedAt(createdAt CreatedAt) {
 func (e *EvaluationSet) SetUpdatedAt(updatedAt UpdatedAt) {
 	e.UpdatedAt = updatedAt
 	e.require(evaluationSetFieldUpdatedAt)
+}
+
+// SetCreatedBy sets the CreatedBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSet) SetCreatedBy(createdBy *CreatedBy) {
+	e.CreatedBy = createdBy
+	e.require(evaluationSetFieldCreatedBy)
 }
 
 func (e *EvaluationSet) UnmarshalJSON(data []byte) error {
@@ -387,6 +403,8 @@ type EvaluationSetEntity struct {
 	Extractor  *ExtractorSummary
 	Classifier *ClassifierSummary
 	Splitter   *SplitterSummary
+
+	rawJSON json.RawMessage
 }
 
 func (e *EvaluationSetEntity) GetObject() string {
@@ -448,6 +466,7 @@ func (e *EvaluationSetEntity) UnmarshalJSON(data []byte) error {
 		}
 		e.Splitter = value
 	}
+	e.rawJSON = json.RawMessage(data)
 	return nil
 }
 
@@ -463,6 +482,9 @@ func (e EvaluationSetEntity) MarshalJSON() ([]byte, error) {
 	}
 	if e.Splitter != nil {
 		return internal.MarshalJSONWithExtraProperty(e.Splitter, "object", "splitter")
+	}
+	if len(e.rawJSON) > 0 {
+		return e.rawJSON, nil
 	}
 	return nil, fmt.Errorf("type %T does not define a non-empty union type", e)
 }
@@ -502,6 +524,9 @@ func (e *EvaluationSetEntity) validate() error {
 	}
 	if len(fields) == 0 {
 		if e.Object != "" {
+			if len(e.rawJSON) > 0 {
+				return nil
+			}
 			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", e, e.Object)
 		}
 		return fmt.Errorf("type %T is empty", e)
