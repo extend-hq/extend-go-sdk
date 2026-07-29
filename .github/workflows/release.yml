@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Refuse to release from a non-main ref
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Releases must be cut from main (got ${{ github.ref }})."
+          exit 1
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Read version from Fern metadata
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION="$(jq -er '.sdkVersion' .fern/metadata.json)"
+          VERSION="v${VERSION#v}"
+
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::sdkVersion '$VERSION' in .fern/metadata.json is not valid semver"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Fern metadata declares $VERSION"
+
+      - name: Skip if already released
+        id: check
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "$VERSION is already tagged — nothing to release."
+          else
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "$VERSION is new — releasing."
+          fi
+
+      - name: Set up Go
+        if: steps.check.outputs.should_release == 'true'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Verify it builds
+        if: steps.check.outputs.should_release == 'true'
+        run: go build ./...
+
+      - name: Create release
+        if: steps.check.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes
+          echo "Released $VERSION at $GITHUB_SHA"
