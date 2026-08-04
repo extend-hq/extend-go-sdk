@@ -1,6 +1,6 @@
 # Extend Go Library
 
-Official Go SDK for [Extend](https://www.extend.ai) (extend.ai) — the document processing API. Parse, extract, classify, split, and edit PDFs and 30+ file types.
+Official Go SDK for [Extend](https://www.extend.ai) (extend.ai) — the document processing API. Parse, extract, classify, split, and edit PDFs and 35+ file types.
 
 [![fern shield](https://img.shields.io/badge/%F0%9F%8C%BF-Built%20with%20Fern-brightgreen)](https://buildwithfern.com?utm_source=github&utm_medium=github&utm_campaign=readme&utm_source=https%3A%2F%2Fgithub.com%2Fextend-hq%2Fextend-go-sdk)
 
