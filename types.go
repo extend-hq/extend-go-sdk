@@ -7824,7 +7824,7 @@ func (c *CreatedByUser) String() string {
 
 // Controls data retention for this run. When omitted or set to `workspace_default`, Extend uses your workspace's configured retention policy. Set `mode` to `zero` to request zero data retention for the run, which deletes supported run data after processing instead of retaining it under the workspace policy.
 //
-// Zero data retention is only available for eligible organizations and plans. If your organization is not eligible, the request will fail with a 400 error.
+// Zero data retention is available to all customers on paid plans upon request. If you're on a free plan, the request will fail with a 400 error. If you'd like to request ZDR to be enabled, please reach out to support@extend.ai.
 var (
 	dataRetentionFieldMode = big.NewInt(1 << 0)
 )
@@ -27107,8 +27107,9 @@ func (p *ParseRunMetrics) String() string {
 //
 // **Availability:** Present when `status` is `"PROCESSED"` and the request was made without the `responseType=url` query parameter. Contains the parsed chunks.
 var (
-	parseRunOutputFieldChunks = big.NewInt(1 << 0)
-	parseRunOutputFieldOcr    = big.NewInt(1 << 1)
+	parseRunOutputFieldChunks   = big.NewInt(1 << 0)
+	parseRunOutputFieldOcr      = big.NewInt(1 << 1)
+	parseRunOutputFieldMetadata = big.NewInt(1 << 2)
 )
 
 type ParseRunOutput struct {
@@ -27116,6 +27117,8 @@ type ParseRunOutput struct {
 	Chunks []*Chunk `json:"chunks" url:"chunks"`
 	// Raw OCR data from the parsing process. Only included when `returnOcr` is configured in the parse config's advanced options.
 	Ocr *ParseRunOutputOcr `json:"ocr,omitempty" url:"ocr,omitempty"`
+	// Rotation, dimension, and file-type metadata about the parse output. `null` for parse runs that completed before this field was introduced.
+	Metadata *ParseRunOutputMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27136,6 +27139,13 @@ func (p *ParseRunOutput) GetOcr() *ParseRunOutputOcr {
 		return nil
 	}
 	return p.Ocr
+}
+
+func (p *ParseRunOutput) GetMetadata() *ParseRunOutputMetadata {
+	if p == nil {
+		return nil
+	}
+	return p.Metadata
 }
 
 func (p *ParseRunOutput) GetExtraProperties() map[string]interface{} {
@@ -27166,6 +27176,13 @@ func (p *ParseRunOutput) SetOcr(ocr *ParseRunOutputOcr) {
 	p.require(parseRunOutputFieldOcr)
 }
 
+// SetMetadata sets the Metadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutput) SetMetadata(metadata *ParseRunOutputMetadata) {
+	p.Metadata = metadata
+	p.require(parseRunOutputFieldMetadata)
+}
+
 func (p *ParseRunOutput) UnmarshalJSON(data []byte) error {
 	type unmarshaler ParseRunOutput
 	var value unmarshaler
@@ -27194,6 +27211,279 @@ func (p *ParseRunOutput) MarshalJSON() ([]byte, error) {
 }
 
 func (p *ParseRunOutput) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Rotation, dimension, and file-type metadata about the parse output. `null` for parse runs that completed before this field was introduced.
+var (
+	parseRunOutputMetadataFieldOriginalMimeType = big.NewInt(1 << 0)
+	parseRunOutputMetadataFieldFinalMimeType    = big.NewInt(1 << 1)
+	parseRunOutputMetadataFieldPages            = big.NewInt(1 << 2)
+)
+
+type ParseRunOutputMetadata struct {
+	// The file's media type before any format conversion.
+	OriginalMimeType *string `json:"originalMimeType,omitempty" url:"originalMimeType,omitempty"`
+	// The file's media type after any format conversion.
+	FinalMimeType *string `json:"finalMimeType,omitempty" url:"finalMimeType,omitempty"`
+	// Per-page rotation and original-dimension info. Set when file is a PDF or was converted to PDF.
+	Pages []*ParseRunOutputMetadataPagesItem `json:"pages,omitempty" url:"pages,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputMetadata) GetOriginalMimeType() *string {
+	if p == nil {
+		return nil
+	}
+	return p.OriginalMimeType
+}
+
+func (p *ParseRunOutputMetadata) GetFinalMimeType() *string {
+	if p == nil {
+		return nil
+	}
+	return p.FinalMimeType
+}
+
+func (p *ParseRunOutputMetadata) GetPages() []*ParseRunOutputMetadataPagesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Pages
+}
+
+func (p *ParseRunOutputMetadata) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputMetadata) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetOriginalMimeType sets the OriginalMimeType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadata) SetOriginalMimeType(originalMimeType *string) {
+	p.OriginalMimeType = originalMimeType
+	p.require(parseRunOutputMetadataFieldOriginalMimeType)
+}
+
+// SetFinalMimeType sets the FinalMimeType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadata) SetFinalMimeType(finalMimeType *string) {
+	p.FinalMimeType = finalMimeType
+	p.require(parseRunOutputMetadataFieldFinalMimeType)
+}
+
+// SetPages sets the Pages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadata) SetPages(pages []*ParseRunOutputMetadataPagesItem) {
+	p.Pages = pages
+	p.require(parseRunOutputMetadataFieldPages)
+}
+
+func (p *ParseRunOutputMetadata) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputMetadata
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputMetadata(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputMetadata) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputMetadata
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputMetadata) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+var (
+	parseRunOutputMetadataPagesItemFieldNumber             = big.NewInt(1 << 0)
+	parseRunOutputMetadataPagesItemFieldRotationApplied    = big.NewInt(1 << 1)
+	parseRunOutputMetadataPagesItemFieldOriginalPageWidth  = big.NewInt(1 << 2)
+	parseRunOutputMetadataPagesItemFieldOriginalPageHeight = big.NewInt(1 << 3)
+	parseRunOutputMetadataPagesItemFieldDpi                = big.NewInt(1 << 4)
+)
+
+type ParseRunOutputMetadataPagesItem struct {
+	// The page number this entry describes.
+	Number int `json:"number" url:"number"`
+	// Degrees Extend rotated the page clockwise to make it upright. `0` if rotation detection ran and the page was already upright; `null` if rotation detection was disabled for this run.
+	RotationApplied *int `json:"rotationApplied,omitempty" url:"rotationApplied,omitempty"`
+	// The file's true page width, independent of rendering resolution.
+	OriginalPageWidth float64 `json:"originalPageWidth" url:"originalPageWidth"`
+	// The file's true page height, independent of rendering resolution.
+	OriginalPageHeight float64 `json:"originalPageHeight" url:"originalPageHeight"`
+	// The DPI that `boundingBox`/`polygon` coordinates on this page are scaled to. Multiply `originalPageWidth`/`originalPageHeight` by `dpi / 72` to convert them into that same coordinate space.
+	Dpi float64 `json:"dpi" url:"dpi"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetNumber() int {
+	if p == nil {
+		return 0
+	}
+	return p.Number
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetRotationApplied() *int {
+	if p == nil {
+		return nil
+	}
+	return p.RotationApplied
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetOriginalPageWidth() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.OriginalPageWidth
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetOriginalPageHeight() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.OriginalPageHeight
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetDpi() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Dpi
+}
+
+func (p *ParseRunOutputMetadataPagesItem) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputMetadataPagesItem) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetNumber sets the Number field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataPagesItem) SetNumber(number int) {
+	p.Number = number
+	p.require(parseRunOutputMetadataPagesItemFieldNumber)
+}
+
+// SetRotationApplied sets the RotationApplied field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataPagesItem) SetRotationApplied(rotationApplied *int) {
+	p.RotationApplied = rotationApplied
+	p.require(parseRunOutputMetadataPagesItemFieldRotationApplied)
+}
+
+// SetOriginalPageWidth sets the OriginalPageWidth field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataPagesItem) SetOriginalPageWidth(originalPageWidth float64) {
+	p.OriginalPageWidth = originalPageWidth
+	p.require(parseRunOutputMetadataPagesItemFieldOriginalPageWidth)
+}
+
+// SetOriginalPageHeight sets the OriginalPageHeight field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataPagesItem) SetOriginalPageHeight(originalPageHeight float64) {
+	p.OriginalPageHeight = originalPageHeight
+	p.require(parseRunOutputMetadataPagesItemFieldOriginalPageHeight)
+}
+
+// SetDpi sets the Dpi field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataPagesItem) SetDpi(dpi float64) {
+	p.Dpi = dpi
+	p.require(parseRunOutputMetadataPagesItemFieldDpi)
+}
+
+func (p *ParseRunOutputMetadataPagesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputMetadataPagesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputMetadataPagesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputMetadataPagesItem) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputMetadataPagesItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputMetadataPagesItem) String() string {
 	if p == nil {
 		return "<nil>"
 	}
@@ -27299,6 +27589,7 @@ var (
 	parseRunOutputOcrWordsItemFieldBoundingBox = big.NewInt(1 << 1)
 	parseRunOutputOcrWordsItemFieldConfidence  = big.NewInt(1 << 2)
 	parseRunOutputOcrWordsItemFieldPageNumber  = big.NewInt(1 << 3)
+	parseRunOutputOcrWordsItemFieldBlockID     = big.NewInt(1 << 4)
 )
 
 type ParseRunOutputOcrWordsItem struct {
@@ -27310,6 +27601,8 @@ type ParseRunOutputOcrWordsItem struct {
 	Confidence float64 `json:"confidence" url:"confidence"`
 	// The page number where the word was detected.
 	PageNumber float64 `json:"pageNumber" url:"pageNumber"`
+	// The `id` of the block (see the `Block` schema) this word was assigned to, based on bounding-box overlap. Omitted when the word doesn't fall within any block's bounding box.
+	BlockID *string `json:"blockId,omitempty" url:"blockId,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27344,6 +27637,13 @@ func (p *ParseRunOutputOcrWordsItem) GetPageNumber() float64 {
 		return 0
 	}
 	return p.PageNumber
+}
+
+func (p *ParseRunOutputOcrWordsItem) GetBlockID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BlockID
 }
 
 func (p *ParseRunOutputOcrWordsItem) GetExtraProperties() map[string]interface{} {
@@ -27386,6 +27686,13 @@ func (p *ParseRunOutputOcrWordsItem) SetConfidence(confidence float64) {
 func (p *ParseRunOutputOcrWordsItem) SetPageNumber(pageNumber float64) {
 	p.PageNumber = pageNumber
 	p.require(parseRunOutputOcrWordsItemFieldPageNumber)
+}
+
+// SetBlockID sets the BlockID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrWordsItem) SetBlockID(blockID *string) {
+	p.BlockID = blockID
+	p.require(parseRunOutputOcrWordsItemFieldBlockID)
 }
 
 func (p *ParseRunOutputOcrWordsItem) UnmarshalJSON(data []byte) error {
