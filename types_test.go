@@ -16360,6 +16360,14 @@ func TestSettersMarkExplicitEditConditionalProperty(t *testing.T) {
 }
 
 func TestSettersEditConfig(t *testing.T) {
+	t.Run("SetEngineVersion", func(t *testing.T) {
+		obj := &EditConfig{}
+		var fernTestValueEngineVersion *string
+		obj.SetEngineVersion(fernTestValueEngineVersion)
+		assert.Equal(t, fernTestValueEngineVersion, obj.EngineVersion)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetSchema", func(t *testing.T) {
 		obj := &EditConfig{}
 		var fernTestValueSchema *EditRootJSON
@@ -16395,6 +16403,39 @@ func TestSettersEditConfig(t *testing.T) {
 }
 
 func TestGettersEditConfig(t *testing.T) {
+	t.Run("GetEngineVersion", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfig{}
+		var expected *string
+		obj.EngineVersion = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetEngineVersion(), "getter should return the property value")
+	})
+
+	t.Run("GetEngineVersion_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfig{}
+		obj.EngineVersion = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetEngineVersion(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetEngineVersion_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EditConfig
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetEngineVersion() // Should return zero value
+	})
+
 	t.Run("GetSchema", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -16530,6 +16571,37 @@ func TestGettersEditConfig(t *testing.T) {
 }
 
 func TestSettersMarkExplicitEditConfig(t *testing.T) {
+	t.Run("SetEngineVersion_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfig{}
+		var fernTestValueEngineVersion *string
+
+		// Act
+		obj.SetEngineVersion(fernTestValueEngineVersion)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
 	t.Run("SetSchema_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -21191,6 +21263,14 @@ func TestSettersMarkExplicitEditRunProcessedWebhookEvent(t *testing.T) {
 }
 
 func TestSettersEditSchemaGenerationConfig(t *testing.T) {
+	t.Run("SetEngineVersion", func(t *testing.T) {
+		obj := &EditSchemaGenerationConfig{}
+		var fernTestValueEngineVersion *string
+		obj.SetEngineVersion(fernTestValueEngineVersion)
+		assert.Equal(t, fernTestValueEngineVersion, obj.EngineVersion)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetInputSchema", func(t *testing.T) {
 		obj := &EditSchemaGenerationConfig{}
 		var fernTestValueInputSchema *EditRootJSON
@@ -21218,6 +21298,39 @@ func TestSettersEditSchemaGenerationConfig(t *testing.T) {
 }
 
 func TestGettersEditSchemaGenerationConfig(t *testing.T) {
+	t.Run("GetEngineVersion", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfig{}
+		var expected *string
+		obj.EngineVersion = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetEngineVersion(), "getter should return the property value")
+	})
+
+	t.Run("GetEngineVersion_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfig{}
+		obj.EngineVersion = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetEngineVersion(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetEngineVersion_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EditSchemaGenerationConfig
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetEngineVersion() // Should return zero value
+	})
+
 	t.Run("GetInputSchema", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -21320,6 +21433,37 @@ func TestGettersEditSchemaGenerationConfig(t *testing.T) {
 }
 
 func TestSettersMarkExplicitEditSchemaGenerationConfig(t *testing.T) {
+	t.Run("SetEngineVersion_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfig{}
+		var fernTestValueEngineVersion *string
+
+		// Act
+		obj.SetEngineVersion(fernTestValueEngineVersion)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
 	t.Run("SetInputSchema_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -37047,6 +37191,149 @@ func TestSettersMarkExplicitFormDetectionRun(t *testing.T) {
 
 }
 
+func TestSettersFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("SetEventID", func(t *testing.T) {
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var fernTestValueEventID string
+		obj.SetEventID(fernTestValueEventID)
+		assert.Equal(t, fernTestValueEventID, obj.EventID)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetPayload", func(t *testing.T) {
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var fernTestValuePayload *FormDetectionRun
+		obj.SetPayload(fernTestValuePayload)
+		assert.Equal(t, fernTestValuePayload, obj.Payload)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+}
+
+func TestGettersFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("GetEventID", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var expected string
+		obj.EventID = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetEventID(), "getter should return the property value")
+	})
+
+	t.Run("GetEventID_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunFailedWebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetEventID() // Should return zero value
+	})
+
+	t.Run("GetPayload", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var expected *FormDetectionRun
+		obj.Payload = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetPayload(), "getter should return the property value")
+	})
+
+	t.Run("GetPayload_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		obj.Payload = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetPayload(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetPayload_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunFailedWebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetPayload() // Should return zero value
+	})
+
+}
+
+func TestSettersMarkExplicitFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("SetEventID_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var fernTestValueEventID string
+
+		// Act
+		obj.SetEventID(fernTestValueEventID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetPayload_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		var fernTestValuePayload *FormDetectionRun
+
+		// Act
+		obj.SetPayload(fernTestValuePayload)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+}
+
 func TestSettersFormDetectionRunMetrics(t *testing.T) {
 	t.Run("SetProcessingTimeMs", func(t *testing.T) {
 		obj := &FormDetectionRunMetrics{}
@@ -37465,6 +37752,149 @@ func TestSettersMarkExplicitFormDetectionRunMetrics(t *testing.T) {
 
 		// Act
 		obj.SetFieldAnnotationTimeMs(fernTestValueFieldAnnotationTimeMs)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+}
+
+func TestSettersFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("SetEventID", func(t *testing.T) {
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var fernTestValueEventID string
+		obj.SetEventID(fernTestValueEventID)
+		assert.Equal(t, fernTestValueEventID, obj.EventID)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetPayload", func(t *testing.T) {
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var fernTestValuePayload *FormDetectionRun
+		obj.SetPayload(fernTestValuePayload)
+		assert.Equal(t, fernTestValuePayload, obj.Payload)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+}
+
+func TestGettersFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("GetEventID", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var expected string
+		obj.EventID = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetEventID(), "getter should return the property value")
+	})
+
+	t.Run("GetEventID_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunProcessedWebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetEventID() // Should return zero value
+	})
+
+	t.Run("GetPayload", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var expected *FormDetectionRun
+		obj.Payload = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetPayload(), "getter should return the property value")
+	})
+
+	t.Run("GetPayload_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		obj.Payload = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetPayload(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetPayload_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunProcessedWebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetPayload() // Should return zero value
+	})
+
+}
+
+func TestSettersMarkExplicitFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("SetEventID_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var fernTestValueEventID string
+
+		// Act
+		obj.SetEventID(fernTestValueEventID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetPayload_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		var fernTestValuePayload *FormDetectionRun
+
+		// Act
+		obj.SetPayload(fernTestValuePayload)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -62549,6 +62979,72 @@ func TestGettersWebhookEvent(t *testing.T) {
 		_ = obj.GetEditRunFailed() // Should return zero value
 	})
 
+	t.Run("GetFormDetectionRunProcessed", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhookEvent{}
+		var expected *FormDetectionRunProcessedWebhookEvent
+		obj.FormDetectionRunProcessed = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFormDetectionRunProcessed(), "getter should return the property value")
+	})
+
+	t.Run("GetFormDetectionRunProcessed_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhookEvent{}
+		obj.FormDetectionRunProcessed = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFormDetectionRunProcessed(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFormDetectionRunProcessed_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFormDetectionRunProcessed() // Should return zero value
+	})
+
+	t.Run("GetFormDetectionRunFailed", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhookEvent{}
+		var expected *FormDetectionRunFailedWebhookEvent
+		obj.FormDetectionRunFailed = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFormDetectionRunFailed(), "getter should return the property value")
+	})
+
+	t.Run("GetFormDetectionRunFailed_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &WebhookEvent{}
+		obj.FormDetectionRunFailed = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFormDetectionRunFailed(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFormDetectionRunFailed_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *WebhookEvent
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFormDetectionRunFailed() // Should return zero value
+	})
+
 	t.Run("GetWorkflowCreated", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -70452,6 +70948,39 @@ func TestJSONMarshalingFormDetectionRun(t *testing.T) {
 
 }
 
+func TestJSONMarshalingFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunFailedWebhookEvent{}
+
+		// Act - Marshal to JSON
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		assert.NotNil(t, data, "marshaled data should not be nil")
+		assert.NotEmpty(t, data, "marshaled data should not be empty")
+
+		// Unmarshal back and verify round-trip
+		var unmarshaled FormDetectionRunFailedWebhookEvent
+		err = json.Unmarshal(data, &unmarshaled)
+		assert.NoError(t, err, "round-trip unmarshal should succeed")
+	})
+
+	t.Run("UnmarshalInvalidJSON", func(t *testing.T) {
+		t.Parallel()
+		var obj FormDetectionRunFailedWebhookEvent
+		err := json.Unmarshal([]byte(`{invalid json}`), &obj)
+		assert.Error(t, err, "unmarshaling invalid JSON should return an error")
+	})
+
+	t.Run("UnmarshalEmptyObject", func(t *testing.T) {
+		t.Parallel()
+		var obj FormDetectionRunFailedWebhookEvent
+		err := json.Unmarshal([]byte(`{}`), &obj)
+		assert.NoError(t, err, "unmarshaling empty object should succeed")
+	})
+}
+
 func TestJSONMarshalingFormDetectionRunMetrics(t *testing.T) {
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		t.Parallel()
@@ -70480,6 +71009,39 @@ func TestJSONMarshalingFormDetectionRunMetrics(t *testing.T) {
 	t.Run("UnmarshalEmptyObject", func(t *testing.T) {
 		t.Parallel()
 		var obj FormDetectionRunMetrics
+		err := json.Unmarshal([]byte(`{}`), &obj)
+		assert.NoError(t, err, "unmarshaling empty object should succeed")
+	})
+}
+
+func TestJSONMarshalingFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+
+		// Act - Marshal to JSON
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		assert.NotNil(t, data, "marshaled data should not be nil")
+		assert.NotEmpty(t, data, "marshaled data should not be empty")
+
+		// Unmarshal back and verify round-trip
+		var unmarshaled FormDetectionRunProcessedWebhookEvent
+		err = json.Unmarshal(data, &unmarshaled)
+		assert.NoError(t, err, "round-trip unmarshal should succeed")
+	})
+
+	t.Run("UnmarshalInvalidJSON", func(t *testing.T) {
+		t.Parallel()
+		var obj FormDetectionRunProcessedWebhookEvent
+		err := json.Unmarshal([]byte(`{invalid json}`), &obj)
+		assert.Error(t, err, "unmarshaling invalid JSON should return an error")
+	})
+
+	t.Run("UnmarshalEmptyObject", func(t *testing.T) {
+		t.Parallel()
+		var obj FormDetectionRunProcessedWebhookEvent
 		err := json.Unmarshal([]byte(`{}`), &obj)
 		assert.NoError(t, err, "unmarshaling empty object should succeed")
 	})
@@ -75921,6 +76483,22 @@ func TestStringFormDetectionRun(t *testing.T) {
 	})
 }
 
+func TestStringFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("StringMethod", func(t *testing.T) {
+		t.Parallel()
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		result := obj.String()
+		assert.NotEmpty(t, result, "String() should return a non-empty representation")
+	})
+
+	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunFailedWebhookEvent
+		result := obj.String()
+		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
 func TestStringFormDetectionRunMetrics(t *testing.T) {
 	t.Run("StringMethod", func(t *testing.T) {
 		t.Parallel()
@@ -75932,6 +76510,22 @@ func TestStringFormDetectionRunMetrics(t *testing.T) {
 	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *FormDetectionRunMetrics
+		result := obj.String()
+		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestStringFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("StringMethod", func(t *testing.T) {
+		t.Parallel()
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		result := obj.String()
+		assert.NotEmpty(t, result, "String() should return a non-empty representation")
+	})
+
+	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunProcessedWebhookEvent
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
 	})
@@ -82884,6 +83478,29 @@ func TestExtraPropertiesFormDetectionRun(t *testing.T) {
 	})
 }
 
+func TestExtraPropertiesFormDetectionRunFailedWebhookEvent(t *testing.T) {
+	t.Run("GetExtraProperties", func(t *testing.T) {
+		t.Parallel()
+		obj := &FormDetectionRunFailedWebhookEvent{}
+		// Should not panic when calling GetExtraProperties()
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("GetExtraProperties() panicked: %v", r)
+			}
+		}()
+		extraProps := obj.GetExtraProperties()
+		// Result can be nil or an empty/non-empty map
+		_ = extraProps
+	})
+
+	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunFailedWebhookEvent
+		extraProps := obj.GetExtraProperties()
+		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
+	})
+}
+
 func TestExtraPropertiesFormDetectionRunMetrics(t *testing.T) {
 	t.Run("GetExtraProperties", func(t *testing.T) {
 		t.Parallel()
@@ -82902,6 +83519,29 @@ func TestExtraPropertiesFormDetectionRunMetrics(t *testing.T) {
 	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *FormDetectionRunMetrics
+		extraProps := obj.GetExtraProperties()
+		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
+	})
+}
+
+func TestExtraPropertiesFormDetectionRunProcessedWebhookEvent(t *testing.T) {
+	t.Run("GetExtraProperties", func(t *testing.T) {
+		t.Parallel()
+		obj := &FormDetectionRunProcessedWebhookEvent{}
+		// Should not panic when calling GetExtraProperties()
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("GetExtraProperties() panicked: %v", r)
+			}
+		}()
+		extraProps := obj.GetExtraProperties()
+		// Result can be nil or an empty/non-empty map
+		_ = extraProps
+	})
+
+	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FormDetectionRunProcessedWebhookEvent
 		extraProps := obj.GetExtraProperties()
 		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
 	})

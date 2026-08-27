@@ -8933,14 +8933,17 @@ func (e *EditConditionalProperty) String() string {
 
 // Configuration options for the editing process.
 var (
-	editConfigFieldSchema                       = big.NewInt(1 << 0)
-	editConfigFieldInstructions                 = big.NewInt(1 << 1)
-	editConfigFieldSchemaGenerationInstructions = big.NewInt(1 << 2)
-	editConfigFieldAdvancedOptions              = big.NewInt(1 << 3)
+	editConfigFieldEngineVersion                = big.NewInt(1 << 0)
+	editConfigFieldSchema                       = big.NewInt(1 << 1)
+	editConfigFieldInstructions                 = big.NewInt(1 << 2)
+	editConfigFieldSchemaGenerationInstructions = big.NewInt(1 << 3)
+	editConfigFieldAdvancedOptions              = big.NewInt(1 << 4)
 )
 
 type EditConfig struct {
-	Schema *EditRootJSON `json:"schema,omitempty" url:"schema,omitempty"`
+	// The Edit engine version to use. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `0.0.1` when omitted. Responses contain the resolved exact version.
+	EngineVersion *string       `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
+	Schema        *EditRootJSON `json:"schema,omitempty" url:"schema,omitempty"`
 	// Custom instructions provided for the edit operation.
 	Instructions *string `json:"instructions,omitempty" url:"instructions,omitempty"`
 	// Additional instructions used when generating a schema from the document.
@@ -8953,6 +8956,13 @@ type EditConfig struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (e *EditConfig) GetEngineVersion() *string {
+	if e == nil {
+		return nil
+	}
+	return e.EngineVersion
 }
 
 func (e *EditConfig) GetSchema() *EditRootJSON {
@@ -8995,6 +9005,13 @@ func (e *EditConfig) require(field *big.Int) {
 		e.explicitFields = big.NewInt(0)
 	}
 	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetEngineVersion sets the EngineVersion field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditConfig) SetEngineVersion(engineVersion *string) {
+	e.EngineVersion = engineVersion
+	e.require(editConfigFieldEngineVersion)
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -10492,6 +10509,7 @@ func (e *EditRun) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// Triggered when an API-created EditRun fails before it finishes filling the document's form fields. A failure in an internal FormDetectionRun is reported through this parent EditRun event; the internal run does not emit a Form Detection webhook.
 var (
 	editRunFailedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	editRunFailedWebhookEventFieldPayload = big.NewInt(1 << 1)
@@ -11008,6 +11026,7 @@ func (e *EditRunOutputEditedFile) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// Triggered after an API-created EditRun finishes filling the document's form fields. If no schema was provided, the EditRun first creates an internal FormDetectionRun; that internal run does not emit Form Detection webhooks.
 var (
 	editRunProcessedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	editRunProcessedWebhookEventFieldPayload = big.NewInt(1 << 1)
@@ -11140,12 +11159,15 @@ func (e EditRunStatus) Ptr() *EditRunStatus {
 
 // Configuration options for edit schema generation.
 var (
-	editSchemaGenerationConfigFieldInputSchema     = big.NewInt(1 << 0)
-	editSchemaGenerationConfigFieldInstructions    = big.NewInt(1 << 1)
-	editSchemaGenerationConfigFieldAdvancedOptions = big.NewInt(1 << 2)
+	editSchemaGenerationConfigFieldEngineVersion   = big.NewInt(1 << 0)
+	editSchemaGenerationConfigFieldInputSchema     = big.NewInt(1 << 1)
+	editSchemaGenerationConfigFieldInstructions    = big.NewInt(1 << 2)
+	editSchemaGenerationConfigFieldAdvancedOptions = big.NewInt(1 << 3)
 )
 
 type EditSchemaGenerationConfig struct {
+	// The Edit engine version to use for form detection. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `0.0.1` when omitted. Responses contain the resolved exact version.
+	EngineVersion *string `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
 	// Optional existing edit schema to map onto the detected form fields. When provided, the response may include a `mappingResult`
 	// that shows which input schema paths matched the generated form fields.
 	InputSchema *EditRootJSON `json:"inputSchema,omitempty" url:"inputSchema,omitempty"`
@@ -11159,6 +11181,13 @@ type EditSchemaGenerationConfig struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (e *EditSchemaGenerationConfig) GetEngineVersion() *string {
+	if e == nil {
+		return nil
+	}
+	return e.EngineVersion
 }
 
 func (e *EditSchemaGenerationConfig) GetInputSchema() *EditRootJSON {
@@ -11194,6 +11223,13 @@ func (e *EditSchemaGenerationConfig) require(field *big.Int) {
 		e.explicitFields = big.NewInt(0)
 	}
 	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetEngineVersion sets the EngineVersion field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationConfig) SetEngineVersion(engineVersion *string) {
+	e.EngineVersion = engineVersion
+	e.require(editSchemaGenerationConfigFieldEngineVersion)
 }
 
 // SetInputSchema sets the InputSchema field and marks it as non-optional;
@@ -19668,6 +19704,108 @@ func (f *FormDetectionRun) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
+// Triggered when a FormDetectionRun created directly through the Form Detection API fails. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
+var (
+	formDetectionRunFailedWebhookEventFieldEventID = big.NewInt(1 << 0)
+	formDetectionRunFailedWebhookEventFieldPayload = big.NewInt(1 << 1)
+)
+
+type FormDetectionRunFailedWebhookEvent struct {
+	// Unique identifier for the event
+	EventID string            `json:"eventId" url:"eventId"`
+	Payload *FormDetectionRun `json:"payload" url:"payload"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) GetEventID() string {
+	if f == nil {
+		return ""
+	}
+	return f.EventID
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) GetPayload() *FormDetectionRun {
+	if f == nil {
+		return nil
+	}
+	return f.Payload
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetEventID sets the EventID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunFailedWebhookEvent) SetEventID(eventID string) {
+	f.EventID = eventID
+	f.require(formDetectionRunFailedWebhookEventFieldEventID)
+}
+
+// SetPayload sets the Payload field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunFailedWebhookEvent) SetPayload(payload *FormDetectionRun) {
+	f.Payload = payload
+	f.require(formDetectionRunFailedWebhookEventFieldPayload)
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) UnmarshalJSON(data []byte) error {
+	type unmarshaler FormDetectionRunFailedWebhookEvent
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FormDetectionRunFailedWebhookEvent(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) MarshalJSON() ([]byte, error) {
+	type embed FormDetectionRunFailedWebhookEvent
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FormDetectionRunFailedWebhookEvent) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
 // Metrics about the form detection process.
 //
 // **Availability:** Present when `status` is `"PROCESSED"`.
@@ -19844,6 +19982,108 @@ func (f *FormDetectionRunMetrics) MarshalJSON() ([]byte, error) {
 }
 
 func (f *FormDetectionRunMetrics) String() string {
+	if f == nil {
+		return "<nil>"
+	}
+	if len(f.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(f.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(f); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", f)
+}
+
+// Triggered after a FormDetectionRun created directly through the Form Detection API finishes detecting and annotating form fields and generating the edit schema. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
+var (
+	formDetectionRunProcessedWebhookEventFieldEventID = big.NewInt(1 << 0)
+	formDetectionRunProcessedWebhookEventFieldPayload = big.NewInt(1 << 1)
+)
+
+type FormDetectionRunProcessedWebhookEvent struct {
+	// Unique identifier for the event
+	EventID string            `json:"eventId" url:"eventId"`
+	Payload *FormDetectionRun `json:"payload" url:"payload"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) GetEventID() string {
+	if f == nil {
+		return ""
+	}
+	return f.EventID
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) GetPayload() *FormDetectionRun {
+	if f == nil {
+		return nil
+	}
+	return f.Payload
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) GetExtraProperties() map[string]interface{} {
+	if f == nil {
+		return nil
+	}
+	return f.extraProperties
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) require(field *big.Int) {
+	if f.explicitFields == nil {
+		f.explicitFields = big.NewInt(0)
+	}
+	f.explicitFields.Or(f.explicitFields, field)
+}
+
+// SetEventID sets the EventID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunProcessedWebhookEvent) SetEventID(eventID string) {
+	f.EventID = eventID
+	f.require(formDetectionRunProcessedWebhookEventFieldEventID)
+}
+
+// SetPayload sets the Payload field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FormDetectionRunProcessedWebhookEvent) SetPayload(payload *FormDetectionRun) {
+	f.Payload = payload
+	f.require(formDetectionRunProcessedWebhookEventFieldPayload)
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) UnmarshalJSON(data []byte) error {
+	type unmarshaler FormDetectionRunProcessedWebhookEvent
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*f = FormDetectionRunProcessedWebhookEvent(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *f)
+	if err != nil {
+		return err
+	}
+	f.extraProperties = extraProperties
+	f.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) MarshalJSON() ([]byte, error) {
+	type embed FormDetectionRunProcessedWebhookEvent
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*f),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, f.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (f *FormDetectionRunProcessedWebhookEvent) String() string {
 	if f == nil {
 		return "<nil>"
 	}
@@ -34057,6 +34297,8 @@ type WebhookEvent struct {
 	ParseRunFailed              *ParseRunFailedWebhookEvent
 	EditRunProcessed            *EditRunProcessedWebhookEvent
 	EditRunFailed               *EditRunFailedWebhookEvent
+	FormDetectionRunProcessed   *FormDetectionRunProcessedWebhookEvent
+	FormDetectionRunFailed      *FormDetectionRunFailedWebhookEvent
 	WorkflowCreated             *WorkflowCreatedWebhookEvent
 	WorkflowDeployed            *WorkflowDeployedWebhookEvent
 	WorkflowDeleted             *WorkflowDeletedWebhookEvent
@@ -34224,6 +34466,20 @@ func (w *WebhookEvent) GetEditRunFailed() *EditRunFailedWebhookEvent {
 		return nil
 	}
 	return w.EditRunFailed
+}
+
+func (w *WebhookEvent) GetFormDetectionRunProcessed() *FormDetectionRunProcessedWebhookEvent {
+	if w == nil {
+		return nil
+	}
+	return w.FormDetectionRunProcessed
+}
+
+func (w *WebhookEvent) GetFormDetectionRunFailed() *FormDetectionRunFailedWebhookEvent {
+	if w == nil {
+		return nil
+	}
+	return w.FormDetectionRunFailed
 }
 
 func (w *WebhookEvent) GetWorkflowCreated() *WorkflowCreatedWebhookEvent {
@@ -34484,6 +34740,18 @@ func (w *WebhookEvent) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		w.EditRunFailed = value
+	case "form_detection_run.processed":
+		value := new(FormDetectionRunProcessedWebhookEvent)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		w.FormDetectionRunProcessed = value
+	case "form_detection_run.failed":
+		value := new(FormDetectionRunFailedWebhookEvent)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		w.FormDetectionRunFailed = value
 	case "workflow.created":
 		value := new(WorkflowCreatedWebhookEvent)
 		if err := json.Unmarshal(data, &value); err != nil {
@@ -34661,6 +34929,12 @@ func (w WebhookEvent) MarshalJSON() ([]byte, error) {
 	if w.EditRunFailed != nil {
 		return internal.MarshalJSONWithExtraProperty(w.EditRunFailed, "eventType", "edit_run.failed")
 	}
+	if w.FormDetectionRunProcessed != nil {
+		return internal.MarshalJSONWithExtraProperty(w.FormDetectionRunProcessed, "eventType", "form_detection_run.processed")
+	}
+	if w.FormDetectionRunFailed != nil {
+		return internal.MarshalJSONWithExtraProperty(w.FormDetectionRunFailed, "eventType", "form_detection_run.failed")
+	}
 	if w.WorkflowCreated != nil {
 		return internal.MarshalJSONWithExtraProperty(w.WorkflowCreated, "eventType", "workflow.created")
 	}
@@ -34742,6 +35016,8 @@ type WebhookEventVisitor interface {
 	VisitParseRunFailed(*ParseRunFailedWebhookEvent) error
 	VisitEditRunProcessed(*EditRunProcessedWebhookEvent) error
 	VisitEditRunFailed(*EditRunFailedWebhookEvent) error
+	VisitFormDetectionRunProcessed(*FormDetectionRunProcessedWebhookEvent) error
+	VisitFormDetectionRunFailed(*FormDetectionRunFailedWebhookEvent) error
 	VisitWorkflowCreated(*WorkflowCreatedWebhookEvent) error
 	VisitWorkflowDeployed(*WorkflowDeployedWebhookEvent) error
 	VisitWorkflowDeleted(*WorkflowDeletedWebhookEvent) error
@@ -34822,6 +35098,12 @@ func (w *WebhookEvent) Accept(visitor WebhookEventVisitor) error {
 	}
 	if w.EditRunFailed != nil {
 		return visitor.VisitEditRunFailed(w.EditRunFailed)
+	}
+	if w.FormDetectionRunProcessed != nil {
+		return visitor.VisitFormDetectionRunProcessed(w.FormDetectionRunProcessed)
+	}
+	if w.FormDetectionRunFailed != nil {
+		return visitor.VisitFormDetectionRunFailed(w.FormDetectionRunFailed)
 	}
 	if w.WorkflowCreated != nil {
 		return visitor.VisitWorkflowCreated(w.WorkflowCreated)
@@ -34944,6 +35226,12 @@ func (w *WebhookEvent) validate() error {
 	}
 	if w.EditRunFailed != nil {
 		fields = append(fields, "edit_run.failed")
+	}
+	if w.FormDetectionRunProcessed != nil {
+		fields = append(fields, "form_detection_run.processed")
+	}
+	if w.FormDetectionRunFailed != nil {
+		fields = append(fields, "form_detection_run.failed")
 	}
 	if w.WorkflowCreated != nil {
 		fields = append(fields, "workflow.created")

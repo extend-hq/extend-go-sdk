@@ -95,6 +95,9 @@ func TestEditRunsCreateWithWireMock(
 			},
 		},
 		Config: &extend.EditConfig{
+			EngineVersion: extend.String(
+				"0.0.1",
+			),
 			Instructions: extend.String(
 				"Fill out the form with the provided data",
 			),

@@ -171,7 +171,7 @@ func (c *Client) Edit(
 
 // Detect fields in a PDF form and wait for the generated edit schema before returning. This endpoint has a 5-minute timeout.
 //
-// For production workloads, use `POST /form_detection_runs` and poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
+// For production workloads, use `POST /form_detection_runs` and receive the result by webhook or poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
 func (c *Client) DetectForm(
 	ctx context.Context,
 	request *extend.DetectFormRequest,
