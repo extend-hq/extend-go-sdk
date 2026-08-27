@@ -157,6 +157,9 @@ request := &extend.EditRequest{
             },
         },
         Config: &extend.EditConfig{
+            EngineVersion: extend.String(
+                "0.0.1",
+            ),
             Instructions: extend.String(
                 "Fill out the form with the provided data",
             ),
@@ -220,7 +223,7 @@ client.Edit(
 
 Detect fields in a PDF form and wait for the generated edit schema before returning. This endpoint has a 5-minute timeout.
 
-For production workloads, use `POST /form_detection_runs` and poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
+For production workloads, use `POST /form_detection_runs` and receive the result by webhook or poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
 </dd>
 </dl>
 </dd>
@@ -242,6 +245,9 @@ request := &extend.DetectFormRequest{
             },
         },
         Config: &extend.EditSchemaGenerationConfig{
+            EngineVersion: extend.String(
+                "0.0.1",
+            ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
             ),
@@ -1661,6 +1667,9 @@ request := &extend.EditRunsCreateRequest{
             },
         },
         Config: &extend.EditConfig{
+            EngineVersion: extend.String(
+                "0.0.1",
+            ),
             Instructions: extend.String(
                 "Fill out the form with the provided data",
             ),
@@ -1976,6 +1985,9 @@ request := &extend.EditSchemasGenerateRequest{
             },
         },
         Config: &extend.EditSchemaGenerationConfig{
+            EngineVersion: extend.String(
+                "0.0.1",
+            ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
             ),
@@ -2040,7 +2052,7 @@ client.EditSchemas.Generate(
 
 Start detecting fields in a PDF form and return immediately with a `form_detection_run` resource, typically in the `PROCESSING` state.
 
-Poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
+Subscribe to the `form_detection_run.processed` and `form_detection_run.failed` webhook events, or poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
 </dd>
 </dl>
 </dd>
@@ -2062,6 +2074,9 @@ request := &extend.FormDetectionRunsCreateRequest{
             },
         },
         Config: &extend.EditSchemaGenerationConfig{
+            EngineVersion: extend.String(
+                "0.0.1",
+            ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
             ),

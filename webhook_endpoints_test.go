@@ -2862,6 +2862,20 @@ func TestEnumWebhookEndpointEventType(t *testing.T) {
 		assert.Equal(t, WebhookEndpointEventType("edit_run.failed"), val, "enum value should match expected wire value")
 	})
 
+	t.Run("NewFromString_form_detection_run_processed", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWebhookEndpointEventTypeFromString("form_detection_run.processed")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WebhookEndpointEventType("form_detection_run.processed"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_form_detection_run_failed", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewWebhookEndpointEventTypeFromString("form_detection_run.failed")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, WebhookEndpointEventType("form_detection_run.failed"), val, "enum value should match expected wire value")
+	})
+
 	t.Run("NewFromString_extract_run_processed", func(t *testing.T) {
 		t.Parallel()
 		val, err := NewWebhookEndpointEventTypeFromString("extract_run.processed")

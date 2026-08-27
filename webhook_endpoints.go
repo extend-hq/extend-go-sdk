@@ -827,6 +827,8 @@ const (
 	WebhookEndpointEventTypeParseRunFailed             WebhookEndpointEventType = "parse_run.failed"
 	WebhookEndpointEventTypeEditRunProcessed           WebhookEndpointEventType = "edit_run.processed"
 	WebhookEndpointEventTypeEditRunFailed              WebhookEndpointEventType = "edit_run.failed"
+	WebhookEndpointEventTypeFormDetectionRunProcessed  WebhookEndpointEventType = "form_detection_run.processed"
+	WebhookEndpointEventTypeFormDetectionRunFailed     WebhookEndpointEventType = "form_detection_run.failed"
 	WebhookEndpointEventTypeExtractRunProcessed        WebhookEndpointEventType = "extract_run.processed"
 	WebhookEndpointEventTypeExtractRunFailed           WebhookEndpointEventType = "extract_run.failed"
 	WebhookEndpointEventTypeClassifyRunProcessed       WebhookEndpointEventType = "classify_run.processed"
@@ -867,6 +869,10 @@ func NewWebhookEndpointEventTypeFromString(s string) (WebhookEndpointEventType, 
 		return WebhookEndpointEventTypeEditRunProcessed, nil
 	case "edit_run.failed":
 		return WebhookEndpointEventTypeEditRunFailed, nil
+	case "form_detection_run.processed":
+		return WebhookEndpointEventTypeFormDetectionRunProcessed, nil
+	case "form_detection_run.failed":
+		return WebhookEndpointEventTypeFormDetectionRunFailed, nil
 	case "extract_run.processed":
 		return WebhookEndpointEventTypeExtractRunProcessed, nil
 	case "extract_run.failed":

@@ -40,7 +40,7 @@ func NewClient(options *core.RequestOptions) *Client {
 
 // Start detecting fields in a PDF form and return immediately with a `form_detection_run` resource, typically in the `PROCESSING` state.
 //
-// Poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
+// Subscribe to the `form_detection_run.processed` and `form_detection_run.failed` webhook events, or poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.FormDetectionRunsCreateRequest,

@@ -128,6 +128,9 @@ func TestEditWithWireMock(
 			},
 		},
 		Config: &extend.EditConfig{
+			EngineVersion: extend.String(
+				"0.0.1",
+			),
 			Instructions: extend.String(
 				"Fill out the form with the provided data",
 			),
@@ -168,6 +171,9 @@ func TestDetectFormWithWireMock(
 			},
 		},
 		Config: &extend.EditSchemaGenerationConfig{
+			EngineVersion: extend.String(
+				"0.0.1",
+			),
 			Instructions: extend.String(
 				"Detect the form fields and use human-readable field names.",
 			),
