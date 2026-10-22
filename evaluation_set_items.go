@@ -184,8 +184,9 @@ var (
 	evaluationSetItemFieldID              = big.NewInt(1 << 0)
 	evaluationSetItemFieldEvaluationSetID = big.NewInt(1 << 1)
 	evaluationSetItemFieldFile            = big.NewInt(1 << 2)
-	evaluationSetItemFieldExpectedOutput  = big.NewInt(1 << 3)
-	evaluationSetItemFieldCreatedBy       = big.NewInt(1 << 4)
+	evaluationSetItemFieldFiles           = big.NewInt(1 << 3)
+	evaluationSetItemFieldExpectedOutput  = big.NewInt(1 << 4)
+	evaluationSetItemFieldCreatedBy       = big.NewInt(1 << 5)
 )
 
 type EvaluationSetItem struct {
@@ -197,8 +198,12 @@ type EvaluationSetItem struct {
 	//
 	// Example: `"ev_2LcgeY_mp2T5yPaEuq5Lw"`
 	EvaluationSetID string `json:"evaluationSetId" url:"evaluationSetId"`
-	// A summary of the file associated with the evaluation set item.
-	File *FileSummary `json:"file" url:"file"`
+	// A summary of the file associated with the evaluation set item. `null` for multifile items (use `files` instead).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
+	// The files associated with a multifile evaluation set item, in the order they were submitted. Only populated for items created with `fileIds`.
+	//
+	// For single-file items, this is `null` — use `file` instead.
+	Files []*FileSummary `json:"files,omitempty" url:"files,omitempty"`
 	// The expected output that will be used to evaluate the performance of the extractor, classifier, or splitter associated with the evaluation set. This must conform to the output schema of the entity associated with the evaluation set.
 	ExpectedOutput *ProvidedProcessorOutput `json:"expectedOutput" url:"expectedOutput"`
 	CreatedBy      *CreatedBy               `json:"createdBy,omitempty" url:"createdBy,omitempty"`
@@ -230,6 +235,13 @@ func (e *EvaluationSetItem) GetFile() *FileSummary {
 		return nil
 	}
 	return e.File
+}
+
+func (e *EvaluationSetItem) GetFiles() []*FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Files
 }
 
 func (e *EvaluationSetItem) GetExpectedOutput() *ProvidedProcessorOutput {
@@ -283,6 +295,13 @@ func (e *EvaluationSetItem) SetEvaluationSetID(evaluationSetID string) {
 func (e *EvaluationSetItem) SetFile(file *FileSummary) {
 	e.File = file
 	e.require(evaluationSetItemFieldFile)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetItem) SetFiles(files []*FileSummary) {
+	e.Files = files
+	e.require(evaluationSetItemFieldFiles)
 }
 
 // SetExpectedOutput sets the ExpectedOutput field and marks it as non-optional;
@@ -355,7 +374,8 @@ func (e *EvaluationSetItem) String() string {
 var (
 	evaluationSetItemSummaryFieldID        = big.NewInt(1 << 0)
 	evaluationSetItemSummaryFieldFile      = big.NewInt(1 << 1)
-	evaluationSetItemSummaryFieldCreatedBy = big.NewInt(1 << 2)
+	evaluationSetItemSummaryFieldFiles     = big.NewInt(1 << 2)
+	evaluationSetItemSummaryFieldCreatedBy = big.NewInt(1 << 3)
 )
 
 type EvaluationSetItemSummary struct {
@@ -363,9 +383,13 @@ type EvaluationSetItemSummary struct {
 	//
 	// Example: `"evi_kR9mNP12Qw4yTv8BdR3H"`
 	ID string `json:"id" url:"id"`
-	// A summary of the file associated with the evaluation set item.
-	File      *FileSummary `json:"file" url:"file"`
-	CreatedBy *CreatedBy   `json:"createdBy,omitempty" url:"createdBy,omitempty"`
+	// A summary of the file associated with the evaluation set item. `null` for multifile items (use `files` instead).
+	File *FileSummary `json:"file,omitempty" url:"file,omitempty"`
+	// The files associated with a multifile evaluation set item, in the order they were submitted. Only populated for items created with `fileIds`.
+	//
+	// For single-file items, this is `null` — use `file` instead.
+	Files     []*FileSummary `json:"files,omitempty" url:"files,omitempty"`
+	CreatedBy *CreatedBy     `json:"createdBy,omitempty" url:"createdBy,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -387,6 +411,13 @@ func (e *EvaluationSetItemSummary) GetFile() *FileSummary {
 		return nil
 	}
 	return e.File
+}
+
+func (e *EvaluationSetItemSummary) GetFiles() []*FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Files
 }
 
 func (e *EvaluationSetItemSummary) GetCreatedBy() *CreatedBy {
@@ -426,6 +457,13 @@ func (e *EvaluationSetItemSummary) SetID(id string) {
 func (e *EvaluationSetItemSummary) SetFile(file *FileSummary) {
 	e.File = file
 	e.require(evaluationSetItemSummaryFieldFile)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetItemSummary) SetFiles(files []*FileSummary) {
+	e.Files = files
+	e.require(evaluationSetItemSummaryFieldFiles)
 }
 
 // SetCreatedBy sets the CreatedBy field and marks it as non-optional;
@@ -488,17 +526,25 @@ func (e *EvaluationSetItemSummary) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// Each item references exactly one of `fileId` (a single file) or `fileIds` (a multifile item) — provide one or the other.
 var (
 	evaluationSetItemsCreateRequestItemsItemFieldFileID         = big.NewInt(1 << 0)
-	evaluationSetItemsCreateRequestItemsItemFieldExpectedOutput = big.NewInt(1 << 1)
+	evaluationSetItemsCreateRequestItemsItemFieldFileIDs        = big.NewInt(1 << 1)
+	evaluationSetItemsCreateRequestItemsItemFieldExpectedOutput = big.NewInt(1 << 2)
 )
 
 type EvaluationSetItemsCreateRequestItemsItem struct {
-	// Extend's internal ID for the file. It will always start with "file_".
+	// Extend's internal ID for the file. It will always start with "file_". Mutually exclusive with `fileIds`.
 	//
 	// Example: `"file_xK9mLPqRtN3vS8wF5hB2cQ"`
-	FileID string `json:"fileId" url:"fileId"`
-	// The expected output that will be compared to the actual output of the extractor, classifier, or splitter when run against the file.
+	FileID *string `json:"fileId,omitempty" url:"fileId,omitempty"`
+	// An ordered list of Extend file IDs to evaluate together as a single multifile item. Mutually exclusive with `fileId`.
+	//
+	// Each evaluation run evaluates the item as one multifile extraction run over these files, in this order. Only supported for evaluation sets whose entity is a JSON-schema extractor. File IDs must be unique.
+	//
+	// See [Multifile Extraction](https://docs.extend.ai/2026-02-09/extraction/multifile) for details.
+	FileIDs []string `json:"fileIds,omitempty" url:"fileIds,omitempty"`
+	// The expected output that will be compared to the actual output of the extractor, classifier, or splitter when run against the file(s).
 	ExpectedOutput *ProvidedProcessorOutput `json:"expectedOutput" url:"expectedOutput"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -508,11 +554,18 @@ type EvaluationSetItemsCreateRequestItemsItem struct {
 	rawJSON         json.RawMessage
 }
 
-func (e *EvaluationSetItemsCreateRequestItemsItem) GetFileID() string {
+func (e *EvaluationSetItemsCreateRequestItemsItem) GetFileID() *string {
 	if e == nil {
-		return ""
+		return nil
 	}
 	return e.FileID
+}
+
+func (e *EvaluationSetItemsCreateRequestItemsItem) GetFileIDs() []string {
+	if e == nil {
+		return nil
+	}
+	return e.FileIDs
 }
 
 func (e *EvaluationSetItemsCreateRequestItemsItem) GetExpectedOutput() *ProvidedProcessorOutput {
@@ -538,9 +591,16 @@ func (e *EvaluationSetItemsCreateRequestItemsItem) require(field *big.Int) {
 
 // SetFileID sets the FileID field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EvaluationSetItemsCreateRequestItemsItem) SetFileID(fileID string) {
+func (e *EvaluationSetItemsCreateRequestItemsItem) SetFileID(fileID *string) {
 	e.FileID = fileID
 	e.require(evaluationSetItemsCreateRequestItemsItemFieldFileID)
+}
+
+// SetFileIDs sets the FileIDs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetItemsCreateRequestItemsItem) SetFileIDs(fileIDs []string) {
+	e.FileIDs = fileIDs
+	e.require(evaluationSetItemsCreateRequestItemsItemFieldFileIDs)
 }
 
 // SetExpectedOutput sets the ExpectedOutput field and marks it as non-optional;

@@ -129,7 +129,7 @@ func TestEditWithWireMock(
 		},
 		Config: &extend.EditConfig{
 			EngineVersion: extend.String(
-				"0.0.1",
+				"1.0.0",
 			),
 			Instructions: extend.String(
 				"Fill out the form with the provided data",
@@ -172,7 +172,7 @@ func TestDetectFormWithWireMock(
 		},
 		Config: &extend.EditSchemaGenerationConfig{
 			EngineVersion: extend.String(
-				"0.0.1",
+				"1.0.0",
 			),
 			Instructions: extend.String(
 				"Detect the form fields and use human-readable field names.",
@@ -194,6 +194,36 @@ func TestDetectFormWithWireMock(
 
 	require.NoError(t, invocationErr, "Client method call should succeed")
 	VerifyRequestCount(t, "TestDetectFormWithWireMock", "POST", "/detect_form", nil, 1)
+}
+
+func TestVerifyWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithToken("test-token"),
+	)
+	request := &extend.VerifyRequest{
+		File: &extend.VerifyRequestFile{
+			FileFromURL: &extend.FileFromURL{
+				URL: "https://example.com/bank_statement.pdf",
+			},
+		},
+	}
+	_, invocationErr := client.Verify(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestVerifyWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestVerifyWithWireMock", "POST", "/verify", nil, 1)
 }
 
 func TestExtractWithWireMock(

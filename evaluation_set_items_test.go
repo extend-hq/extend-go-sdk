@@ -409,6 +409,14 @@ func TestSettersEvaluationSetItem(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetFiles", func(t *testing.T) {
+		obj := &EvaluationSetItem{}
+		var fernTestValueFiles []*FileSummary
+		obj.SetFiles(fernTestValueFiles)
+		assert.Equal(t, fernTestValueFiles, obj.Files)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetExpectedOutput", func(t *testing.T) {
 		obj := &EvaluationSetItem{}
 		var fernTestValueExpectedOutput *ProvidedProcessorOutput
@@ -505,6 +513,39 @@ func TestGettersEvaluationSetItem(t *testing.T) {
 			}
 		}()
 		_ = obj.GetFile() // Should return zero value
+	})
+
+	t.Run("GetFiles", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItem{}
+		var expected []*FileSummary
+		obj.Files = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFiles(), "getter should return the property value")
+	})
+
+	t.Run("GetFiles_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItem{}
+		obj.Files = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFiles(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFiles_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EvaluationSetItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFiles() // Should return zero value
 	})
 
 	t.Run("GetExpectedOutput", func(t *testing.T) {
@@ -669,6 +710,37 @@ func TestSettersMarkExplicitEvaluationSetItem(t *testing.T) {
 		// It verifies that setting a field via setter allows successful JSON round-trip
 	})
 
+	t.Run("SetFiles_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItem{}
+		var fernTestValueFiles []*FileSummary
+
+		// Act
+		obj.SetFiles(fernTestValueFiles)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
 	t.Run("SetExpectedOutput_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -750,6 +822,14 @@ func TestSettersEvaluationSetItemSummary(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetFiles", func(t *testing.T) {
+		obj := &EvaluationSetItemSummary{}
+		var fernTestValueFiles []*FileSummary
+		obj.SetFiles(fernTestValueFiles)
+		assert.Equal(t, fernTestValueFiles, obj.Files)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetCreatedBy", func(t *testing.T) {
 		obj := &EvaluationSetItemSummary{}
 		var fernTestValueCreatedBy *CreatedBy
@@ -815,6 +895,39 @@ func TestGettersEvaluationSetItemSummary(t *testing.T) {
 			}
 		}()
 		_ = obj.GetFile() // Should return zero value
+	})
+
+	t.Run("GetFiles", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemSummary{}
+		var expected []*FileSummary
+		obj.Files = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFiles(), "getter should return the property value")
+	})
+
+	t.Run("GetFiles_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemSummary{}
+		obj.Files = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFiles(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFiles_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EvaluationSetItemSummary
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFiles() // Should return zero value
 	})
 
 	t.Run("GetCreatedBy", func(t *testing.T) {
@@ -915,6 +1028,37 @@ func TestSettersMarkExplicitEvaluationSetItemSummary(t *testing.T) {
 		// It verifies that setting a field via setter allows successful JSON round-trip
 	})
 
+	t.Run("SetFiles_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemSummary{}
+		var fernTestValueFiles []*FileSummary
+
+		// Act
+		obj.SetFiles(fernTestValueFiles)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
 	t.Run("SetCreatedBy_MarksExplicit", func(t *testing.T) {
 		t.Parallel()
 		// Arrange
@@ -951,9 +1095,17 @@ func TestSettersMarkExplicitEvaluationSetItemSummary(t *testing.T) {
 func TestSettersEvaluationSetItemsCreateRequestItemsItem(t *testing.T) {
 	t.Run("SetFileID", func(t *testing.T) {
 		obj := &EvaluationSetItemsCreateRequestItemsItem{}
-		var fernTestValueFileID string
+		var fernTestValueFileID *string
 		obj.SetFileID(fernTestValueFileID)
 		assert.Equal(t, fernTestValueFileID, obj.FileID)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetFileIDs", func(t *testing.T) {
+		obj := &EvaluationSetItemsCreateRequestItemsItem{}
+		var fernTestValueFileIDs []string
+		obj.SetFileIDs(fernTestValueFileIDs)
+		assert.Equal(t, fernTestValueFileIDs, obj.FileIDs)
 		assert.NotNil(t, obj.explicitFields)
 	})
 
@@ -972,11 +1124,21 @@ func TestGettersEvaluationSetItemsCreateRequestItemsItem(t *testing.T) {
 		t.Parallel()
 		// Arrange
 		obj := &EvaluationSetItemsCreateRequestItemsItem{}
-		var expected string
+		var expected *string
 		obj.FileID = expected
 
 		// Act & Assert
 		assert.Equal(t, expected, obj.GetFileID(), "getter should return the property value")
+	})
+
+	t.Run("GetFileID_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemsCreateRequestItemsItem{}
+		obj.FileID = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFileID(), "getter should return nil when property is nil")
 	})
 
 	t.Run("GetFileID_NilReceiver", func(t *testing.T) {
@@ -989,6 +1151,39 @@ func TestGettersEvaluationSetItemsCreateRequestItemsItem(t *testing.T) {
 			}
 		}()
 		_ = obj.GetFileID() // Should return zero value
+	})
+
+	t.Run("GetFileIDs", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemsCreateRequestItemsItem{}
+		var expected []string
+		obj.FileIDs = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetFileIDs(), "getter should return the property value")
+	})
+
+	t.Run("GetFileIDs_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemsCreateRequestItemsItem{}
+		obj.FileIDs = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetFileIDs(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetFileIDs_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EvaluationSetItemsCreateRequestItemsItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetFileIDs() // Should return zero value
 	})
 
 	t.Run("GetExpectedOutput", func(t *testing.T) {
@@ -1031,10 +1226,41 @@ func TestSettersMarkExplicitEvaluationSetItemsCreateRequestItemsItem(t *testing.
 		t.Parallel()
 		// Arrange
 		obj := &EvaluationSetItemsCreateRequestItemsItem{}
-		var fernTestValueFileID string
+		var fernTestValueFileID *string
 
 		// Act
 		obj.SetFileID(fernTestValueFileID)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetFileIDs_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EvaluationSetItemsCreateRequestItemsItem{}
+		var fernTestValueFileIDs []string
+
+		// Act
+		obj.SetFileIDs(fernTestValueFileIDs)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)

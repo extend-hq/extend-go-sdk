@@ -143,14 +143,23 @@ func (d *DetectFormRequest) MarshalJSON() ([]byte, error) {
 }
 
 var (
-	editRequestFieldFile   = big.NewInt(1 << 0)
-	editRequestFieldConfig = big.NewInt(1 << 1)
+	editRequestFieldFile       = big.NewInt(1 << 0)
+	editRequestFieldTemplateID = big.NewInt(1 << 1)
+	editRequestFieldConfig     = big.NewInt(1 << 2)
 )
 
 type EditRequest struct {
-	// The file to be edited. Files can be provided as a URL or an Extend file ID.
-	File   *EditRequestFile `json:"file" url:"-"`
-	Config *EditConfig      `json:"config,omitempty" url:"-"`
+	// The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+	//
+	// Files can be provided as a URL or an Extend file ID.
+	File *EditRequestFile `json:"file,omitempty" url:"-"`
+	// The ID of a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template) to run against. Mutually exclusive with `file` — provide one or the other.
+	//
+	// The template's saved file is used as the input file, and its saved `config` (schema, instructions, engine version, and advanced options) is used to fill in any values not set on the request's own `config`. Values set on the request's `config` always take precedence over the template's.
+	//
+	// Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
+	TemplateID *string     `json:"templateId,omitempty" url:"-"`
+	Config     *EditConfig `json:"config,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -168,6 +177,13 @@ func (e *EditRequest) require(field *big.Int) {
 func (e *EditRequest) SetFile(file *EditRequestFile) {
 	e.File = file
 	e.require(editRequestFieldFile)
+}
+
+// SetTemplateID sets the TemplateID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRequest) SetTemplateID(templateID *string) {
+	e.TemplateID = templateID
+	e.require(editRequestFieldTemplateID)
 }
 
 // SetConfig sets the Config field and marks it as non-optional;
@@ -469,6 +485,7 @@ var (
 	aPIErrorFieldRetryable = big.NewInt(1 << 2)
 	aPIErrorFieldRequestID = big.NewInt(1 << 3)
 	aPIErrorFieldDocURL    = big.NewInt(1 << 4)
+	aPIErrorFieldRunID     = big.NewInt(1 << 5)
 )
 
 type APIError struct {
@@ -485,6 +502,8 @@ type APIError struct {
 	RequestID *string `json:"requestId,omitempty" url:"requestId,omitempty"`
 	// Link to relevant documentation when one is available.
 	DocURL *string `json:"docUrl,omitempty" url:"docUrl,omitempty"`
+	// The ID of the run the error refers to, when the run outlives the request. Currently returned only when a synchronous `POST /verify` request times out: the verify run keeps processing, so fetch it with `GET /verify_runs/{id}` instead of resubmitting the file.
+	RunID *string `json:"runId,omitempty" url:"runId,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -526,6 +545,13 @@ func (a *APIError) GetDocURL() *string {
 		return nil
 	}
 	return a.DocURL
+}
+
+func (a *APIError) GetRunID() *string {
+	if a == nil {
+		return nil
+	}
+	return a.RunID
 }
 
 func (a *APIError) GetExtraProperties() map[string]interface{} {
@@ -577,6 +603,13 @@ func (a *APIError) SetDocURL(docURL *string) {
 	a.require(aPIErrorFieldDocURL)
 }
 
+// SetRunID sets the RunID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (a *APIError) SetRunID(runID *string) {
+	a.RunID = runID
+	a.require(aPIErrorFieldRunID)
+}
+
 func (a *APIError) UnmarshalJSON(data []byte) error {
 	type unmarshaler APIError
 	var value unmarshaler
@@ -625,6 +658,7 @@ var (
 
 type ArrayStrategy struct {
 	// The strategy type for handling large array use cases. For most use cases this should be left null, or should be set to `large_array_heuristics`. If you're unsure of what your use case needs, reach out to the Extend team for help.
+	//
 	// - `large_array_heuristics`: Optimized for documents with very large arrays, but where latency matters.
 	//
 	//	This strategy uses specialized heuristics around chunking, tables, and merging to handle large arrays efficiently over large documents.
@@ -716,6 +750,7 @@ func (a *ArrayStrategy) String() string {
 }
 
 // The strategy type for handling large array use cases. For most use cases this should be left null, or should be set to `large_array_heuristics`. If you're unsure of what your use case needs, reach out to the Extend team for help.
+//
 // - `large_array_heuristics`: Optimized for documents with very large arrays, but where latency matters.
 //
 //	This strategy uses specialized heuristics around chunking, tables, and merging to handle large arrays efficiently over large documents.
@@ -3136,6 +3171,7 @@ var (
 	citationFieldPage          = big.NewInt(1 << 1)
 	citationFieldReferenceText = big.NewInt(1 << 2)
 	citationFieldPolygon       = big.NewInt(1 << 3)
+	citationFieldCellRange     = big.NewInt(1 << 4)
 )
 
 type Citation struct {
@@ -3146,6 +3182,8 @@ type Citation struct {
 	ReferenceText *string `json:"referenceText,omitempty" url:"referenceText,omitempty"`
 	// Array of points defining the polygon around the referenced text
 	Polygon []*Polygon `json:"polygon,omitempty" url:"polygon,omitempty"`
+	// The cited cell or range in A1 notation for Excel and CSV files. Returned instead of a polygon when a cell reference is available.
+	CellRange *string `json:"cellRange,omitempty" url:"cellRange,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -3180,6 +3218,13 @@ func (c *Citation) GetPolygon() []*Polygon {
 		return nil
 	}
 	return c.Polygon
+}
+
+func (c *Citation) GetCellRange() *string {
+	if c == nil {
+		return nil
+	}
+	return c.CellRange
 }
 
 func (c *Citation) GetExtraProperties() map[string]interface{} {
@@ -3222,6 +3267,13 @@ func (c *Citation) SetReferenceText(referenceText *string) {
 func (c *Citation) SetPolygon(polygon []*Polygon) {
 	c.Polygon = polygon
 	c.require(citationFieldPolygon)
+}
+
+// SetCellRange sets the CellRange field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (c *Citation) SetCellRange(cellRange *string) {
+	c.CellRange = cellRange
+	c.require(citationFieldCellRange)
 }
 
 func (c *Citation) UnmarshalJSON(data []byte) error {
@@ -3273,7 +3325,7 @@ var (
 )
 
 type CitationPage struct {
-	// Page number where the citation was found. Starts at 1.
+	// Page number where the citation was found. Starts at 1. For Excel, the 1-based worksheet index; for CSV, always 1.
 	Number float64 `json:"number" url:"number"`
 	// The width of the page in points.
 	Width *float64 `json:"width,omitempty" url:"width,omitempty"`
@@ -4949,16 +5001,19 @@ func (c ClassifyAdvancedOptionsContext) Ptr() *ClassifyAdvancedOptionsContext {
 	return &c
 }
 
-// The base processor to use. For classifiers, this can be either `"classification_performance"` or `"classification_light"`. Defaults to `"classification_performance"` if not provided. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
+// The base processor to use. Default is classification_standard, which skips parsing when possible.
 type ClassifyBaseProcessor string
 
 const (
+	ClassifyBaseProcessorClassificationStandard    ClassifyBaseProcessor = "classification_standard"
 	ClassifyBaseProcessorClassificationPerformance ClassifyBaseProcessor = "classification_performance"
 	ClassifyBaseProcessorClassificationLight       ClassifyBaseProcessor = "classification_light"
 )
 
 func NewClassifyBaseProcessorFromString(s string) (ClassifyBaseProcessor, error) {
 	switch s {
+	case "classification_standard":
+		return ClassifyBaseProcessorClassificationStandard, nil
 	case "classification_performance":
 		return ClassifyBaseProcessorClassificationPerformance, nil
 	case "classification_light":
@@ -8372,153 +8427,6 @@ func (e *EditConditionalClause) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Nested object/row schema used inside conditional array and object constraints.
-var (
-	editConditionalObjectPropertyFieldType                 = big.NewInt(1 << 0)
-	editConditionalObjectPropertyFieldDescription          = big.NewInt(1 << 1)
-	editConditionalObjectPropertyFieldProperties           = big.NewInt(1 << 2)
-	editConditionalObjectPropertyFieldRequired             = big.NewInt(1 << 3)
-	editConditionalObjectPropertyFieldAdditionalProperties = big.NewInt(1 << 4)
-)
-
-type EditConditionalObjectProperty struct {
-	// Must be `object` for nested object conditional schemas.
-	Type *string `json:"type,omitempty" url:"type,omitempty"`
-	// Description of the nested object constraint.
-	Description *string `json:"description,omitempty" url:"description,omitempty"`
-	// Nested conditional property constraints.
-	Properties map[string]*EditConditionalProperty `json:"properties,omitempty" url:"properties,omitempty"`
-	// Required nested properties.
-	Required []string `json:"required,omitempty" url:"required,omitempty"`
-	// Whether additional nested properties are allowed.
-	AdditionalProperties *bool `json:"additionalProperties,omitempty" url:"additionalProperties,omitempty"`
-
-	// Private bitmask of fields set to an explicit value and therefore not to be omitted
-	explicitFields *big.Int `json:"-" url:"-"`
-
-	extraProperties map[string]interface{}
-	rawJSON         json.RawMessage
-}
-
-func (e *EditConditionalObjectProperty) GetDescription() *string {
-	if e == nil {
-		return nil
-	}
-	return e.Description
-}
-
-func (e *EditConditionalObjectProperty) GetProperties() map[string]*EditConditionalProperty {
-	if e == nil {
-		return nil
-	}
-	return e.Properties
-}
-
-func (e *EditConditionalObjectProperty) GetRequired() []string {
-	if e == nil {
-		return nil
-	}
-	return e.Required
-}
-
-func (e *EditConditionalObjectProperty) GetAdditionalProperties() *bool {
-	if e == nil {
-		return nil
-	}
-	return e.AdditionalProperties
-}
-
-func (e *EditConditionalObjectProperty) GetExtraProperties() map[string]interface{} {
-	if e == nil {
-		return nil
-	}
-	return e.extraProperties
-}
-
-func (e *EditConditionalObjectProperty) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
-	}
-	e.explicitFields.Or(e.explicitFields, field)
-}
-
-// SetType sets the Type field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalObjectProperty) SetType(type_ *string) {
-	e.Type = type_
-	e.require(editConditionalObjectPropertyFieldType)
-}
-
-// SetDescription sets the Description field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalObjectProperty) SetDescription(description *string) {
-	e.Description = description
-	e.require(editConditionalObjectPropertyFieldDescription)
-}
-
-// SetProperties sets the Properties field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalObjectProperty) SetProperties(properties map[string]*EditConditionalProperty) {
-	e.Properties = properties
-	e.require(editConditionalObjectPropertyFieldProperties)
-}
-
-// SetRequired sets the Required field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalObjectProperty) SetRequired(required []string) {
-	e.Required = required
-	e.require(editConditionalObjectPropertyFieldRequired)
-}
-
-// SetAdditionalProperties sets the AdditionalProperties field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalObjectProperty) SetAdditionalProperties(additionalProperties *bool) {
-	e.AdditionalProperties = additionalProperties
-	e.require(editConditionalObjectPropertyFieldAdditionalProperties)
-}
-
-func (e *EditConditionalObjectProperty) UnmarshalJSON(data []byte) error {
-	type unmarshaler EditConditionalObjectProperty
-	var value unmarshaler
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	*e = EditConditionalObjectProperty(value)
-	extraProperties, err := internal.ExtractExtraProperties(data, *e)
-	if err != nil {
-		return err
-	}
-	e.extraProperties = extraProperties
-	e.rawJSON = json.RawMessage(data)
-	return nil
-}
-
-func (e *EditConditionalObjectProperty) MarshalJSON() ([]byte, error) {
-	type embed EditConditionalObjectProperty
-	var marshaler = struct {
-		embed
-	}{
-		embed: embed(*e),
-	}
-	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
-	return json.Marshal(explicitMarshaler)
-}
-
-func (e *EditConditionalObjectProperty) String() string {
-	if e == nil {
-		return "<nil>"
-	}
-	if len(e.rawJSON) > 0 {
-		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
-			return value
-		}
-	}
-	if value, err := internal.StringifyJSON(e); err == nil {
-		return value
-	}
-	return fmt.Sprintf("%#v", e)
-}
-
 // Field-level schema fragment used inside conditional clauses. These condition objects support nested JSON
 // Schema structure such as `type`, `enum`, `items`, `properties`, `required`, and `contains`, but do not
 // allow any `extend_edit:*` placement or styling keys.
@@ -8552,9 +8460,9 @@ type EditConditionalProperty struct {
 	// Description of the field constraint.
 	Description *string `json:"description,omitempty" url:"description,omitempty"`
 	// Allowed values for enum-based conditional constraints.
-	Enum []string `json:"enum,omitempty" url:"enum,omitempty"`
+	Enum []*EditConditionalPropertyEnumItem `json:"enum,omitempty" url:"enum,omitempty"`
 	// Nested array item schema for conditional array constraints.
-	Items *EditConditionalObjectProperty `json:"items,omitempty" url:"items,omitempty"`
+	Items *EditConditionalProperty `json:"items,omitempty" url:"items,omitempty"`
 	// Nested object property constraints.
 	Properties map[string]*EditConditionalProperty `json:"properties,omitempty" url:"properties,omitempty"`
 	// Required nested object properties.
@@ -8609,14 +8517,14 @@ func (e *EditConditionalProperty) GetDescription() *string {
 	return e.Description
 }
 
-func (e *EditConditionalProperty) GetEnum() []string {
+func (e *EditConditionalProperty) GetEnum() []*EditConditionalPropertyEnumItem {
 	if e == nil {
 		return nil
 	}
 	return e.Enum
 }
 
-func (e *EditConditionalProperty) GetItems() *EditConditionalObjectProperty {
+func (e *EditConditionalProperty) GetItems() *EditConditionalProperty {
 	if e == nil {
 		return nil
 	}
@@ -8765,14 +8673,14 @@ func (e *EditConditionalProperty) SetDescription(description *string) {
 
 // SetEnum sets the Enum field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalProperty) SetEnum(enum []string) {
+func (e *EditConditionalProperty) SetEnum(enum []*EditConditionalPropertyEnumItem) {
 	e.Enum = enum
 	e.require(editConditionalPropertyFieldEnum)
 }
 
 // SetItems sets the Items field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConditionalProperty) SetItems(items *EditConditionalObjectProperty) {
+func (e *EditConditionalProperty) SetItems(items *EditConditionalProperty) {
 	e.Items = items
 	e.require(editConditionalPropertyFieldItems)
 }
@@ -8931,6 +8839,89 @@ func (e *EditConditionalProperty) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+type EditConditionalPropertyEnumItem struct {
+	String  string
+	Double  float64
+	Boolean bool
+
+	typ string
+}
+
+func (e *EditConditionalPropertyEnumItem) GetString() string {
+	if e == nil {
+		return ""
+	}
+	return e.String
+}
+
+func (e *EditConditionalPropertyEnumItem) GetDouble() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.Double
+}
+
+func (e *EditConditionalPropertyEnumItem) GetBoolean() bool {
+	if e == nil {
+		return false
+	}
+	return e.Boolean
+}
+
+func (e *EditConditionalPropertyEnumItem) UnmarshalJSON(data []byte) error {
+	var valueString string
+	if err := json.Unmarshal(data, &valueString); err == nil {
+		e.typ = "String"
+		e.String = valueString
+		return nil
+	}
+	var valueDouble float64
+	if err := json.Unmarshal(data, &valueDouble); err == nil {
+		e.typ = "Double"
+		e.Double = valueDouble
+		return nil
+	}
+	var valueBoolean bool
+	if err := json.Unmarshal(data, &valueBoolean); err == nil {
+		e.typ = "Boolean"
+		e.Boolean = valueBoolean
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, e)
+}
+
+func (e EditConditionalPropertyEnumItem) MarshalJSON() ([]byte, error) {
+	if e.typ == "String" || e.String != "" {
+		return json.Marshal(e.String)
+	}
+	if e.typ == "Double" || e.Double != 0 {
+		return json.Marshal(e.Double)
+	}
+	if e.typ == "Boolean" || e.Boolean != false {
+		return json.Marshal(e.Boolean)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", e)
+}
+
+type EditConditionalPropertyEnumItemVisitor interface {
+	VisitString(string) error
+	VisitDouble(float64) error
+	VisitBoolean(bool) error
+}
+
+func (e *EditConditionalPropertyEnumItem) Accept(visitor EditConditionalPropertyEnumItemVisitor) error {
+	if e.typ == "String" || e.String != "" {
+		return visitor.VisitString(e.String)
+	}
+	if e.typ == "Double" || e.Double != 0 {
+		return visitor.VisitDouble(e.Double)
+	}
+	if e.typ == "Boolean" || e.Boolean != false {
+		return visitor.VisitBoolean(e.Boolean)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", e)
+}
+
 // Configuration options for the editing process.
 var (
 	editConfigFieldEngineVersion                = big.NewInt(1 << 0)
@@ -8941,7 +8932,7 @@ var (
 )
 
 type EditConfig struct {
-	// The Edit engine version to use. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `0.0.1` when omitted. Responses contain the resolved exact version.
+	// The Edit engine version to use. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `1.0.0` when omitted. Responses contain the resolved exact version.
 	EngineVersion *string       `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
 	Schema        *EditRootJSON `json:"schema,omitempty" url:"schema,omitempty"`
 	// Custom instructions provided for the edit operation.
@@ -9096,9 +9087,9 @@ var (
 type EditConfigAdvancedOptions struct {
 	// Whether to parse table regions as arrays of objects. Defaults to `false`.
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
-	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true`.
+	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`.
 	FlattenPdf *bool `json:"flattenPdf,omitempty" url:"flattenPdf,omitempty"`
-	// Whether to model radio fields as enums. This ensures only one radio widget is filled. Defaults to false.
+	// Whether to represent radio groups as enums so only one option can be selected. Defaults to `true` for Edit `1.0.0` and `1.0.0-beta`, and `false` for `0.0.1`.
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm from the PDF will be imported and used in the schema (skips object detection). Defaults to false.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
@@ -9260,15 +9251,17 @@ var (
 	editJSONFieldExtendEditPageIndex       = big.NewInt(1 << 5)
 	editJSONFieldExtendEditTextEditOptions = big.NewInt(1 << 6)
 	editJSONFieldExtendEditColumnWidth     = big.NewInt(1 << 7)
-	editJSONFieldExtendEditValue           = big.NewInt(1 << 8)
-	editJSONFieldExtendEditImage           = big.NewInt(1 << 9)
-	editJSONFieldExtendEditRowHeights      = big.NewInt(1 << 10)
-	editJSONFieldItems                     = big.NewInt(1 << 11)
-	editJSONFieldProperties                = big.NewInt(1 << 12)
-	editJSONFieldEnum                      = big.NewInt(1 << 13)
-	editJSONFieldMaxItems                  = big.NewInt(1 << 14)
-	editJSONFieldRequired                  = big.NewInt(1 << 15)
-	editJSONFieldAdditionalProperties      = big.NewInt(1 << 16)
+	editJSONFieldExtendEditSourceAcroform  = big.NewInt(1 << 8)
+	editJSONFieldExtendEditValue           = big.NewInt(1 << 9)
+	editJSONFieldExtendEditImage           = big.NewInt(1 << 10)
+	editJSONFieldExtendEditRowHeights      = big.NewInt(1 << 11)
+	editJSONFieldItems                     = big.NewInt(1 << 12)
+	editJSONFieldProperties                = big.NewInt(1 << 13)
+	editJSONFieldEnum                      = big.NewInt(1 << 14)
+	editJSONFieldExtendDescriptions        = big.NewInt(1 << 15)
+	editJSONFieldMaxItems                  = big.NewInt(1 << 16)
+	editJSONFieldRequired                  = big.NewInt(1 << 17)
+	editJSONFieldAdditionalProperties      = big.NewInt(1 << 18)
 )
 
 type EditJSON struct {
@@ -9295,7 +9288,8 @@ type EditJSON struct {
 	ExtendEditPageIndex       *int             `json:"extend_edit:page_index,omitempty" url:"extend_edit:page_index,omitempty"`
 	ExtendEditTextEditOptions *EditTextOptions `json:"extend_edit:text_edit_options,omitempty" url:"extend_edit:text_edit_options,omitempty"`
 	// Width of the column as a percentage (for table fields)
-	ExtendEditColumnWidth *float64 `json:"extend_edit:column_width,omitempty" url:"extend_edit:column_width,omitempty"`
+	ExtendEditColumnWidth    *float64            `json:"extend_edit:column_width,omitempty" url:"extend_edit:column_width,omitempty"`
+	ExtendEditSourceAcroform *EditSourceAcroForm `json:"extend_edit:source_acroform,omitempty" url:"extend_edit:source_acroform,omitempty"`
 	// The value to fill into this field. Can be any type. This will force the value at this field to be filled with this value. If a value is not provided, we will attempt to generate or infer one based on the instructions.
 	ExtendEditValue any `json:"extend_edit:value,omitempty" url:"extend_edit:value,omitempty"`
 	// Image fill for signature fields. Only PNG and JPEG image URLs are supported.
@@ -9308,6 +9302,8 @@ type EditJSON struct {
 	Properties map[string]*EditJSON `json:"properties,omitempty" url:"properties,omitempty"`
 	// Allowed values for enum/dropdown/radio fields
 	Enum []string `json:"enum,omitempty" url:"enum,omitempty"`
+	// Human-readable labels for the values in `enum`, in the same order. Include this property when using a schema returned by Detect Form.
+	ExtendDescriptions []string `json:"extend:descriptions,omitempty" url:"extend:descriptions,omitempty"`
 	// Maximum number of rows for array/table fields
 	MaxItems *int `json:"maxItems,omitempty" url:"maxItems,omitempty"`
 	// List of required property names (for object types)
@@ -9378,6 +9374,13 @@ func (e *EditJSON) GetExtendEditColumnWidth() *float64 {
 	return e.ExtendEditColumnWidth
 }
 
+func (e *EditJSON) GetExtendEditSourceAcroform() *EditSourceAcroForm {
+	if e == nil {
+		return nil
+	}
+	return e.ExtendEditSourceAcroform
+}
+
 func (e *EditJSON) GetExtendEditValue() any {
 	if e == nil {
 		return nil
@@ -9418,6 +9421,13 @@ func (e *EditJSON) GetEnum() []string {
 		return nil
 	}
 	return e.Enum
+}
+
+func (e *EditJSON) GetExtendDescriptions() []string {
+	if e == nil {
+		return nil
+	}
+	return e.ExtendDescriptions
 }
 
 func (e *EditJSON) GetMaxItems() *int {
@@ -9511,6 +9521,13 @@ func (e *EditJSON) SetExtendEditColumnWidth(extendEditColumnWidth *float64) {
 	e.require(editJSONFieldExtendEditColumnWidth)
 }
 
+// SetExtendEditSourceAcroform sets the ExtendEditSourceAcroform field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditJSON) SetExtendEditSourceAcroform(extendEditSourceAcroform *EditSourceAcroForm) {
+	e.ExtendEditSourceAcroform = extendEditSourceAcroform
+	e.require(editJSONFieldExtendEditSourceAcroform)
+}
+
 // SetExtendEditValue sets the ExtendEditValue field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (e *EditJSON) SetExtendEditValue(extendEditValue any) {
@@ -9551,6 +9568,13 @@ func (e *EditJSON) SetProperties(properties map[string]*EditJSON) {
 func (e *EditJSON) SetEnum(enum []string) {
 	e.Enum = enum
 	e.require(editJSONFieldEnum)
+}
+
+// SetExtendDescriptions sets the ExtendDescriptions field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditJSON) SetExtendDescriptions(extendDescriptions []string) {
+	e.ExtendDescriptions = extendDescriptions
+	e.require(editJSONFieldExtendDescriptions)
 }
 
 // SetMaxItems sets the MaxItems field and marks it as non-optional;
@@ -9907,7 +9931,9 @@ func (e *EditObjectJSON) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The file to be edited. Files can be provided as a URL or an Extend file ID.
+// The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+//
+// Files can be provided as a URL or an Extend file ID.
 type EditRequestFile struct {
 	FileFromURL *FileFromURL
 	FileFromID  *FileFromID
@@ -11166,7 +11192,7 @@ var (
 )
 
 type EditSchemaGenerationConfig struct {
-	// The Edit engine version to use for form detection. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `0.0.1` when omitted. Responses contain the resolved exact version.
+	// The Edit engine version to use for form detection. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `1.0.0` when omitted. Responses contain the resolved exact version.
 	EngineVersion *string `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
 	// Optional existing edit schema to map onto the detected form fields. When provided, the response may include a `mappingResult`
 	// that shows which input schema paths matched the generated form fields.
@@ -11306,7 +11332,7 @@ var (
 type EditSchemaGenerationConfigAdvancedOptions struct {
 	// Whether to parse table regions as arrays of objects. Defaults to `false`.
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
-	// Whether to model radio fields as enums. This ensures only one radio widget is selected. Defaults to `false`.
+	// Whether to represent radio groups as enums so only one option can be selected. Defaults to `true` for Edit `1.0.0` and `1.0.0-beta`, and `false` for `0.0.1`.
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm fields from the PDF will be imported and used in the schema, skipping object detection. Defaults to `false`.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
@@ -11775,21 +11801,319 @@ func (e *EditSchemaGenerationResponse) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+// Details about the original PDF form field. When Detect Form returns this property, include it unchanged in Edit requests.
+var (
+	editSourceAcroFormFieldFieldName   = big.NewInt(1 << 0)
+	editSourceAcroFormFieldFieldType   = big.NewInt(1 << 1)
+	editSourceAcroFormFieldOptionMap   = big.NewInt(1 << 2)
+	editSourceAcroFormFieldOptionValue = big.NewInt(1 << 3)
+)
+
+type EditSourceAcroForm struct {
+	// Name of the PDF form field.
+	FieldName string `json:"fieldName" url:"fieldName"`
+	// Type of the original native PDF field.
+	FieldType EditSourceAcroFormFieldType `json:"fieldType" url:"fieldType"`
+	// Supported choices for radio, dropdown, and option-list fields.
+	OptionMap []*EditSourceAcroFormOption `json:"optionMap,omitempty" url:"optionMap,omitempty"`
+	// Value used when this option is selected.
+	OptionValue *string `json:"optionValue,omitempty" url:"optionValue,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditSourceAcroForm) GetFieldName() string {
+	if e == nil {
+		return ""
+	}
+	return e.FieldName
+}
+
+func (e *EditSourceAcroForm) GetFieldType() EditSourceAcroFormFieldType {
+	if e == nil {
+		return ""
+	}
+	return e.FieldType
+}
+
+func (e *EditSourceAcroForm) GetOptionMap() []*EditSourceAcroFormOption {
+	if e == nil {
+		return nil
+	}
+	return e.OptionMap
+}
+
+func (e *EditSourceAcroForm) GetOptionValue() *string {
+	if e == nil {
+		return nil
+	}
+	return e.OptionValue
+}
+
+func (e *EditSourceAcroForm) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditSourceAcroForm) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetFieldName sets the FieldName field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroForm) SetFieldName(fieldName string) {
+	e.FieldName = fieldName
+	e.require(editSourceAcroFormFieldFieldName)
+}
+
+// SetFieldType sets the FieldType field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroForm) SetFieldType(fieldType EditSourceAcroFormFieldType) {
+	e.FieldType = fieldType
+	e.require(editSourceAcroFormFieldFieldType)
+}
+
+// SetOptionMap sets the OptionMap field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroForm) SetOptionMap(optionMap []*EditSourceAcroFormOption) {
+	e.OptionMap = optionMap
+	e.require(editSourceAcroFormFieldOptionMap)
+}
+
+// SetOptionValue sets the OptionValue field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroForm) SetOptionValue(optionValue *string) {
+	e.OptionValue = optionValue
+	e.require(editSourceAcroFormFieldOptionValue)
+}
+
+func (e *EditSourceAcroForm) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditSourceAcroForm
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditSourceAcroForm(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditSourceAcroForm) MarshalJSON() ([]byte, error) {
+	type embed EditSourceAcroForm
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditSourceAcroForm) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Type of the original native PDF field.
+type EditSourceAcroFormFieldType string
+
+const (
+	EditSourceAcroFormFieldTypeText       EditSourceAcroFormFieldType = "text"
+	EditSourceAcroFormFieldTypeCheckbox   EditSourceAcroFormFieldType = "checkbox"
+	EditSourceAcroFormFieldTypeRadio      EditSourceAcroFormFieldType = "radio"
+	EditSourceAcroFormFieldTypeDropdown   EditSourceAcroFormFieldType = "dropdown"
+	EditSourceAcroFormFieldTypeOptionList EditSourceAcroFormFieldType = "optionList"
+	EditSourceAcroFormFieldTypeSignature  EditSourceAcroFormFieldType = "signature"
+)
+
+func NewEditSourceAcroFormFieldTypeFromString(s string) (EditSourceAcroFormFieldType, error) {
+	switch s {
+	case "text":
+		return EditSourceAcroFormFieldTypeText, nil
+	case "checkbox":
+		return EditSourceAcroFormFieldTypeCheckbox, nil
+	case "radio":
+		return EditSourceAcroFormFieldTypeRadio, nil
+	case "dropdown":
+		return EditSourceAcroFormFieldTypeDropdown, nil
+	case "optionList":
+		return EditSourceAcroFormFieldTypeOptionList, nil
+	case "signature":
+		return EditSourceAcroFormFieldTypeSignature, nil
+	}
+	var t EditSourceAcroFormFieldType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (e EditSourceAcroFormFieldType) Ptr() *EditSourceAcroFormFieldType {
+	return &e
+}
+
+// A supported choice for a PDF form field.
+var (
+	editSourceAcroFormOptionFieldSchemaValue  = big.NewInt(1 << 0)
+	editSourceAcroFormOptionFieldExportValue  = big.NewInt(1 << 1)
+	editSourceAcroFormOptionFieldDisplayValue = big.NewInt(1 << 2)
+)
+
+type EditSourceAcroFormOption struct {
+	// Value used in the Edit schema.
+	SchemaValue string `json:"schemaValue" url:"schemaValue"`
+	// Value used by the PDF form field.
+	ExportValue string `json:"exportValue" url:"exportValue"`
+	// Label shown in the PDF form.
+	DisplayValue string `json:"displayValue" url:"displayValue"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditSourceAcroFormOption) GetSchemaValue() string {
+	if e == nil {
+		return ""
+	}
+	return e.SchemaValue
+}
+
+func (e *EditSourceAcroFormOption) GetExportValue() string {
+	if e == nil {
+		return ""
+	}
+	return e.ExportValue
+}
+
+func (e *EditSourceAcroFormOption) GetDisplayValue() string {
+	if e == nil {
+		return ""
+	}
+	return e.DisplayValue
+}
+
+func (e *EditSourceAcroFormOption) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditSourceAcroFormOption) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetSchemaValue sets the SchemaValue field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroFormOption) SetSchemaValue(schemaValue string) {
+	e.SchemaValue = schemaValue
+	e.require(editSourceAcroFormOptionFieldSchemaValue)
+}
+
+// SetExportValue sets the ExportValue field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroFormOption) SetExportValue(exportValue string) {
+	e.ExportValue = exportValue
+	e.require(editSourceAcroFormOptionFieldExportValue)
+}
+
+// SetDisplayValue sets the DisplayValue field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSourceAcroFormOption) SetDisplayValue(displayValue string) {
+	e.DisplayValue = displayValue
+	e.require(editSourceAcroFormOptionFieldDisplayValue)
+}
+
+func (e *EditSourceAcroFormOption) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditSourceAcroFormOption
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditSourceAcroFormOption(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditSourceAcroFormOption) MarshalJSON() ([]byte, error) {
+	type embed EditSourceAcroFormOption
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditSourceAcroFormOption) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
 // Text styling options for text fields
 var (
 	editTextOptionsFieldFontSize  = big.NewInt(1 << 0)
-	editTextOptionsFieldFontColor = big.NewInt(1 << 1)
-	editTextOptionsFieldFont      = big.NewInt(1 << 2)
-	editTextOptionsFieldCombing   = big.NewInt(1 << 3)
-	editTextOptionsFieldMaxLength = big.NewInt(1 << 4)
-	editTextOptionsFieldMultiLine = big.NewInt(1 << 5)
+	editTextOptionsFieldColor     = big.NewInt(1 << 1)
+	editTextOptionsFieldOpacity   = big.NewInt(1 << 2)
+	editTextOptionsFieldFontColor = big.NewInt(1 << 3)
+	editTextOptionsFieldFont      = big.NewInt(1 << 4)
+	editTextOptionsFieldCombing   = big.NewInt(1 << 5)
+	editTextOptionsFieldMaxLength = big.NewInt(1 << 6)
+	editTextOptionsFieldMultiLine = big.NewInt(1 << 7)
 )
 
 type EditTextOptions struct {
 	// Font size in points
 	FontSize *float64 `json:"fontSize,omitempty" url:"fontSize,omitempty"`
-	// RGB color values (0-255) for text color
-	FontColor []float64 `json:"fontColor,omitempty" url:"fontColor,omitempty"`
+	// RGB color values from 0 to 255 for text color.
+	Color []int `json:"color,omitempty" url:"color,omitempty"`
+	// Text opacity from 0 to 1. Defaults to 1.
+	Opacity *float64 `json:"opacity,omitempty" url:"opacity,omitempty"`
+	// Deprecated alias for `color`. RGB color values from 0 to 255.
+	FontColor []int `json:"fontColor,omitempty" url:"fontColor,omitempty"`
 	// Font family name
 	Font *string `json:"font,omitempty" url:"font,omitempty"`
 	// Whether this is a combed field (like SSN fields with individual character boxes)
@@ -11813,7 +12137,21 @@ func (e *EditTextOptions) GetFontSize() *float64 {
 	return e.FontSize
 }
 
-func (e *EditTextOptions) GetFontColor() []float64 {
+func (e *EditTextOptions) GetColor() []int {
+	if e == nil {
+		return nil
+	}
+	return e.Color
+}
+
+func (e *EditTextOptions) GetOpacity() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.Opacity
+}
+
+func (e *EditTextOptions) GetFontColor() []int {
 	if e == nil {
 		return nil
 	}
@@ -11869,9 +12207,23 @@ func (e *EditTextOptions) SetFontSize(fontSize *float64) {
 	e.require(editTextOptionsFieldFontSize)
 }
 
+// SetColor sets the Color field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTextOptions) SetColor(color []int) {
+	e.Color = color
+	e.require(editTextOptionsFieldColor)
+}
+
+// SetOpacity sets the Opacity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTextOptions) SetOpacity(opacity *float64) {
+	e.Opacity = opacity
+	e.require(editTextOptionsFieldOpacity)
+}
+
 // SetFontColor sets the FontColor field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditTextOptions) SetFontColor(fontColor []float64) {
+func (e *EditTextOptions) SetFontColor(fontColor []int) {
 	e.FontColor = fontColor
 	e.require(editTextOptionsFieldFontColor)
 }
@@ -13158,12 +13510,15 @@ func (e *ExtractAdvancedOptionsReviewAgent) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this can be `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+//
+// `"extraction_operator"` selects [Operator](https://docs.extend.ai/2026-02-09/extraction/operator).
 type ExtractBaseProcessor string
 
 const (
 	ExtractBaseProcessorExtractionPerformance ExtractBaseProcessor = "extraction_performance"
 	ExtractBaseProcessorExtractionLight       ExtractBaseProcessor = "extraction_light"
+	ExtractBaseProcessorExtractionOperator    ExtractBaseProcessor = "extraction_operator"
 )
 
 func NewExtractBaseProcessorFromString(s string) (ExtractBaseProcessor, error) {
@@ -13172,6 +13527,8 @@ func NewExtractBaseProcessorFromString(s string) (ExtractBaseProcessor, error) {
 		return ExtractBaseProcessorExtractionPerformance, nil
 	case "extraction_light":
 		return ExtractBaseProcessorExtractionLight, nil
+	case "extraction_operator":
+		return ExtractBaseProcessorExtractionOperator, nil
 	}
 	var t ExtractBaseProcessor
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -13181,6 +13538,7 @@ func (e ExtractBaseProcessor) Ptr() *ExtractBaseProcessor {
 	return &e
 }
 
+// Options controlling how documents are chunked before extraction.
 var (
 	extractChunkingOptionsFieldChunkingStrategy            = big.NewInt(1 << 0)
 	extractChunkingOptionsFieldPageChunkSize               = big.NewInt(1 << 1)
@@ -13445,7 +13803,7 @@ var (
 
 type ExtractConfigJSON struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	//
@@ -13617,9 +13975,11 @@ var (
 )
 
 type ExtractConfigLegacy struct {
-	// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The base processor to use. For extractors, this can be `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	//
+	// `"extraction_operator"` is not supported on legacy `fields` configs.
 	BaseProcessor *ExtractConfigLegacyBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
@@ -13779,7 +14139,9 @@ func (e *ExtractConfigLegacy) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The base processor to use. For extractors, this can be either `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this can be `"extraction_performance"` or `"extraction_light"`. Defaults to `"extraction_performance"` if not provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+//
+// `"extraction_operator"` is not supported on legacy `fields` configs.
 type ExtractConfigLegacyBaseProcessor string
 
 const (
@@ -14297,7 +14659,7 @@ var (
 
 type ExtractOverrideConfigJSON struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
@@ -21880,9 +22242,9 @@ var (
 )
 
 type LegacyExtractionConfig struct {
-	// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The base processor to use. For extractors, this must be `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseProcessor *LegacyExtractionConfigBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If this is provided, the `baseProcessor` must also be provided. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
@@ -22060,12 +22422,13 @@ func (l *LegacyExtractionConfig) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// The base processor to use. For extractors, this must be either `"extraction_performance"` or `"extraction_light"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+// The base processor to use. For extractors, this must be `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"`. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 type LegacyExtractionConfigBaseProcessor string
 
 const (
 	LegacyExtractionConfigBaseProcessorExtractionPerformance LegacyExtractionConfigBaseProcessor = "extraction_performance"
 	LegacyExtractionConfigBaseProcessorExtractionLight       LegacyExtractionConfigBaseProcessor = "extraction_light"
+	LegacyExtractionConfigBaseProcessorExtractionOperator    LegacyExtractionConfigBaseProcessor = "extraction_operator"
 )
 
 func NewLegacyExtractionConfigBaseProcessorFromString(s string) (LegacyExtractionConfigBaseProcessor, error) {
@@ -22074,6 +22437,8 @@ func NewLegacyExtractionConfigBaseProcessorFromString(s string) (LegacyExtractio
 		return LegacyExtractionConfigBaseProcessorExtractionPerformance, nil
 	case "extraction_light":
 		return LegacyExtractionConfigBaseProcessorExtractionLight, nil
+	case "extraction_operator":
+		return LegacyExtractionConfigBaseProcessorExtractionOperator, nil
 	}
 	var t LegacyExtractionConfigBaseProcessor
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -24621,6 +24986,7 @@ type ParseConfig struct {
 	// The parsing engine to use. Supported values:
 	// * `parse_performance`: Full-featured parsing engine with highest accuracy (default)
 	// * `parse_light`: Lightweight parsing engine optimized for high-volume, cost-sensitive ingestion. Uses the new layout model with full layout support and the markdown target at lower cost and latency, but performs worse than `parse_performance` on lower-quality scans, harder handwriting, larger tables, non-Latin-based languages, and dense checkbox regions.
+	// * `parse_auto`: Adaptive parsing that classifies difficulty and routes work per page — simple pages are parsed with the parse_light model pipeline while complex pages get performance-level model treatment. Billed per page by complexity.
 	Engine *ParseConfigEngine `json:"engine,omitempty" url:"engine,omitempty"`
 	// Pin a specific parser engine version for reproducibility. When set to `latest`, the most recent stable version of the selected engine is used.
 	EngineVersion *string `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
@@ -24815,7 +25181,7 @@ type ParseConfigAdvancedOptions struct {
 	ExcelIncludeCellFormatting *bool `json:"excelIncludeCellFormatting,omitempty" url:"excelIncludeCellFormatting,omitempty"`
 	// Multiplier for the Y-axis threshold used to determine if text blocks should be placed on the same line or not (0.1-5.0, default 1.0). Higher values group elements that are further apart vertically. Only applies when the spatial target is set.
 	VerticalGroupingThreshold *float64 `json:"verticalGroupingThreshold,omitempty" url:"verticalGroupingThreshold,omitempty"`
-	// Options for returning raw OCR data in the response.
+	// Options for returning raw OCR data in the response. Words and lines are independent opt-ins and both default to false.
 	ReturnOcr *ParseConfigAdvancedOptionsReturnOcr `json:"returnOcr,omitempty" url:"returnOcr,omitempty"`
 	// Whether to convert supported file types (images, Word documents, PowerPoint, Excel, HTML) to PDF before parsing. This can improve parsing quality for some file types and ensures spatial output with bounding boxes.
 	AlwaysConvertToPdf *bool `json:"alwaysConvertToPdf,omitempty" url:"alwaysConvertToPdf,omitempty"`
@@ -25263,14 +25629,17 @@ func (p ParseConfigAdvancedOptionsImageConversionQuality) Ptr() *ParseConfigAdva
 	return &p
 }
 
-// Options for returning raw OCR data in the response.
+// Options for returning raw OCR data in the response. Words and lines are independent opt-ins and both default to false.
 var (
 	parseConfigAdvancedOptionsReturnOcrFieldWords = big.NewInt(1 << 0)
+	parseConfigAdvancedOptionsReturnOcrFieldLines = big.NewInt(1 << 1)
 )
 
 type ParseConfigAdvancedOptionsReturnOcr struct {
 	// Whether to include word-level OCR data in the response, including word bounding boxes and confidence scores. This meaningfully impacts the response size, consider using the signed url return format.
 	Words *bool `json:"words,omitempty" url:"words,omitempty"`
+	// Whether to include line-level OCR data at `output.ocr.lines`, including bounding boxes and confidence scores when available. Does not enable word-level OCR output.
+	Lines *bool `json:"lines,omitempty" url:"lines,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -25284,6 +25653,13 @@ func (p *ParseConfigAdvancedOptionsReturnOcr) GetWords() *bool {
 		return nil
 	}
 	return p.Words
+}
+
+func (p *ParseConfigAdvancedOptionsReturnOcr) GetLines() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.Lines
 }
 
 func (p *ParseConfigAdvancedOptionsReturnOcr) GetExtraProperties() map[string]interface{} {
@@ -25305,6 +25681,13 @@ func (p *ParseConfigAdvancedOptionsReturnOcr) require(field *big.Int) {
 func (p *ParseConfigAdvancedOptionsReturnOcr) SetWords(words *bool) {
 	p.Words = words
 	p.require(parseConfigAdvancedOptionsReturnOcrFieldWords)
+}
+
+// SetLines sets the Lines field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptionsReturnOcr) SetLines(lines *bool) {
+	p.Lines = lines
+	p.require(parseConfigAdvancedOptionsReturnOcrFieldLines)
 }
 
 func (p *ParseConfigAdvancedOptionsReturnOcr) UnmarshalJSON(data []byte) error {
@@ -25950,7 +26333,7 @@ type ParseConfigBlockOptionsTables struct {
 	TargetFormat *ParseConfigBlockOptionsTablesTargetFormat `json:"targetFormat,omitempty" url:"targetFormat,omitempty"`
 	// Whether to automatically copy table headers to headerless tables on subsequent pages when they have matching column counts. Useful for multi-page tables.
 	TableHeaderContinuationEnabled *bool `json:"tableHeaderContinuationEnabled,omitempty" url:"tableHeaderContinuationEnabled,omitempty"`
-	// Whether to include individual table cell blocks in the output. When enabled, each cell in a table will be represented as a separate block with its own bounding box and content and will be `children` of the table block.
+	// Whether to include individual table cell blocks in the output. When enabled, each cell in a table will be represented as a separate block with its own bounding box and content and will be `children` of the table block. Only supported on `parse_performance` engineVersion `1.0.1`.
 	CellBlocksEnabled *bool `json:"cellBlocksEnabled,omitempty" url:"cellBlocksEnabled,omitempty"`
 	// Options for agentic table processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic table correction is triggered.
 	Agentic *ParseConfigBlockOptionsTablesAgentic `json:"agentic,omitempty" url:"agentic,omitempty"`
@@ -26665,11 +27048,13 @@ func (p ParseConfigChunkingStrategyType) Ptr() *ParseConfigChunkingStrategyType 
 // The parsing engine to use. Supported values:
 // * `parse_performance`: Full-featured parsing engine with highest accuracy (default)
 // * `parse_light`: Lightweight parsing engine optimized for high-volume, cost-sensitive ingestion. Uses the new layout model with full layout support and the markdown target at lower cost and latency, but performs worse than `parse_performance` on lower-quality scans, harder handwriting, larger tables, non-Latin-based languages, and dense checkbox regions.
+// * `parse_auto`: Adaptive parsing that classifies difficulty and routes work per page — simple pages are parsed with the parse_light model pipeline while complex pages get performance-level model treatment. Billed per page by complexity.
 type ParseConfigEngine string
 
 const (
 	ParseConfigEngineParsePerformance ParseConfigEngine = "parse_performance"
 	ParseConfigEngineParseLight       ParseConfigEngine = "parse_light"
+	ParseConfigEngineParseAuto        ParseConfigEngine = "parse_auto"
 )
 
 func NewParseConfigEngineFromString(s string) (ParseConfigEngine, error) {
@@ -26678,6 +27063,8 @@ func NewParseConfigEngineFromString(s string) (ParseConfigEngine, error) {
 		return ParseConfigEngineParsePerformance, nil
 	case "parse_light":
 		return ParseConfigEngineParseLight, nil
+	case "parse_auto":
+		return ParseConfigEngineParseAuto, nil
 	}
 	var t ParseConfigEngine
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -27355,7 +27742,7 @@ var (
 type ParseRunOutput struct {
 	// An array of chunks that were parsed from the file.
 	Chunks []*Chunk `json:"chunks" url:"chunks"`
-	// Raw OCR data from the parsing process. Only included when `returnOcr` is configured in the parse config's advanced options.
+	// Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
 	Ocr *ParseRunOutputOcr `json:"ocr,omitempty" url:"ocr,omitempty"`
 	// Rotation, dimension, and file-type metadata about the parse output. `null` for parse runs that completed before this field was introduced.
 	Metadata *ParseRunOutputMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
@@ -27596,7 +27983,7 @@ var (
 type ParseRunOutputMetadataPagesItem struct {
 	// The page number this entry describes.
 	Number int `json:"number" url:"number"`
-	// Degrees Extend rotated the page clockwise to make it upright. `0` if rotation detection ran and the page was already upright; `null` if rotation detection was disabled for this run.
+	// Degrees Extend rotated the page to make it upright, as a multiple of 90. Positive values are clockwise and negative values are counterclockwise (for example, `-90` is equivalent to `270`). `0` if rotation detection ran and the page was already upright; `null` if rotation detection was disabled for this run. Normalize with `((value % 360) + 360) % 360` before branching on it.
 	RotationApplied *int `json:"rotationApplied,omitempty" url:"rotationApplied,omitempty"`
 	// The file's true page width, independent of rendering resolution.
 	OriginalPageWidth float64 `json:"originalPageWidth" url:"originalPageWidth"`
@@ -27738,14 +28125,17 @@ func (p *ParseRunOutputMetadataPagesItem) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Raw OCR data from the parsing process. Only included when `returnOcr` is configured in the parse config's advanced options.
+// Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
 var (
 	parseRunOutputOcrFieldWords = big.NewInt(1 << 0)
+	parseRunOutputOcrFieldLines = big.NewInt(1 << 1)
 )
 
 type ParseRunOutputOcr struct {
 	// An array of individual words detected by OCR.
 	Words []*ParseRunOutputOcrWordsItem `json:"words,omitempty" url:"words,omitempty"`
+	// Text lines detected by OCR. Only included when `config.advancedOptions.returnOcr.lines` is true and line data is available; enabling words does not enable lines.
+	Lines []*ParseRunOutputOcrLinesItem `json:"lines,omitempty" url:"lines,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27759,6 +28149,13 @@ func (p *ParseRunOutputOcr) GetWords() []*ParseRunOutputOcrWordsItem {
 		return nil
 	}
 	return p.Words
+}
+
+func (p *ParseRunOutputOcr) GetLines() []*ParseRunOutputOcrLinesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Lines
 }
 
 func (p *ParseRunOutputOcr) GetExtraProperties() map[string]interface{} {
@@ -27780,6 +28177,13 @@ func (p *ParseRunOutputOcr) require(field *big.Int) {
 func (p *ParseRunOutputOcr) SetWords(words []*ParseRunOutputOcrWordsItem) {
 	p.Words = words
 	p.require(parseRunOutputOcrFieldWords)
+}
+
+// SetLines sets the Lines field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcr) SetLines(lines []*ParseRunOutputOcrLinesItem) {
+	p.Lines = lines
+	p.require(parseRunOutputOcrFieldLines)
 }
 
 func (p *ParseRunOutputOcr) UnmarshalJSON(data []byte) error {
@@ -27825,11 +28229,165 @@ func (p *ParseRunOutputOcr) String() string {
 }
 
 var (
+	parseRunOutputOcrLinesItemFieldContent     = big.NewInt(1 << 0)
+	parseRunOutputOcrLinesItemFieldBoundingBox = big.NewInt(1 << 1)
+	parseRunOutputOcrLinesItemFieldConfidence  = big.NewInt(1 << 2)
+	parseRunOutputOcrLinesItemFieldPageNumber  = big.NewInt(1 << 3)
+	parseRunOutputOcrLinesItemFieldBlockID     = big.NewInt(1 << 4)
+)
+
+type ParseRunOutputOcrLinesItem struct {
+	// The text content of the line.
+	Content string `json:"content" url:"content"`
+	// The bounding box of the line in the same page coordinate space as blocks, measured from the top-left corner.
+	BoundingBox *BoundingBox `json:"boundingBox" url:"boundingBox"`
+	// The OCR confidence score for this line, between 0 and 1. Omitted when unavailable.
+	Confidence *float64 `json:"confidence,omitempty" url:"confidence,omitempty"`
+	// The page number where the line was detected.
+	PageNumber float64 `json:"pageNumber" url:"pageNumber"`
+	// The `id` of the block this line was assigned to, based on bounding-box overlap. Omitted when no block was assigned.
+	BlockID *string `json:"blockId,omitempty" url:"blockId,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetContent() string {
+	if p == nil {
+		return ""
+	}
+	return p.Content
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetBoundingBox() *BoundingBox {
+	if p == nil {
+		return nil
+	}
+	return p.BoundingBox
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetConfidence() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Confidence
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetPageNumber() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.PageNumber
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetBlockID() *string {
+	if p == nil {
+		return nil
+	}
+	return p.BlockID
+}
+
+func (p *ParseRunOutputOcrLinesItem) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputOcrLinesItem) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetContent sets the Content field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrLinesItem) SetContent(content string) {
+	p.Content = content
+	p.require(parseRunOutputOcrLinesItemFieldContent)
+}
+
+// SetBoundingBox sets the BoundingBox field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrLinesItem) SetBoundingBox(boundingBox *BoundingBox) {
+	p.BoundingBox = boundingBox
+	p.require(parseRunOutputOcrLinesItemFieldBoundingBox)
+}
+
+// SetConfidence sets the Confidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrLinesItem) SetConfidence(confidence *float64) {
+	p.Confidence = confidence
+	p.require(parseRunOutputOcrLinesItemFieldConfidence)
+}
+
+// SetPageNumber sets the PageNumber field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrLinesItem) SetPageNumber(pageNumber float64) {
+	p.PageNumber = pageNumber
+	p.require(parseRunOutputOcrLinesItemFieldPageNumber)
+}
+
+// SetBlockID sets the BlockID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrLinesItem) SetBlockID(blockID *string) {
+	p.BlockID = blockID
+	p.require(parseRunOutputOcrLinesItemFieldBlockID)
+}
+
+func (p *ParseRunOutputOcrLinesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputOcrLinesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputOcrLinesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputOcrLinesItem) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputOcrLinesItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputOcrLinesItem) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+var (
 	parseRunOutputOcrWordsItemFieldContent     = big.NewInt(1 << 0)
 	parseRunOutputOcrWordsItemFieldBoundingBox = big.NewInt(1 << 1)
 	parseRunOutputOcrWordsItemFieldConfidence  = big.NewInt(1 << 2)
 	parseRunOutputOcrWordsItemFieldPageNumber  = big.NewInt(1 << 3)
 	parseRunOutputOcrWordsItemFieldBlockID     = big.NewInt(1 << 4)
+	parseRunOutputOcrWordsItemFieldRotation    = big.NewInt(1 << 5)
 )
 
 type ParseRunOutputOcrWordsItem struct {
@@ -27843,6 +28401,12 @@ type ParseRunOutputOcrWordsItem struct {
 	PageNumber float64 `json:"pageNumber" url:"pageNumber"`
 	// The `id` of the block (see the `Block` schema) this word was assigned to, based on bounding-box overlap. Omitted when the word doesn't fall within any block's bounding box.
 	BlockID *string `json:"blockId,omitempty" url:"blockId,omitempty"`
+	// Clockwise degrees the word is rotated from upright, as a whole number in `[0, 360)`.
+	//
+	// `null` when the orientation could not be calculated for the word.
+	//
+	// **Availability:** Present on parse runs created on or after October 6, 2026.
+	Rotation *float64 `json:"rotation,omitempty" url:"rotation,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27884,6 +28448,13 @@ func (p *ParseRunOutputOcrWordsItem) GetBlockID() *string {
 		return nil
 	}
 	return p.BlockID
+}
+
+func (p *ParseRunOutputOcrWordsItem) GetRotation() *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Rotation
 }
 
 func (p *ParseRunOutputOcrWordsItem) GetExtraProperties() map[string]interface{} {
@@ -27933,6 +28504,13 @@ func (p *ParseRunOutputOcrWordsItem) SetPageNumber(pageNumber float64) {
 func (p *ParseRunOutputOcrWordsItem) SetBlockID(blockID *string) {
 	p.BlockID = blockID
 	p.require(parseRunOutputOcrWordsItemFieldBlockID)
+}
+
+// SetRotation sets the Rotation field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputOcrWordsItem) SetRotation(rotation *float64) {
+	p.Rotation = rotation
+	p.require(parseRunOutputOcrWordsItemFieldRotation)
 }
 
 func (p *ParseRunOutputOcrWordsItem) UnmarshalJSON(data []byte) error {
@@ -29186,6 +29764,434 @@ func (r ReleaseType) Ptr() *ReleaseType {
 	return &r
 }
 
+// A next entry for `ROUTER` steps. Routes based on the first matching branch.
+var (
+	routerNextEntryFieldStep     = big.NewInt(1 << 0)
+	routerNextEntryFieldBranchID = big.NewInt(1 << 1)
+)
+
+type RouterNextEntry struct {
+	// The name of the target step.
+	Step string `json:"step" url:"step"`
+	// Must match a `config.branches[].id` value, or `"otherwise"` for the route taken when no branch matches.
+	BranchID string `json:"branchId" url:"branchId"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterNextEntry) GetStep() string {
+	if r == nil {
+		return ""
+	}
+	return r.Step
+}
+
+func (r *RouterNextEntry) GetBranchID() string {
+	if r == nil {
+		return ""
+	}
+	return r.BranchID
+}
+
+func (r *RouterNextEntry) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterNextEntry) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetStep sets the Step field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterNextEntry) SetStep(step string) {
+	r.Step = step
+	r.require(routerNextEntryFieldStep)
+}
+
+// SetBranchID sets the BranchID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterNextEntry) SetBranchID(branchID string) {
+	r.BranchID = branchID
+	r.require(routerNextEntryFieldBranchID)
+}
+
+func (r *RouterNextEntry) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterNextEntry
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterNextEntry(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterNextEntry) MarshalJSON() ([]byte, error) {
+	type embed RouterNextEntry
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterNextEntry) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// Evaluates branch predicates in order and routes through the first matching branch. Uses the `"otherwise"` route when no branch matches.
+var (
+	routerStepDefinitionFieldName   = big.NewInt(1 << 0)
+	routerStepDefinitionFieldConfig = big.NewInt(1 << 1)
+	routerStepDefinitionFieldNext   = big.NewInt(1 << 2)
+)
+
+type RouterStepDefinition struct {
+	// Unique name for this step.
+	Name string `json:"name" url:"name"`
+	// Optional. Omit on update to preserve the step's existing branches.
+	Config *RouterStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
+	// Routes to downstream steps by branch ID, including the reserved `"otherwise"` route.
+	Next []*RouterNextEntry `json:"next,omitempty" url:"next,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterStepDefinition) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RouterStepDefinition) GetConfig() *RouterStepDefinitionConfig {
+	if r == nil {
+		return nil
+	}
+	return r.Config
+}
+
+func (r *RouterStepDefinition) GetNext() []*RouterNextEntry {
+	if r == nil {
+		return nil
+	}
+	return r.Next
+}
+
+func (r *RouterStepDefinition) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterStepDefinition) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinition) SetName(name string) {
+	r.Name = name
+	r.require(routerStepDefinitionFieldName)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinition) SetConfig(config *RouterStepDefinitionConfig) {
+	r.Config = config
+	r.require(routerStepDefinitionFieldConfig)
+}
+
+// SetNext sets the Next field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinition) SetNext(next []*RouterNextEntry) {
+	r.Next = next
+	r.require(routerStepDefinitionFieldNext)
+}
+
+func (r *RouterStepDefinition) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterStepDefinition
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterStepDefinition(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterStepDefinition) MarshalJSON() ([]byte, error) {
+	type embed RouterStepDefinition
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterStepDefinition) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// Optional. Omit on update to preserve the step's existing branches.
+var (
+	routerStepDefinitionConfigFieldBranches = big.NewInt(1 << 0)
+)
+
+type RouterStepDefinitionConfig struct {
+	// Branch predicates in evaluation order.
+	Branches []*RouterStepDefinitionConfigBranchesItem `json:"branches" url:"branches"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterStepDefinitionConfig) GetBranches() []*RouterStepDefinitionConfigBranchesItem {
+	if r == nil {
+		return nil
+	}
+	return r.Branches
+}
+
+func (r *RouterStepDefinitionConfig) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterStepDefinitionConfig) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetBranches sets the Branches field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinitionConfig) SetBranches(branches []*RouterStepDefinitionConfigBranchesItem) {
+	r.Branches = branches
+	r.require(routerStepDefinitionConfigFieldBranches)
+}
+
+func (r *RouterStepDefinitionConfig) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterStepDefinitionConfig
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterStepDefinitionConfig(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterStepDefinitionConfig) MarshalJSON() ([]byte, error) {
+	type embed RouterStepDefinitionConfig
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterStepDefinitionConfig) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+var (
+	routerStepDefinitionConfigBranchesItemFieldID    = big.NewInt(1 << 0)
+	routerStepDefinitionConfigBranchesItemFieldName  = big.NewInt(1 << 1)
+	routerStepDefinitionConfigBranchesItemFieldBlock = big.NewInt(1 << 2)
+)
+
+type RouterStepDefinitionConfigBranchesItem struct {
+	// Unique branch ID within this step. `"otherwise"` is reserved for the implicit fall-through route.
+	ID string `json:"id" url:"id"`
+	// The branch name. Omit on update to preserve its existing name.
+	Name *string `json:"name,omitempty" url:"name,omitempty"`
+	// The branch predicate. Omit to preserve an existing branch's block; new branches receive a default JavaScript block that returns true.
+	Block *ValidationBlockInput `json:"block,omitempty" url:"block,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) GetName() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Name
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) GetBlock() *ValidationBlockInput {
+	if r == nil {
+		return nil
+	}
+	return r.Block
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinitionConfigBranchesItem) SetID(id string) {
+	r.ID = id
+	r.require(routerStepDefinitionConfigBranchesItemFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinitionConfigBranchesItem) SetName(name *string) {
+	r.Name = name
+	r.require(routerStepDefinitionConfigBranchesItemFieldName)
+}
+
+// SetBlock sets the Block field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepDefinitionConfigBranchesItem) SetBlock(block *ValidationBlockInput) {
+	r.Block = block
+	r.require(routerStepDefinitionConfigBranchesItemFieldBlock)
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterStepDefinitionConfigBranchesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterStepDefinitionConfigBranchesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) MarshalJSON() ([]byte, error) {
+	type embed RouterStepDefinitionConfigBranchesItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterStepDefinitionConfigBranchesItem) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
 // A next entry for `RULE_VALIDATION` steps. Routes based on whether all validation rules passed.
 //
 // See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
@@ -29832,7 +30838,7 @@ func (r *RunUsage) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A single cost driver within a breakdown entry's credit total. The per-unit rate is `credits / quantity`.
+// A single cost driver within a breakdown entry's credit total. The per-unit rate is `credits / quantity`. Certain charges, such as `agent_usage`, have a unit of `usd`
 var (
 	runUsageBreakdownChargeFieldProduct  = big.NewInt(1 << 0)
 	runUsageBreakdownChargeFieldUnit     = big.NewInt(1 << 1)
@@ -29842,10 +30848,10 @@ var (
 )
 
 type RunUsageBreakdownCharge struct {
-	// Identifier for the billable cost driver.
+	// Identifier for the billable cost driver. Base charges use the processor and tier (e.g. `extraction_performance`, `extraction_light`, `parse_light`); add-ons use the feature code (e.g. `review_agent`, `large_array_max_context`, `extraction_schema_groups`, `priority_parsing`, `agentic_text_correction`, `advanced_excel_parsing`); `agent_usage` is an Operator overage for unusually high effort relative to document size.
 	Product string `json:"product" url:"product"`
-	// The unit `quantity` is measured in.
-	Unit string `json:"unit" url:"unit"`
+	// The unit `quantity` is measured in. `page` for per-page charges, `cell` for advanced Excel parsing, `usd` for additional amounts billed such as Operator overages (`agent_usage`).
+	Unit RunUsageBreakdownChargeUnit `json:"unit" url:"unit"`
 	// How many units this charge was billed for.
 	Quantity float64 `json:"quantity" url:"quantity"`
 	// Credits consumed by this charge.
@@ -29867,7 +30873,7 @@ func (r *RunUsageBreakdownCharge) GetProduct() string {
 	return r.Product
 }
 
-func (r *RunUsageBreakdownCharge) GetUnit() string {
+func (r *RunUsageBreakdownCharge) GetUnit() RunUsageBreakdownChargeUnit {
 	if r == nil {
 		return ""
 	}
@@ -29918,7 +30924,7 @@ func (r *RunUsageBreakdownCharge) SetProduct(product string) {
 
 // SetUnit sets the Unit field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
-func (r *RunUsageBreakdownCharge) SetUnit(unit string) {
+func (r *RunUsageBreakdownCharge) SetUnit(unit RunUsageBreakdownChargeUnit) {
 	r.Unit = unit
 	r.require(runUsageBreakdownChargeFieldUnit)
 }
@@ -29984,6 +30990,32 @@ func (r *RunUsageBreakdownCharge) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", r)
+}
+
+// The unit `quantity` is measured in. `page` for per-page charges, `cell` for advanced Excel parsing, `usd` for additional amounts billed such as Operator overages (`agent_usage`).
+type RunUsageBreakdownChargeUnit string
+
+const (
+	RunUsageBreakdownChargeUnitPage RunUsageBreakdownChargeUnit = "page"
+	RunUsageBreakdownChargeUnitCell RunUsageBreakdownChargeUnit = "cell"
+	RunUsageBreakdownChargeUnitUsd  RunUsageBreakdownChargeUnit = "usd"
+)
+
+func NewRunUsageBreakdownChargeUnitFromString(s string) (RunUsageBreakdownChargeUnit, error) {
+	switch s {
+	case "page":
+		return RunUsageBreakdownChargeUnitPage, nil
+	case "cell":
+		return RunUsageBreakdownChargeUnitCell, nil
+	case "usd":
+		return RunUsageBreakdownChargeUnitUsd, nil
+	}
+	var t RunUsageBreakdownChargeUnit
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (r RunUsageBreakdownChargeUnit) Ptr() *RunUsageBreakdownChargeUnit {
+	return &r
 }
 
 // One line item in a run's `usage.breakdown`. Each entry corresponds to a concrete chargeable resource that contributed credits to the parent operation. When `charges` is present, it itemizes the cost drivers behind this entry's `credits`.
@@ -30409,6 +31441,7 @@ var (
 	splitAdvancedOptionsFieldSplitExcelDocumentsBySheetEnabled = big.NewInt(1 << 2)
 	splitAdvancedOptionsFieldPageRanges                        = big.NewInt(1 << 3)
 	splitAdvancedOptionsFieldPageOverlapEnabled                = big.NewInt(1 << 4)
+	splitAdvancedOptionsFieldStrictIdentifierModeEnabled       = big.NewInt(1 << 5)
 )
 
 type SplitAdvancedOptions struct {
@@ -30426,6 +31459,14 @@ type SplitAdvancedOptions struct {
 	// When enabled, the splitter will allow for page overlap when splitting a document such that a page can occur in multiple adjacent splits when context from the previous split is on the page and context from the next split is on the page.
 	// **Availability:** Supported on `splitting_light` >= 1.1.0 and `splitting_performance` >= 1.2.0. If provided on older versions, this field is accepted but ignored.
 	PageOverlapEnabled *bool `json:"pageOverlapEnabled,omitempty" url:"pageOverlapEnabled,omitempty"`
+	// When enabled, adjacent candidate sub-documents that share the same type and the same extracted identifier are merged into a single split before the splitter finalizes its boundaries. Use it when one logical document repeats its identifier across its pages — for example a multi-page invoice whose invoice number appears on every page.
+	//
+	// Identifiers come from the `identifierKey` rule on the matching classification in `splitClassifications` when one is defined. The splitter will always define a short descriptive identifier for each sub-document — make sure to define `identifierKey` on any classification you intend to merge by, so the identifier is a stable document-level value.
+	//
+	// **Default:** When omitted, this setting is enabled on `splitting_performance` >= 1.6.2 and `splitting_light` >= 1.4.1, and disabled on earlier versions.
+	//
+	// **Availability:** all `splitting_performance` versions and `splitting_light` >= 1.3.0
+	StrictIdentifierModeEnabled *bool `json:"strictIdentifierModeEnabled,omitempty" url:"strictIdentifierModeEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -30467,6 +31508,13 @@ func (s *SplitAdvancedOptions) GetPageOverlapEnabled() *bool {
 		return nil
 	}
 	return s.PageOverlapEnabled
+}
+
+func (s *SplitAdvancedOptions) GetStrictIdentifierModeEnabled() *bool {
+	if s == nil {
+		return nil
+	}
+	return s.StrictIdentifierModeEnabled
 }
 
 func (s *SplitAdvancedOptions) GetExtraProperties() map[string]interface{} {
@@ -30516,6 +31564,13 @@ func (s *SplitAdvancedOptions) SetPageRanges(pageRanges *PageRanges) {
 func (s *SplitAdvancedOptions) SetPageOverlapEnabled(pageOverlapEnabled *bool) {
 	s.PageOverlapEnabled = pageOverlapEnabled
 	s.require(splitAdvancedOptionsFieldPageOverlapEnabled)
+}
+
+// SetStrictIdentifierModeEnabled sets the StrictIdentifierModeEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (s *SplitAdvancedOptions) SetStrictIdentifierModeEnabled(strictIdentifierModeEnabled *bool) {
+	s.StrictIdentifierModeEnabled = strictIdentifierModeEnabled
+	s.require(splitAdvancedOptionsFieldStrictIdentifierModeEnabled)
 }
 
 func (s *SplitAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -34252,6 +35307,4713 @@ func (t *TriggerStepDefinition) String() string {
 // Example: `"2024-03-21T16:45:00Z"`
 type UpdatedAt = time.Time
 
+// A code or semantic validation block. References to upstream steps in code and prompt text use public step names.
+type ValidationBlockInput struct {
+	BlockType string
+	Code      *ValidationCodeBlockInput
+	Semantic  *ValidationSemanticBlockInput
+
+	rawJSON json.RawMessage
+}
+
+func (v *ValidationBlockInput) GetBlockType() string {
+	if v == nil {
+		return ""
+	}
+	return v.BlockType
+}
+
+func (v *ValidationBlockInput) GetCode() *ValidationCodeBlockInput {
+	if v == nil {
+		return nil
+	}
+	return v.Code
+}
+
+func (v *ValidationBlockInput) GetSemantic() *ValidationSemanticBlockInput {
+	if v == nil {
+		return nil
+	}
+	return v.Semantic
+}
+
+func (v *ValidationBlockInput) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		BlockType string `json:"blockType"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	v.BlockType = unmarshaler.BlockType
+	if unmarshaler.BlockType == "" {
+		return fmt.Errorf("%T did not include discriminant blockType", v)
+	}
+	switch unmarshaler.BlockType {
+	case "code":
+		value := new(ValidationCodeBlockInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.Code = value
+	case "semantic":
+		value := new(ValidationSemanticBlockInput)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.Semantic = value
+	}
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v ValidationBlockInput) MarshalJSON() ([]byte, error) {
+	if err := v.validate(); err != nil {
+		return nil, err
+	}
+	if v.Code != nil {
+		return internal.MarshalJSONWithExtraProperty(v.Code, "blockType", "code")
+	}
+	if v.Semantic != nil {
+		return internal.MarshalJSONWithExtraProperty(v.Semantic, "blockType", "semantic")
+	}
+	if len(v.rawJSON) > 0 {
+		return v.rawJSON, nil
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", v)
+}
+
+type ValidationBlockInputVisitor interface {
+	VisitCode(*ValidationCodeBlockInput) error
+	VisitSemantic(*ValidationSemanticBlockInput) error
+}
+
+func (v *ValidationBlockInput) Accept(visitor ValidationBlockInputVisitor) error {
+	if v.Code != nil {
+		return visitor.VisitCode(v.Code)
+	}
+	if v.Semantic != nil {
+		return visitor.VisitSemantic(v.Semantic)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", v)
+}
+
+func (v *ValidationBlockInput) validate() error {
+	if v == nil {
+		return fmt.Errorf("type %T is nil", v)
+	}
+	var fields []string
+	if v.Code != nil {
+		fields = append(fields, "code")
+	}
+	if v.Semantic != nil {
+		fields = append(fields, "semantic")
+	}
+	if len(fields) == 0 {
+		if v.BlockType != "" {
+			if len(v.rawJSON) > 0 {
+				return nil
+			}
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", v, v.BlockType)
+		}
+		return fmt.Errorf("type %T is empty", v)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", v, fields)
+	}
+	if v.BlockType != "" {
+		field := fields[0]
+		if v.BlockType != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				v,
+				v.BlockType,
+				v,
+			)
+		}
+	}
+	return nil
+}
+
+// A validation block that evaluates code against the workflow context.
+var (
+	validationCodeBlockInputFieldID   = big.NewInt(1 << 0)
+	validationCodeBlockInputFieldName = big.NewInt(1 << 1)
+	validationCodeBlockInputFieldCode = big.NewInt(1 << 2)
+)
+
+type ValidationCodeBlockInput struct {
+	// The block ID. Generated when omitted.
+	ID *string `json:"id,omitempty" url:"id,omitempty"`
+	// The name of the validation block.
+	Name string                        `json:"name" url:"name"`
+	Code *ValidationCodeBlockInputCode `json:"code" url:"code"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationCodeBlockInput) GetID() *string {
+	if v == nil {
+		return nil
+	}
+	return v.ID
+}
+
+func (v *ValidationCodeBlockInput) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *ValidationCodeBlockInput) GetCode() *ValidationCodeBlockInputCode {
+	if v == nil {
+		return nil
+	}
+	return v.Code
+}
+
+func (v *ValidationCodeBlockInput) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationCodeBlockInput) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationCodeBlockInput) SetID(id *string) {
+	v.ID = id
+	v.require(validationCodeBlockInputFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationCodeBlockInput) SetName(name string) {
+	v.Name = name
+	v.require(validationCodeBlockInputFieldName)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationCodeBlockInput) SetCode(code *ValidationCodeBlockInputCode) {
+	v.Code = code
+	v.require(validationCodeBlockInputFieldCode)
+}
+
+func (v *ValidationCodeBlockInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationCodeBlockInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationCodeBlockInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationCodeBlockInput) MarshalJSON() ([]byte, error) {
+	type embed ValidationCodeBlockInput
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationCodeBlockInput) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	validationCodeBlockInputCodeFieldLanguage = big.NewInt(1 << 0)
+	validationCodeBlockInputCodeFieldCode     = big.NewInt(1 << 1)
+)
+
+type ValidationCodeBlockInputCode struct {
+	// The code language. Only JavaScript is currently executable; Python blocks return an error when evaluated.
+	Language ValidationCodeBlockInputCodeLanguage `json:"language" url:"language"`
+	// Code to evaluate against the workflow context. Router predicates must return a boolean or a boolean with reasoning.
+	Code string `json:"code" url:"code"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationCodeBlockInputCode) GetLanguage() ValidationCodeBlockInputCodeLanguage {
+	if v == nil {
+		return ""
+	}
+	return v.Language
+}
+
+func (v *ValidationCodeBlockInputCode) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *ValidationCodeBlockInputCode) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationCodeBlockInputCode) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetLanguage sets the Language field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationCodeBlockInputCode) SetLanguage(language ValidationCodeBlockInputCodeLanguage) {
+	v.Language = language
+	v.require(validationCodeBlockInputCodeFieldLanguage)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationCodeBlockInputCode) SetCode(code string) {
+	v.Code = code
+	v.require(validationCodeBlockInputCodeFieldCode)
+}
+
+func (v *ValidationCodeBlockInputCode) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationCodeBlockInputCode
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationCodeBlockInputCode(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationCodeBlockInputCode) MarshalJSON() ([]byte, error) {
+	type embed ValidationCodeBlockInputCode
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationCodeBlockInputCode) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The code language. Only JavaScript is currently executable; Python blocks return an error when evaluated.
+type ValidationCodeBlockInputCodeLanguage string
+
+const (
+	ValidationCodeBlockInputCodeLanguageJavascript ValidationCodeBlockInputCodeLanguage = "javascript"
+	ValidationCodeBlockInputCodeLanguagePython     ValidationCodeBlockInputCodeLanguage = "python"
+)
+
+func NewValidationCodeBlockInputCodeLanguageFromString(s string) (ValidationCodeBlockInputCodeLanguage, error) {
+	switch s {
+	case "javascript":
+		return ValidationCodeBlockInputCodeLanguageJavascript, nil
+	case "python":
+		return ValidationCodeBlockInputCodeLanguagePython, nil
+	}
+	var t ValidationCodeBlockInputCodeLanguage
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValidationCodeBlockInputCodeLanguage) Ptr() *ValidationCodeBlockInputCodeLanguage {
+	return &v
+}
+
+// A next entry for `VALIDATION` steps. Routes based on whether all validation blocks passed.
+var (
+	validationNextEntryFieldStep   = big.NewInt(1 << 0)
+	validationNextEntryFieldResult = big.NewInt(1 << 1)
+)
+
+type ValidationNextEntry struct {
+	// The name of the target step.
+	Step string `json:"step" url:"step"`
+	// Use `"pass"` when all validation blocks passed, or `"fail"` otherwise.
+	Result ValidationNextEntryResult `json:"result" url:"result"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationNextEntry) GetStep() string {
+	if v == nil {
+		return ""
+	}
+	return v.Step
+}
+
+func (v *ValidationNextEntry) GetResult() ValidationNextEntryResult {
+	if v == nil {
+		return ""
+	}
+	return v.Result
+}
+
+func (v *ValidationNextEntry) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationNextEntry) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetStep sets the Step field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationNextEntry) SetStep(step string) {
+	v.Step = step
+	v.require(validationNextEntryFieldStep)
+}
+
+// SetResult sets the Result field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationNextEntry) SetResult(result ValidationNextEntryResult) {
+	v.Result = result
+	v.require(validationNextEntryFieldResult)
+}
+
+func (v *ValidationNextEntry) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationNextEntry
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationNextEntry(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationNextEntry) MarshalJSON() ([]byte, error) {
+	type embed ValidationNextEntry
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationNextEntry) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Use `"pass"` when all validation blocks passed, or `"fail"` otherwise.
+type ValidationNextEntryResult string
+
+const (
+	ValidationNextEntryResultPass ValidationNextEntryResult = "pass"
+	ValidationNextEntryResultFail ValidationNextEntryResult = "fail"
+)
+
+func NewValidationNextEntryResultFromString(s string) (ValidationNextEntryResult, error) {
+	switch s {
+	case "pass":
+		return ValidationNextEntryResultPass, nil
+	case "fail":
+		return ValidationNextEntryResultFail, nil
+	}
+	var t ValidationNextEntryResult
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v ValidationNextEntryResult) Ptr() *ValidationNextEntryResult {
+	return &v
+}
+
+// A validation block that evaluates natural-language instructions against the workflow context.
+var (
+	validationSemanticBlockInputFieldID       = big.NewInt(1 << 0)
+	validationSemanticBlockInputFieldName     = big.NewInt(1 << 1)
+	validationSemanticBlockInputFieldSemantic = big.NewInt(1 << 2)
+)
+
+type ValidationSemanticBlockInput struct {
+	// The block ID. Generated when omitted.
+	ID *string `json:"id,omitempty" url:"id,omitempty"`
+	// The name of the validation block.
+	Name     string                                `json:"name" url:"name"`
+	Semantic *ValidationSemanticBlockInputSemantic `json:"semantic" url:"semantic"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationSemanticBlockInput) GetID() *string {
+	if v == nil {
+		return nil
+	}
+	return v.ID
+}
+
+func (v *ValidationSemanticBlockInput) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *ValidationSemanticBlockInput) GetSemantic() *ValidationSemanticBlockInputSemantic {
+	if v == nil {
+		return nil
+	}
+	return v.Semantic
+}
+
+func (v *ValidationSemanticBlockInput) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationSemanticBlockInput) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationSemanticBlockInput) SetID(id *string) {
+	v.ID = id
+	v.require(validationSemanticBlockInputFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationSemanticBlockInput) SetName(name string) {
+	v.Name = name
+	v.require(validationSemanticBlockInputFieldName)
+}
+
+// SetSemantic sets the Semantic field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationSemanticBlockInput) SetSemantic(semantic *ValidationSemanticBlockInputSemantic) {
+	v.Semantic = semantic
+	v.require(validationSemanticBlockInputFieldSemantic)
+}
+
+func (v *ValidationSemanticBlockInput) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationSemanticBlockInput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationSemanticBlockInput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationSemanticBlockInput) MarshalJSON() ([]byte, error) {
+	type embed ValidationSemanticBlockInput
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationSemanticBlockInput) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	validationSemanticBlockInputSemanticFieldPromptText = big.NewInt(1 << 0)
+)
+
+type ValidationSemanticBlockInputSemantic struct {
+	// Natural-language instructions for validating the workflow data.
+	PromptText string `json:"promptText" url:"promptText"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationSemanticBlockInputSemantic) GetPromptText() string {
+	if v == nil {
+		return ""
+	}
+	return v.PromptText
+}
+
+func (v *ValidationSemanticBlockInputSemantic) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationSemanticBlockInputSemantic) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetPromptText sets the PromptText field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationSemanticBlockInputSemantic) SetPromptText(promptText string) {
+	v.PromptText = promptText
+	v.require(validationSemanticBlockInputSemanticFieldPromptText)
+}
+
+func (v *ValidationSemanticBlockInputSemantic) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationSemanticBlockInputSemantic
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationSemanticBlockInputSemantic(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationSemanticBlockInputSemantic) MarshalJSON() ([]byte, error) {
+	type embed ValidationSemanticBlockInputSemantic
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationSemanticBlockInputSemantic) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Evaluates code and semantic validation blocks and routes to pass or fail next steps.
+var (
+	validationStepDefinitionFieldName   = big.NewInt(1 << 0)
+	validationStepDefinitionFieldConfig = big.NewInt(1 << 1)
+	validationStepDefinitionFieldNext   = big.NewInt(1 << 2)
+)
+
+type ValidationStepDefinition struct {
+	// Unique name for this step.
+	Name string `json:"name" url:"name"`
+	// Optional. Omit on update to preserve the step's existing validation blocks. Omitted in responses when no blocks are configured.
+	Config *ValidationStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
+	// Routes to downstream steps based on whether all validation blocks passed.
+	Next []*ValidationNextEntry `json:"next,omitempty" url:"next,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationStepDefinition) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *ValidationStepDefinition) GetConfig() *ValidationStepDefinitionConfig {
+	if v == nil {
+		return nil
+	}
+	return v.Config
+}
+
+func (v *ValidationStepDefinition) GetNext() []*ValidationNextEntry {
+	if v == nil {
+		return nil
+	}
+	return v.Next
+}
+
+func (v *ValidationStepDefinition) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationStepDefinition) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepDefinition) SetName(name string) {
+	v.Name = name
+	v.require(validationStepDefinitionFieldName)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepDefinition) SetConfig(config *ValidationStepDefinitionConfig) {
+	v.Config = config
+	v.require(validationStepDefinitionFieldConfig)
+}
+
+// SetNext sets the Next field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepDefinition) SetNext(next []*ValidationNextEntry) {
+	v.Next = next
+	v.require(validationStepDefinitionFieldNext)
+}
+
+func (v *ValidationStepDefinition) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationStepDefinition
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationStepDefinition(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationStepDefinition) MarshalJSON() ([]byte, error) {
+	type embed ValidationStepDefinition
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationStepDefinition) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Optional. Omit on update to preserve the step's existing validation blocks. Omitted in responses when no blocks are configured.
+var (
+	validationStepDefinitionConfigFieldBlocks = big.NewInt(1 << 0)
+)
+
+type ValidationStepDefinitionConfig struct {
+	// Validation blocks for this step. All blocks must pass for the step to be valid.
+	Blocks []*ValidationBlockInput `json:"blocks" url:"blocks"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationStepDefinitionConfig) GetBlocks() []*ValidationBlockInput {
+	if v == nil {
+		return nil
+	}
+	return v.Blocks
+}
+
+func (v *ValidationStepDefinitionConfig) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationStepDefinitionConfig) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetBlocks sets the Blocks field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepDefinitionConfig) SetBlocks(blocks []*ValidationBlockInput) {
+	v.Blocks = blocks
+	v.require(validationStepDefinitionConfigFieldBlocks)
+}
+
+func (v *ValidationStepDefinitionConfig) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationStepDefinitionConfig
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationStepDefinitionConfig(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationStepDefinitionConfig) MarshalJSON() ([]byte, error) {
+	type embed ValidationStepDefinitionConfig
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationStepDefinitionConfig) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Advanced options for a verify run. Every field is optional. Unknown keys are rejected with `400`.
+var (
+	verifyAdvancedOptionsFieldRequireParsing = big.NewInt(1 << 0)
+)
+
+type VerifyAdvancedOptions struct {
+	// If `true`, this forces the verify run to parse the document if it has not already been parsed in Extend. This is for checks that require OCR, like detecting mismatches with the text layer. `verify_agentic` requires this to be `true`, and rejects `false` with `400`. `verify_light` parses only when this is `true`. Defaults to `false` for `verify_light` to reduce latency. In both cases, if the file has already been parsed in Extend with Verify's default parse settings and you reuse the `fileId` without zero data retention (ZDR), then the parsed results will be used here.
+	RequireParsing *bool `json:"requireParsing,omitempty" url:"requireParsing,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyAdvancedOptions) GetRequireParsing() *bool {
+	if v == nil {
+		return nil
+	}
+	return v.RequireParsing
+}
+
+func (v *VerifyAdvancedOptions) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyAdvancedOptions) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetRequireParsing sets the RequireParsing field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyAdvancedOptions) SetRequireParsing(requireParsing *bool) {
+	v.RequireParsing = requireParsing
+	v.require(verifyAdvancedOptionsFieldRequireParsing)
+}
+
+func (v *VerifyAdvancedOptions) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyAdvancedOptions
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyAdvancedOptions(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyAdvancedOptions) MarshalJSON() ([]byte, error) {
+	type embed VerifyAdvancedOptions
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyAdvancedOptions) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Configuration for a verify run. Every field is optional on a request, and unknown keys are rejected with `400`. Runs echo the resolved configuration, with defaults applied, in `config`.
+var (
+	verifyConfigFieldEngine          = big.NewInt(1 << 0)
+	verifyConfigFieldEngineVersion   = big.NewInt(1 << 1)
+	verifyConfigFieldAdvancedOptions = big.NewInt(1 << 2)
+)
+
+type VerifyConfig struct {
+	// The verification engine to use. Defaults to `"verify_agentic"`.
+	Engine *VerifyEngine `json:"engine,omitempty" url:"engine,omitempty"`
+	// The engine release to use. Pass a specific version (for example `"0.1.0"`) to pin your integration to that release, or `"latest"` (the default) to use the newest release. The response echoes the resolved version in `config.engineVersion`. Unsupported values return `400 INVALID_REQUEST`.
+	EngineVersion   *string                `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
+	AdvancedOptions *VerifyAdvancedOptions `json:"advancedOptions,omitempty" url:"advancedOptions,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyConfig) GetEngine() *VerifyEngine {
+	if v == nil {
+		return nil
+	}
+	return v.Engine
+}
+
+func (v *VerifyConfig) GetEngineVersion() *string {
+	if v == nil {
+		return nil
+	}
+	return v.EngineVersion
+}
+
+func (v *VerifyConfig) GetAdvancedOptions() *VerifyAdvancedOptions {
+	if v == nil {
+		return nil
+	}
+	return v.AdvancedOptions
+}
+
+func (v *VerifyConfig) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyConfig) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEngine sets the Engine field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyConfig) SetEngine(engine *VerifyEngine) {
+	v.Engine = engine
+	v.require(verifyConfigFieldEngine)
+}
+
+// SetEngineVersion sets the EngineVersion field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyConfig) SetEngineVersion(engineVersion *string) {
+	v.EngineVersion = engineVersion
+	v.require(verifyConfigFieldEngineVersion)
+}
+
+// SetAdvancedOptions sets the AdvancedOptions field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyConfig) SetAdvancedOptions(advancedOptions *VerifyAdvancedOptions) {
+	v.AdvancedOptions = advancedOptions
+	v.require(verifyConfigFieldAdvancedOptions)
+}
+
+func (v *VerifyConfig) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyConfig
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyConfig(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyConfig) MarshalJSON() ([]byte, error) {
+	type embed VerifyConfig
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyConfig) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The verification engine:
+// * `"verify_agentic"` - Parses the file and runs every check, including the checks that read the parse, and leverages an agent harness optimized for tamper detection. Slower and more expensive, but the most performant option for detecting difficult cases of document fraud.
+// * `"verify_light"` - Faster checks that do not require parsing, but will use parsed results if the file has already been parsed in Extend. Covers all checks except the agentic checks around content and OCR.
+type VerifyEngine string
+
+const (
+	VerifyEngineVerifyAgentic VerifyEngine = "verify_agentic"
+	VerifyEngineVerifyLight   VerifyEngine = "verify_light"
+)
+
+func NewVerifyEngineFromString(s string) (VerifyEngine, error) {
+	switch s {
+	case "verify_agentic":
+		return VerifyEngineVerifyAgentic, nil
+	case "verify_light":
+		return VerifyEngineVerifyLight, nil
+	}
+	var t VerifyEngine
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v VerifyEngine) Ptr() *VerifyEngine {
+	return &v
+}
+
+// One coherent observation supporting a detected signal. Every evidence item has exactly four fields: `evidenceId`, `type`, `data`, and `locations`. `type` selects the schema of `data`; the six types are composable building blocks shared across signals rather than one type per signal. `locations` may be empty when the evidence cannot be honestly localized.
+type VerifyEvidence struct {
+	Type              string
+	ValueComparison   *VerifyValueComparisonEvidence
+	Validation        *VerifyValidationEvidence
+	Inventory         *VerifyInventoryEvidence
+	History           *VerifyHistoryEvidence
+	StructuralPattern *VerifyStructuralPatternEvidence
+	ModelPrediction   *VerifyModelPredictionEvidence
+
+	rawJSON json.RawMessage
+}
+
+func (v *VerifyEvidence) GetType() string {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *VerifyEvidence) GetValueComparison() *VerifyValueComparisonEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.ValueComparison
+}
+
+func (v *VerifyEvidence) GetValidation() *VerifyValidationEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.Validation
+}
+
+func (v *VerifyEvidence) GetInventory() *VerifyInventoryEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.Inventory
+}
+
+func (v *VerifyEvidence) GetHistory() *VerifyHistoryEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.History
+}
+
+func (v *VerifyEvidence) GetStructuralPattern() *VerifyStructuralPatternEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.StructuralPattern
+}
+
+func (v *VerifyEvidence) GetModelPrediction() *VerifyModelPredictionEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.ModelPrediction
+}
+
+func (v *VerifyEvidence) UnmarshalJSON(data []byte) error {
+	var unmarshaler struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	v.Type = unmarshaler.Type
+	if unmarshaler.Type == "" {
+		return fmt.Errorf("%T did not include discriminant type", v)
+	}
+	switch unmarshaler.Type {
+	case "value_comparison":
+		value := new(VerifyValueComparisonEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.ValueComparison = value
+	case "validation":
+		value := new(VerifyValidationEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.Validation = value
+	case "inventory":
+		value := new(VerifyInventoryEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.Inventory = value
+	case "history":
+		value := new(VerifyHistoryEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.History = value
+	case "structural_pattern":
+		value := new(VerifyStructuralPatternEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.StructuralPattern = value
+	case "model_prediction":
+		value := new(VerifyModelPredictionEvidence)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		v.ModelPrediction = value
+	}
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v VerifyEvidence) MarshalJSON() ([]byte, error) {
+	if err := v.validate(); err != nil {
+		return nil, err
+	}
+	if v.ValueComparison != nil {
+		return internal.MarshalJSONWithExtraProperty(v.ValueComparison, "type", "value_comparison")
+	}
+	if v.Validation != nil {
+		return internal.MarshalJSONWithExtraProperty(v.Validation, "type", "validation")
+	}
+	if v.Inventory != nil {
+		return internal.MarshalJSONWithExtraProperty(v.Inventory, "type", "inventory")
+	}
+	if v.History != nil {
+		return internal.MarshalJSONWithExtraProperty(v.History, "type", "history")
+	}
+	if v.StructuralPattern != nil {
+		return internal.MarshalJSONWithExtraProperty(v.StructuralPattern, "type", "structural_pattern")
+	}
+	if v.ModelPrediction != nil {
+		return internal.MarshalJSONWithExtraProperty(v.ModelPrediction, "type", "model_prediction")
+	}
+	if len(v.rawJSON) > 0 {
+		return v.rawJSON, nil
+	}
+	return nil, fmt.Errorf("type %T does not define a non-empty union type", v)
+}
+
+type VerifyEvidenceVisitor interface {
+	VisitValueComparison(*VerifyValueComparisonEvidence) error
+	VisitValidation(*VerifyValidationEvidence) error
+	VisitInventory(*VerifyInventoryEvidence) error
+	VisitHistory(*VerifyHistoryEvidence) error
+	VisitStructuralPattern(*VerifyStructuralPatternEvidence) error
+	VisitModelPrediction(*VerifyModelPredictionEvidence) error
+}
+
+func (v *VerifyEvidence) Accept(visitor VerifyEvidenceVisitor) error {
+	if v.ValueComparison != nil {
+		return visitor.VisitValueComparison(v.ValueComparison)
+	}
+	if v.Validation != nil {
+		return visitor.VisitValidation(v.Validation)
+	}
+	if v.Inventory != nil {
+		return visitor.VisitInventory(v.Inventory)
+	}
+	if v.History != nil {
+		return visitor.VisitHistory(v.History)
+	}
+	if v.StructuralPattern != nil {
+		return visitor.VisitStructuralPattern(v.StructuralPattern)
+	}
+	if v.ModelPrediction != nil {
+		return visitor.VisitModelPrediction(v.ModelPrediction)
+	}
+	return fmt.Errorf("type %T does not define a non-empty union type", v)
+}
+
+func (v *VerifyEvidence) validate() error {
+	if v == nil {
+		return fmt.Errorf("type %T is nil", v)
+	}
+	var fields []string
+	if v.ValueComparison != nil {
+		fields = append(fields, "value_comparison")
+	}
+	if v.Validation != nil {
+		fields = append(fields, "validation")
+	}
+	if v.Inventory != nil {
+		fields = append(fields, "inventory")
+	}
+	if v.History != nil {
+		fields = append(fields, "history")
+	}
+	if v.StructuralPattern != nil {
+		fields = append(fields, "structural_pattern")
+	}
+	if v.ModelPrediction != nil {
+		fields = append(fields, "model_prediction")
+	}
+	if len(fields) == 0 {
+		if v.Type != "" {
+			if len(v.rawJSON) > 0 {
+				return nil
+			}
+			return fmt.Errorf("type %T defines a discriminant set to %q but the field is not set", v, v.Type)
+		}
+		return fmt.Errorf("type %T is empty", v)
+	}
+	if len(fields) > 1 {
+		return fmt.Errorf("type %T defines values for %s, but only one value is allowed", v, fields)
+	}
+	if v.Type != "" {
+		field := fields[0]
+		if v.Type != field {
+			return fmt.Errorf(
+				"type %T defines a discriminant set to %q, but it does not match the %T field; either remove or update the discriminant to match",
+				v,
+				v.Type,
+				v,
+			)
+		}
+	}
+	return nil
+}
+
+// A rectangle on the page, defined by its edges and measured from the page's top-left corner, in the same units as the page's `width` and `height`.
+var (
+	verifyEvidenceBoundingBoxFieldLeft   = big.NewInt(1 << 0)
+	verifyEvidenceBoundingBoxFieldTop    = big.NewInt(1 << 1)
+	verifyEvidenceBoundingBoxFieldRight  = big.NewInt(1 << 2)
+	verifyEvidenceBoundingBoxFieldBottom = big.NewInt(1 << 3)
+)
+
+type VerifyEvidenceBoundingBox struct {
+	Left   float64 `json:"left" url:"left"`
+	Top    float64 `json:"top" url:"top"`
+	Right  float64 `json:"right" url:"right"`
+	Bottom float64 `json:"bottom" url:"bottom"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyEvidenceBoundingBox) GetLeft() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Left
+}
+
+func (v *VerifyEvidenceBoundingBox) GetTop() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Top
+}
+
+func (v *VerifyEvidenceBoundingBox) GetRight() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Right
+}
+
+func (v *VerifyEvidenceBoundingBox) GetBottom() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.Bottom
+}
+
+func (v *VerifyEvidenceBoundingBox) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyEvidenceBoundingBox) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetLeft sets the Left field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceBoundingBox) SetLeft(left float64) {
+	v.Left = left
+	v.require(verifyEvidenceBoundingBoxFieldLeft)
+}
+
+// SetTop sets the Top field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceBoundingBox) SetTop(top float64) {
+	v.Top = top
+	v.require(verifyEvidenceBoundingBoxFieldTop)
+}
+
+// SetRight sets the Right field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceBoundingBox) SetRight(right float64) {
+	v.Right = right
+	v.require(verifyEvidenceBoundingBoxFieldRight)
+}
+
+// SetBottom sets the Bottom field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceBoundingBox) SetBottom(bottom float64) {
+	v.Bottom = bottom
+	v.require(verifyEvidenceBoundingBoxFieldBottom)
+}
+
+func (v *VerifyEvidenceBoundingBox) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyEvidenceBoundingBox
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyEvidenceBoundingBox(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyEvidenceBoundingBox) MarshalJSON() ([]byte, error) {
+	type embed VerifyEvidenceBoundingBox
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyEvidenceBoundingBox) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A range of bytes measured from the beginning of the submitted file.
+var (
+	verifyEvidenceByteRangeFieldOffset = big.NewInt(1 << 0)
+	verifyEvidenceByteRangeFieldLength = big.NewInt(1 << 1)
+)
+
+type VerifyEvidenceByteRange struct {
+	Offset int `json:"offset" url:"offset"`
+	Length int `json:"length" url:"length"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyEvidenceByteRange) GetOffset() int {
+	if v == nil {
+		return 0
+	}
+	return v.Offset
+}
+
+func (v *VerifyEvidenceByteRange) GetLength() int {
+	if v == nil {
+		return 0
+	}
+	return v.Length
+}
+
+func (v *VerifyEvidenceByteRange) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyEvidenceByteRange) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetOffset sets the Offset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceByteRange) SetOffset(offset int) {
+	v.Offset = offset
+	v.require(verifyEvidenceByteRangeFieldOffset)
+}
+
+// SetLength sets the Length field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceByteRange) SetLength(length int) {
+	v.Length = length
+	v.require(verifyEvidenceByteRangeFieldLength)
+}
+
+func (v *VerifyEvidenceByteRange) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyEvidenceByteRange
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyEvidenceByteRange(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyEvidenceByteRange) MarshalJSON() ([]byte, error) {
+	type embed VerifyEvidenceByteRange
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyEvidenceByteRange) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Where in the submitted document a piece of evidence was found. Every location carries at least one resolved locator (`page`, `boundingBox`, `objectRefs`, or `byteRange`); unresolved locators are omitted rather than guessed. A `boundingBox` is always accompanied by a `page` with its `width` and `height`.
+var (
+	verifyEvidenceLocationFieldLocationID  = big.NewInt(1 << 0)
+	verifyEvidenceLocationFieldPage        = big.NewInt(1 << 1)
+	verifyEvidenceLocationFieldBoundingBox = big.NewInt(1 << 2)
+	verifyEvidenceLocationFieldObjectRefs  = big.NewInt(1 << 3)
+	verifyEvidenceLocationFieldByteRange   = big.NewInt(1 << 4)
+)
+
+type VerifyEvidenceLocation struct {
+	// Identifier referenced by `locationIds` fields inside the evidence `data`.
+	LocationID  string                     `json:"locationId" url:"locationId"`
+	Page        *VerifyEvidencePage        `json:"page,omitempty" url:"page,omitempty"`
+	BoundingBox *VerifyEvidenceBoundingBox `json:"boundingBox,omitempty" url:"boundingBox,omitempty"`
+	// Indirect PDF object references (for example `"26 0 R"`). These identify objects in the file, not visible page positions.
+	ObjectRefs []string                 `json:"objectRefs,omitempty" url:"objectRefs,omitempty"`
+	ByteRange  *VerifyEvidenceByteRange `json:"byteRange,omitempty" url:"byteRange,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyEvidenceLocation) GetLocationID() string {
+	if v == nil {
+		return ""
+	}
+	return v.LocationID
+}
+
+func (v *VerifyEvidenceLocation) GetPage() *VerifyEvidencePage {
+	if v == nil {
+		return nil
+	}
+	return v.Page
+}
+
+func (v *VerifyEvidenceLocation) GetBoundingBox() *VerifyEvidenceBoundingBox {
+	if v == nil {
+		return nil
+	}
+	return v.BoundingBox
+}
+
+func (v *VerifyEvidenceLocation) GetObjectRefs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.ObjectRefs
+}
+
+func (v *VerifyEvidenceLocation) GetByteRange() *VerifyEvidenceByteRange {
+	if v == nil {
+		return nil
+	}
+	return v.ByteRange
+}
+
+func (v *VerifyEvidenceLocation) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyEvidenceLocation) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetLocationID sets the LocationID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceLocation) SetLocationID(locationID string) {
+	v.LocationID = locationID
+	v.require(verifyEvidenceLocationFieldLocationID)
+}
+
+// SetPage sets the Page field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceLocation) SetPage(page *VerifyEvidencePage) {
+	v.Page = page
+	v.require(verifyEvidenceLocationFieldPage)
+}
+
+// SetBoundingBox sets the BoundingBox field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceLocation) SetBoundingBox(boundingBox *VerifyEvidenceBoundingBox) {
+	v.BoundingBox = boundingBox
+	v.require(verifyEvidenceLocationFieldBoundingBox)
+}
+
+// SetObjectRefs sets the ObjectRefs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceLocation) SetObjectRefs(objectRefs []string) {
+	v.ObjectRefs = objectRefs
+	v.require(verifyEvidenceLocationFieldObjectRefs)
+}
+
+// SetByteRange sets the ByteRange field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidenceLocation) SetByteRange(byteRange *VerifyEvidenceByteRange) {
+	v.ByteRange = byteRange
+	v.require(verifyEvidenceLocationFieldByteRange)
+}
+
+func (v *VerifyEvidenceLocation) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyEvidenceLocation
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyEvidenceLocation(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyEvidenceLocation) MarshalJSON() ([]byte, error) {
+	type embed VerifyEvidenceLocation
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyEvidenceLocation) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The page a location is on. Matches the `page` shape used elsewhere in the API: `number` starts at 1, and `width` and `height` give the page's dimensions (PDF points for PDF pages, pixels for image submissions).
+var (
+	verifyEvidencePageFieldNumber = big.NewInt(1 << 0)
+	verifyEvidencePageFieldWidth  = big.NewInt(1 << 1)
+	verifyEvidencePageFieldHeight = big.NewInt(1 << 2)
+)
+
+type VerifyEvidencePage struct {
+	// The page number. Starts at 1.
+	Number int `json:"number" url:"number"`
+	// The width of the page. Always present when the location has a `boundingBox`.
+	Width *float64 `json:"width,omitempty" url:"width,omitempty"`
+	// The height of the page. Always present when the location has a `boundingBox`.
+	Height *float64 `json:"height,omitempty" url:"height,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyEvidencePage) GetNumber() int {
+	if v == nil {
+		return 0
+	}
+	return v.Number
+}
+
+func (v *VerifyEvidencePage) GetWidth() *float64 {
+	if v == nil {
+		return nil
+	}
+	return v.Width
+}
+
+func (v *VerifyEvidencePage) GetHeight() *float64 {
+	if v == nil {
+		return nil
+	}
+	return v.Height
+}
+
+func (v *VerifyEvidencePage) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyEvidencePage) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetNumber sets the Number field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidencePage) SetNumber(number int) {
+	v.Number = number
+	v.require(verifyEvidencePageFieldNumber)
+}
+
+// SetWidth sets the Width field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidencePage) SetWidth(width *float64) {
+	v.Width = width
+	v.require(verifyEvidencePageFieldWidth)
+}
+
+// SetHeight sets the Height field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyEvidencePage) SetHeight(height *float64) {
+	v.Height = height
+	v.require(verifyEvidencePageFieldHeight)
+}
+
+func (v *VerifyEvidencePage) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyEvidencePage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyEvidencePage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyEvidencePage) MarshalJSON() ([]byte, error) {
+	type embed VerifyEvidencePage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyEvidencePage) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// What happened to the document, in order. Each save, signature, and change is an event; array order is event order.
+var (
+	verifyHistoryEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyHistoryEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyHistoryEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyHistoryEvidence struct {
+	EvidenceID string                     `json:"evidenceId" url:"evidenceId"`
+	Data       *VerifyHistoryEvidenceData `json:"data" url:"data"`
+	Locations  []*VerifyEvidenceLocation  `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyHistoryEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyHistoryEvidence) GetData() *VerifyHistoryEvidenceData {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyHistoryEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyHistoryEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyHistoryEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyHistoryEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidence) SetData(data *VerifyHistoryEvidenceData) {
+	v.Data = data
+	v.require(verifyHistoryEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyHistoryEvidenceFieldLocations)
+}
+
+func (v *VerifyHistoryEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyHistoryEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyHistoryEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyHistoryEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyHistoryEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyHistoryEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyHistoryEvidenceDataFieldEvents = big.NewInt(1 << 0)
+)
+
+type VerifyHistoryEvidenceData struct {
+	Events []*VerifyHistoryEvidenceDataEventsItem `json:"events" url:"events"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyHistoryEvidenceData) GetEvents() []*VerifyHistoryEvidenceDataEventsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Events
+}
+
+func (v *VerifyHistoryEvidenceData) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyHistoryEvidenceData) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvents sets the Events field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceData) SetEvents(events []*VerifyHistoryEvidenceDataEventsItem) {
+	v.Events = events
+	v.require(verifyHistoryEvidenceDataFieldEvents)
+}
+
+func (v *VerifyHistoryEvidenceData) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyHistoryEvidenceData
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyHistoryEvidenceData(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyHistoryEvidenceData) MarshalJSON() ([]byte, error) {
+	type embed VerifyHistoryEvidenceData
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyHistoryEvidenceData) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyHistoryEvidenceDataEventsItemFieldCode        = big.NewInt(1 << 0)
+	verifyHistoryEvidenceDataEventsItemFieldLocationIDs = big.NewInt(1 << 1)
+	verifyHistoryEvidenceDataEventsItemFieldTimestamp   = big.NewInt(1 << 2)
+	verifyHistoryEvidenceDataEventsItemFieldActor       = big.NewInt(1 << 3)
+	verifyHistoryEvidenceDataEventsItemFieldValues      = big.NewInt(1 << 4)
+)
+
+type VerifyHistoryEvidenceDataEventsItem struct {
+	// A stable event code, such as `"PDF_REVISION_APPENDED"` or `"PAGE_CONTENT_REPLACED"`.
+	Code        string   `json:"code" url:"code"`
+	LocationIDs []string `json:"locationIds,omitempty" url:"locationIds,omitempty"`
+	// When the event happened, if the file records it.
+	Timestamp *string `json:"timestamp,omitempty" url:"timestamp,omitempty"`
+	// Who or what performed the event, if the file records it.
+	Actor  *string             `json:"actor,omitempty" url:"actor,omitempty"`
+	Values []*VerifyNamedValue `json:"values,omitempty" url:"values,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetLocationIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.LocationIDs
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetTimestamp() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Timestamp
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetActor() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Actor
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetValues() []*VerifyNamedValue {
+	if v == nil {
+		return nil
+	}
+	return v.Values
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceDataEventsItem) SetCode(code string) {
+	v.Code = code
+	v.require(verifyHistoryEvidenceDataEventsItemFieldCode)
+}
+
+// SetLocationIDs sets the LocationIDs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceDataEventsItem) SetLocationIDs(locationIDs []string) {
+	v.LocationIDs = locationIDs
+	v.require(verifyHistoryEvidenceDataEventsItemFieldLocationIDs)
+}
+
+// SetTimestamp sets the Timestamp field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceDataEventsItem) SetTimestamp(timestamp *string) {
+	v.Timestamp = timestamp
+	v.require(verifyHistoryEvidenceDataEventsItemFieldTimestamp)
+}
+
+// SetActor sets the Actor field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceDataEventsItem) SetActor(actor *string) {
+	v.Actor = actor
+	v.require(verifyHistoryEvidenceDataEventsItemFieldActor)
+}
+
+// SetValues sets the Values field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyHistoryEvidenceDataEventsItem) SetValues(values []*VerifyNamedValue) {
+	v.Values = values
+	v.require(verifyHistoryEvidenceDataEventsItemFieldValues)
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyHistoryEvidenceDataEventsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyHistoryEvidenceDataEventsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) MarshalJSON() ([]byte, error) {
+	type embed VerifyHistoryEvidenceDataEventsItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyHistoryEvidenceDataEventsItem) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A count of one kind of item found in the document, with the items listed where they could be read.
+var (
+	verifyInventoryEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyInventoryEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyInventoryEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyInventoryEvidence struct {
+	EvidenceID string                       `json:"evidenceId" url:"evidenceId"`
+	Data       *VerifyInventoryEvidenceData `json:"data" url:"data"`
+	Locations  []*VerifyEvidenceLocation    `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyInventoryEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyInventoryEvidence) GetData() *VerifyInventoryEvidenceData {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyInventoryEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyInventoryEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyInventoryEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyInventoryEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidence) SetData(data *VerifyInventoryEvidenceData) {
+	v.Data = data
+	v.require(verifyInventoryEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyInventoryEvidenceFieldLocations)
+}
+
+func (v *VerifyInventoryEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyInventoryEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyInventoryEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyInventoryEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyInventoryEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyInventoryEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyInventoryEvidenceDataFieldCode  = big.NewInt(1 << 0)
+	verifyInventoryEvidenceDataFieldCount = big.NewInt(1 << 1)
+	verifyInventoryEvidenceDataFieldItems = big.NewInt(1 << 2)
+)
+
+type VerifyInventoryEvidenceData struct {
+	// A stable code for the kind of item counted, such as `"EMBEDDED_FILE"`.
+	Code  string `json:"code" url:"code"`
+	Count int    `json:"count" url:"count"`
+	// Up to 20 of the counted items. Each item says where it is, what it is, or both.
+	Items []*VerifyInventoryEvidenceDataItemsItem `json:"items,omitempty" url:"items,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyInventoryEvidenceData) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *VerifyInventoryEvidenceData) GetCount() int {
+	if v == nil {
+		return 0
+	}
+	return v.Count
+}
+
+func (v *VerifyInventoryEvidenceData) GetItems() []*VerifyInventoryEvidenceDataItemsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Items
+}
+
+func (v *VerifyInventoryEvidenceData) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyInventoryEvidenceData) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidenceData) SetCode(code string) {
+	v.Code = code
+	v.require(verifyInventoryEvidenceDataFieldCode)
+}
+
+// SetCount sets the Count field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidenceData) SetCount(count int) {
+	v.Count = count
+	v.require(verifyInventoryEvidenceDataFieldCount)
+}
+
+// SetItems sets the Items field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidenceData) SetItems(items []*VerifyInventoryEvidenceDataItemsItem) {
+	v.Items = items
+	v.require(verifyInventoryEvidenceDataFieldItems)
+}
+
+func (v *VerifyInventoryEvidenceData) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyInventoryEvidenceData
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyInventoryEvidenceData(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyInventoryEvidenceData) MarshalJSON() ([]byte, error) {
+	type embed VerifyInventoryEvidenceData
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyInventoryEvidenceData) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyInventoryEvidenceDataItemsItemFieldLocationIDs = big.NewInt(1 << 0)
+	verifyInventoryEvidenceDataItemsItemFieldValues      = big.NewInt(1 << 1)
+)
+
+type VerifyInventoryEvidenceDataItemsItem struct {
+	LocationIDs []string            `json:"locationIds,omitempty" url:"locationIds,omitempty"`
+	Values      []*VerifyNamedValue `json:"values,omitempty" url:"values,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) GetLocationIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.LocationIDs
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) GetValues() []*VerifyNamedValue {
+	if v == nil {
+		return nil
+	}
+	return v.Values
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetLocationIDs sets the LocationIDs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidenceDataItemsItem) SetLocationIDs(locationIDs []string) {
+	v.LocationIDs = locationIDs
+	v.require(verifyInventoryEvidenceDataItemsItemFieldLocationIDs)
+}
+
+// SetValues sets the Values field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyInventoryEvidenceDataItemsItem) SetValues(values []*VerifyNamedValue) {
+	v.Values = values
+	v.require(verifyInventoryEvidenceDataItemsItemFieldValues)
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyInventoryEvidenceDataItemsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyInventoryEvidenceDataItemsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) MarshalJSON() ([]byte, error) {
+	type embed VerifyInventoryEvidenceDataItemsItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyInventoryEvidenceDataItemsItem) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A detection model supports this signal. `locations` identify the regions that produced the prediction. Model identity, version, score, and thresholds remain internal, so `data` is empty.
+var (
+	verifyModelPredictionEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyModelPredictionEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyModelPredictionEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyModelPredictionEvidence struct {
+	EvidenceID string `json:"evidenceId" url:"evidenceId"`
+	// Always an empty object in the current release.
+	Data      map[string]any            `json:"data" url:"data"`
+	Locations []*VerifyEvidenceLocation `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyModelPredictionEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyModelPredictionEvidence) GetData() map[string]any {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyModelPredictionEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyModelPredictionEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyModelPredictionEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyModelPredictionEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyModelPredictionEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyModelPredictionEvidence) SetData(data map[string]any) {
+	v.Data = data
+	v.require(verifyModelPredictionEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyModelPredictionEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyModelPredictionEvidenceFieldLocations)
+}
+
+func (v *VerifyModelPredictionEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyModelPredictionEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyModelPredictionEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyModelPredictionEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyModelPredictionEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyModelPredictionEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A value read from the document, with an optional raw form, normalized form, and the locations it was read from. It operates as a non-strongly-typed key-value pair for rendering and evaluating findings.
+var (
+	verifyNamedValueFieldName        = big.NewInt(1 << 0)
+	verifyNamedValueFieldRaw         = big.NewInt(1 << 1)
+	verifyNamedValueFieldNormalized  = big.NewInt(1 << 2)
+	verifyNamedValueFieldLocationIDs = big.NewInt(1 << 3)
+)
+
+type VerifyNamedValue struct {
+	Name string `json:"name" url:"name"`
+	// The value exactly as it appears in the file.
+	Raw *string `json:"raw,omitempty" url:"raw,omitempty"`
+	// The value in a normalized form, such as an ISO 8601 timestamp.
+	Normalized  *string  `json:"normalized,omitempty" url:"normalized,omitempty"`
+	LocationIDs []string `json:"locationIds,omitempty" url:"locationIds,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyNamedValue) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *VerifyNamedValue) GetRaw() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Raw
+}
+
+func (v *VerifyNamedValue) GetNormalized() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Normalized
+}
+
+func (v *VerifyNamedValue) GetLocationIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.LocationIDs
+}
+
+func (v *VerifyNamedValue) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyNamedValue) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyNamedValue) SetName(name string) {
+	v.Name = name
+	v.require(verifyNamedValueFieldName)
+}
+
+// SetRaw sets the Raw field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyNamedValue) SetRaw(raw *string) {
+	v.Raw = raw
+	v.require(verifyNamedValueFieldRaw)
+}
+
+// SetNormalized sets the Normalized field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyNamedValue) SetNormalized(normalized *string) {
+	v.Normalized = normalized
+	v.require(verifyNamedValueFieldNormalized)
+}
+
+// SetLocationIDs sets the LocationIDs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyNamedValue) SetLocationIDs(locationIDs []string) {
+	v.LocationIDs = locationIDs
+	v.require(verifyNamedValueFieldLocationIDs)
+}
+
+func (v *VerifyNamedValue) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyNamedValue
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyNamedValue(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyNamedValue) MarshalJSON() ([]byte, error) {
+	type embed VerifyNamedValue
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyNamedValue) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The result of a processed verify run. `signals` contains detected Public Signals only. An empty `signals` array means no Public Signals were detected; it does not mean that every check ran or that the document is authentic.
+var (
+	verifyOutputFieldRiskLevel = big.NewInt(1 << 0)
+	verifyOutputFieldSummary   = big.NewInt(1 << 1)
+	verifyOutputFieldSignals   = big.NewInt(1 << 2)
+)
+
+type VerifyOutput struct {
+	// The document-level risk: the highest `riskAssessment` among the detected signals, or `"LOW"` when nothing was detected.
+	RiskLevel VerifyRiskLevel `json:"riskLevel" url:"riskLevel"`
+	// A plain-language summary of the document's findings, or `"No fraud signals were detected."` when `signals` is empty.
+	Summary string          `json:"summary" url:"summary"`
+	Signals []*VerifySignal `json:"signals" url:"signals"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyOutput) GetRiskLevel() VerifyRiskLevel {
+	if v == nil {
+		return ""
+	}
+	return v.RiskLevel
+}
+
+func (v *VerifyOutput) GetSummary() string {
+	if v == nil {
+		return ""
+	}
+	return v.Summary
+}
+
+func (v *VerifyOutput) GetSignals() []*VerifySignal {
+	if v == nil {
+		return nil
+	}
+	return v.Signals
+}
+
+func (v *VerifyOutput) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyOutput) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetRiskLevel sets the RiskLevel field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyOutput) SetRiskLevel(riskLevel VerifyRiskLevel) {
+	v.RiskLevel = riskLevel
+	v.require(verifyOutputFieldRiskLevel)
+}
+
+// SetSummary sets the Summary field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyOutput) SetSummary(summary string) {
+	v.Summary = summary
+	v.require(verifyOutputFieldSummary)
+}
+
+// SetSignals sets the Signals field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyOutput) SetSignals(signals []*VerifySignal) {
+	v.Signals = signals
+	v.require(verifyOutputFieldSignals)
+}
+
+func (v *VerifyOutput) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyOutput
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyOutput(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyOutput) MarshalJSON() ([]byte, error) {
+	type embed VerifyOutput
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyOutput) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The file to verify, as a public URL or an Extend file ID. Verify runs against the exact submitted bytes, so `text` and `base64` inputs are not accepted. Supported inputs are PDF, JPEG, PNG, and WebP files; other types fail with `FILE_TYPE_NOT_SUPPORTED`.
+type VerifyRequestFile struct {
+	FileFromURL *FileFromURL
+	FileFromID  *FileFromID
+
+	typ string
+}
+
+func (v *VerifyRequestFile) GetFileFromURL() *FileFromURL {
+	if v == nil {
+		return nil
+	}
+	return v.FileFromURL
+}
+
+func (v *VerifyRequestFile) GetFileFromID() *FileFromID {
+	if v == nil {
+		return nil
+	}
+	return v.FileFromID
+}
+
+func (v *VerifyRequestFile) UnmarshalJSON(data []byte) error {
+	valueFileFromURL := new(FileFromURL)
+	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+		v.typ = "FileFromURL"
+		v.FileFromURL = valueFileFromURL
+		return nil
+	}
+	valueFileFromID := new(FileFromID)
+	if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+		v.typ = "FileFromID"
+		v.FileFromID = valueFileFromID
+		return nil
+	}
+	return fmt.Errorf("%s cannot be deserialized as a %T", data, v)
+}
+
+func (v VerifyRequestFile) MarshalJSON() ([]byte, error) {
+	if v.typ == "FileFromURL" || v.FileFromURL != nil {
+		return json.Marshal(v.FileFromURL)
+	}
+	if v.typ == "FileFromID" || v.FileFromID != nil {
+		return json.Marshal(v.FileFromID)
+	}
+	return nil, fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+type VerifyRequestFileVisitor interface {
+	VisitFileFromURL(*FileFromURL) error
+	VisitFileFromID(*FileFromID) error
+}
+
+func (v *VerifyRequestFile) Accept(visitor VerifyRequestFileVisitor) error {
+	if v.typ == "FileFromURL" || v.FileFromURL != nil {
+		return visitor.VisitFileFromURL(v.FileFromURL)
+	}
+	if v.typ == "FileFromID" || v.FileFromID != nil {
+		return visitor.VisitFileFromID(v.FileFromID)
+	}
+	return fmt.Errorf("type %T does not include a non-empty union type", v)
+}
+
+// The risk attributed to one detected signal, distinct from the document-level `riskLevel`.
+var (
+	verifyRiskAssessmentFieldLevel = big.NewInt(1 << 0)
+)
+
+type VerifyRiskAssessment struct {
+	Level VerifyRiskLevel `json:"level" url:"level"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	type_          string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyRiskAssessment) GetLevel() VerifyRiskLevel {
+	if v == nil {
+		return ""
+	}
+	return v.Level
+}
+
+func (v *VerifyRiskAssessment) Type() string {
+	return v.type_
+}
+
+func (v *VerifyRiskAssessment) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyRiskAssessment) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetLevel sets the Level field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRiskAssessment) SetLevel(level VerifyRiskLevel) {
+	v.Level = level
+	v.require(verifyRiskAssessmentFieldLevel)
+}
+
+func (v *VerifyRiskAssessment) UnmarshalJSON(data []byte) error {
+	type embed VerifyRiskAssessment
+	var unmarshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*v = VerifyRiskAssessment(unmarshaler.embed)
+	if unmarshaler.Type != "LEVEL" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", v, "LEVEL", unmarshaler.Type)
+	}
+	v.type_ = unmarshaler.Type
+	extraProperties, err := internal.ExtractExtraProperties(data, *v, "type")
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyRiskAssessment) MarshalJSON() ([]byte, error) {
+	type embed VerifyRiskAssessment
+	var marshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*v),
+		Type:  "LEVEL",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyRiskAssessment) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A categorical risk level. It is derived from the checks that ran and is never a claim of authenticity: `"LOW"` means the checks that ran found nothing, not that the document is genuine.
+type VerifyRiskLevel string
+
+const (
+	VerifyRiskLevelLow    VerifyRiskLevel = "LOW"
+	VerifyRiskLevelMedium VerifyRiskLevel = "MEDIUM"
+	VerifyRiskLevelHigh   VerifyRiskLevel = "HIGH"
+)
+
+func NewVerifyRiskLevelFromString(s string) (VerifyRiskLevel, error) {
+	switch s {
+	case "LOW":
+		return VerifyRiskLevelLow, nil
+	case "MEDIUM":
+		return VerifyRiskLevelMedium, nil
+	case "HIGH":
+		return VerifyRiskLevelHigh, nil
+	}
+	var t VerifyRiskLevel
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v VerifyRiskLevel) Ptr() *VerifyRiskLevel {
+	return &v
+}
+
+// A run that checks a single document for evidence of tampering, forgery, or AI generation.
+var (
+	verifyRunFieldID             = big.NewInt(1 << 0)
+	verifyRunFieldFile           = big.NewInt(1 << 1)
+	verifyRunFieldStatus         = big.NewInt(1 << 2)
+	verifyRunFieldOutput         = big.NewInt(1 << 3)
+	verifyRunFieldFailureReason  = big.NewInt(1 << 4)
+	verifyRunFieldFailureMessage = big.NewInt(1 << 5)
+	verifyRunFieldMetadata       = big.NewInt(1 << 6)
+	verifyRunFieldMetrics        = big.NewInt(1 << 7)
+	verifyRunFieldConfig         = big.NewInt(1 << 8)
+	verifyRunFieldUsage          = big.NewInt(1 << 9)
+	verifyRunFieldSource         = big.NewInt(1 << 10)
+	verifyRunFieldSourceID       = big.NewInt(1 << 11)
+	verifyRunFieldCreatedAt      = big.NewInt(1 << 12)
+	verifyRunFieldUpdatedAt      = big.NewInt(1 << 13)
+)
+
+type VerifyRun struct {
+	// A unique identifier for the verify run.
+	//
+	// Example: `"vr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID string `json:"id" url:"id"`
+	// The file that was verified. `null` once the input file has been deleted.
+	File   *FileSummary    `json:"file" url:"file"`
+	Status VerifyRunStatus `json:"status" url:"status"`
+	// The verification result.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`. For a zero-retention run the result is delivered once, in the synchronous response or the first `GET`, and purged afterwards; it is purged in any case one hour after the run reaches a terminal status.
+	Output *VerifyOutput `json:"output,omitempty" url:"output,omitempty"`
+	// The reason for failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	//
+	// Possible values include:
+	// * `FILE_TYPE_NOT_SUPPORTED`
+	// * `NO_APPLICABLE_SIGNALS`
+	// * `PARSE_FAILED`
+	// * `REQUEST_ABORTED`
+	// * `INTERNAL_ERROR`
+	//
+	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
+	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
+	// A human-readable description of the failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	FailureMessage *string `json:"failureMessage,omitempty" url:"failureMessage,omitempty"`
+	// Any metadata that was provided when creating the verify run.
+	//
+	// **Availability:** Present when metadata was provided during creation.
+	Metadata *RunMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
+	// Metrics about the verification process.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`.
+	Metrics *VerifyRunMetrics `json:"metrics,omitempty" url:"metrics,omitempty"`
+	// The configuration that ran, with defaults applied: the `engine`, the concrete `engineVersion` that `"latest"` resolved to, and `advancedOptions.requireParsing` as it applied to this run.
+	Config *VerifyConfig `json:"config" url:"config"`
+	// Usage credits consumed by this verify run.
+	Usage *RunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+	// How the run was created.
+	Source VerifyRunSource `json:"source" url:"source"`
+	// An identifier for the request that created the run. For API-created runs this is the request ID, the same value returned as `requestId` on errors, which you can quote to support.
+	SourceID  *string   `json:"sourceId,omitempty" url:"sourceId,omitempty"`
+	CreatedAt CreatedAt `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt `json:"updatedAt" url:"updatedAt"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyRun) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *VerifyRun) GetFile() *FileSummary {
+	if v == nil {
+		return nil
+	}
+	return v.File
+}
+
+func (v *VerifyRun) GetStatus() VerifyRunStatus {
+	if v == nil {
+		return ""
+	}
+	return v.Status
+}
+
+func (v *VerifyRun) GetOutput() *VerifyOutput {
+	if v == nil {
+		return nil
+	}
+	return v.Output
+}
+
+func (v *VerifyRun) GetFailureReason() *string {
+	if v == nil {
+		return nil
+	}
+	return v.FailureReason
+}
+
+func (v *VerifyRun) GetFailureMessage() *string {
+	if v == nil {
+		return nil
+	}
+	return v.FailureMessage
+}
+
+func (v *VerifyRun) GetMetadata() *RunMetadata {
+	if v == nil {
+		return nil
+	}
+	return v.Metadata
+}
+
+func (v *VerifyRun) GetMetrics() *VerifyRunMetrics {
+	if v == nil {
+		return nil
+	}
+	return v.Metrics
+}
+
+func (v *VerifyRun) GetConfig() *VerifyConfig {
+	if v == nil {
+		return nil
+	}
+	return v.Config
+}
+
+func (v *VerifyRun) GetUsage() *RunUsage {
+	if v == nil {
+		return nil
+	}
+	return v.Usage
+}
+
+func (v *VerifyRun) GetSource() VerifyRunSource {
+	if v == nil {
+		return ""
+	}
+	return v.Source
+}
+
+func (v *VerifyRun) GetSourceID() *string {
+	if v == nil {
+		return nil
+	}
+	return v.SourceID
+}
+
+func (v *VerifyRun) GetCreatedAt() CreatedAt {
+	if v == nil {
+		return time.Time{}
+	}
+	return v.CreatedAt
+}
+
+func (v *VerifyRun) GetUpdatedAt() UpdatedAt {
+	if v == nil {
+		return time.Time{}
+	}
+	return v.UpdatedAt
+}
+
+func (v *VerifyRun) Object() string {
+	return v.object
+}
+
+func (v *VerifyRun) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyRun) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetID(id string) {
+	v.ID = id
+	v.require(verifyRunFieldID)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetFile(file *FileSummary) {
+	v.File = file
+	v.require(verifyRunFieldFile)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetStatus(status VerifyRunStatus) {
+	v.Status = status
+	v.require(verifyRunFieldStatus)
+}
+
+// SetOutput sets the Output field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetOutput(output *VerifyOutput) {
+	v.Output = output
+	v.require(verifyRunFieldOutput)
+}
+
+// SetFailureReason sets the FailureReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetFailureReason(failureReason *string) {
+	v.FailureReason = failureReason
+	v.require(verifyRunFieldFailureReason)
+}
+
+// SetFailureMessage sets the FailureMessage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetFailureMessage(failureMessage *string) {
+	v.FailureMessage = failureMessage
+	v.require(verifyRunFieldFailureMessage)
+}
+
+// SetMetadata sets the Metadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetMetadata(metadata *RunMetadata) {
+	v.Metadata = metadata
+	v.require(verifyRunFieldMetadata)
+}
+
+// SetMetrics sets the Metrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetMetrics(metrics *VerifyRunMetrics) {
+	v.Metrics = metrics
+	v.require(verifyRunFieldMetrics)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetConfig(config *VerifyConfig) {
+	v.Config = config
+	v.require(verifyRunFieldConfig)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetUsage(usage *RunUsage) {
+	v.Usage = usage
+	v.require(verifyRunFieldUsage)
+}
+
+// SetSource sets the Source field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetSource(source VerifyRunSource) {
+	v.Source = source
+	v.require(verifyRunFieldSource)
+}
+
+// SetSourceID sets the SourceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetSourceID(sourceID *string) {
+	v.SourceID = sourceID
+	v.require(verifyRunFieldSourceID)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetCreatedAt(createdAt CreatedAt) {
+	v.CreatedAt = createdAt
+	v.require(verifyRunFieldCreatedAt)
+}
+
+// SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRun) SetUpdatedAt(updatedAt UpdatedAt) {
+	v.UpdatedAt = updatedAt
+	v.require(verifyRunFieldUpdatedAt)
+}
+
+func (v *VerifyRun) UnmarshalJSON(data []byte) error {
+	type embed VerifyRun
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*v = VerifyRun(unmarshaler.embed)
+	v.CreatedAt = unmarshaler.CreatedAt.Time()
+	v.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	if unmarshaler.Object != "verify_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", v, "verify_run", unmarshaler.Object)
+	}
+	v.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *v, "object")
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyRun) MarshalJSON() ([]byte, error) {
+	type embed VerifyRun
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed:     embed(*v),
+		CreatedAt: internal.NewDateTime(v.CreatedAt),
+		UpdatedAt: internal.NewDateTime(v.UpdatedAt),
+		Object:    "verify_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyRun) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Metrics about the verification process.
+var (
+	verifyRunMetricsFieldProcessingTimeMs = big.NewInt(1 << 0)
+	verifyRunMetricsFieldPageCount        = big.NewInt(1 << 1)
+)
+
+type VerifyRunMetrics struct {
+	// Total processing time in milliseconds.
+	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
+	// The number of pages in the document. `null` when the page count could not be determined, such as for some image inputs.
+	PageCount *int `json:"pageCount,omitempty" url:"pageCount,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyRunMetrics) GetProcessingTimeMs() float64 {
+	if v == nil {
+		return 0
+	}
+	return v.ProcessingTimeMs
+}
+
+func (v *VerifyRunMetrics) GetPageCount() *int {
+	if v == nil {
+		return nil
+	}
+	return v.PageCount
+}
+
+func (v *VerifyRunMetrics) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyRunMetrics) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRunMetrics) SetProcessingTimeMs(processingTimeMs float64) {
+	v.ProcessingTimeMs = processingTimeMs
+	v.require(verifyRunMetricsFieldProcessingTimeMs)
+}
+
+// SetPageCount sets the PageCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRunMetrics) SetPageCount(pageCount *int) {
+	v.PageCount = pageCount
+	v.require(verifyRunMetricsFieldPageCount)
+}
+
+func (v *VerifyRunMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyRunMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyRunMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyRunMetrics) MarshalJSON() ([]byte, error) {
+	type embed VerifyRunMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyRunMetrics) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// How the run was created.
+type VerifyRunSource string
+
+const (
+	VerifyRunSourceAPI    VerifyRunSource = "API"
+	VerifyRunSourceStudio VerifyRunSource = "STUDIO"
+)
+
+func NewVerifyRunSourceFromString(s string) (VerifyRunSource, error) {
+	switch s {
+	case "API":
+		return VerifyRunSourceAPI, nil
+	case "STUDIO":
+		return VerifyRunSourceStudio, nil
+	}
+	var t VerifyRunSource
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v VerifyRunSource) Ptr() *VerifyRunSource {
+	return &v
+}
+
+// The status of the verify run:
+// * `"PROCESSING"` - The document is still being checked
+// * `"PROCESSED"` - Verification completed successfully; read `output`
+// * `"FAILED"` - Verification failed (see `failureReason` for details)
+// * `"CANCELLED"` - The run was cancelled before it completed
+type VerifyRunStatus string
+
+const (
+	VerifyRunStatusProcessing VerifyRunStatus = "PROCESSING"
+	VerifyRunStatusProcessed  VerifyRunStatus = "PROCESSED"
+	VerifyRunStatusFailed     VerifyRunStatus = "FAILED"
+	VerifyRunStatusCancelled  VerifyRunStatus = "CANCELLED"
+)
+
+func NewVerifyRunStatusFromString(s string) (VerifyRunStatus, error) {
+	switch s {
+	case "PROCESSING":
+		return VerifyRunStatusProcessing, nil
+	case "PROCESSED":
+		return VerifyRunStatusProcessed, nil
+	case "FAILED":
+		return VerifyRunStatusFailed, nil
+	case "CANCELLED":
+		return VerifyRunStatusCancelled, nil
+	}
+	var t VerifyRunStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v VerifyRunStatus) Ptr() *VerifyRunStatus {
+	return &v
+}
+
+// One detected Public Signal. When several internal checks detect issues in the same category, they are combined into a single signal with one summary and the relevant evidence from each.
+var (
+	verifySignalFieldID             = big.NewInt(1 << 0)
+	verifySignalFieldType           = big.NewInt(1 << 1)
+	verifySignalFieldRiskAssessment = big.NewInt(1 << 2)
+	verifySignalFieldSummary        = big.NewInt(1 << 3)
+	verifySignalFieldEvidence       = big.NewInt(1 << 4)
+)
+
+type VerifySignal struct {
+	// A stable identifier for this detected signal.
+	//
+	// Example: `"vs_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID             string                `json:"id" url:"id"`
+	Type           VerifySignalType      `json:"type" url:"type"`
+	RiskAssessment *VerifyRiskAssessment `json:"riskAssessment" url:"riskAssessment"`
+	// A plain-language explanation of what was detected, written for a reviewer.
+	Summary  string            `json:"summary" url:"summary"`
+	Evidence []*VerifyEvidence `json:"evidence" url:"evidence"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifySignal) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *VerifySignal) GetType() VerifySignalType {
+	if v == nil {
+		return ""
+	}
+	return v.Type
+}
+
+func (v *VerifySignal) GetRiskAssessment() *VerifyRiskAssessment {
+	if v == nil {
+		return nil
+	}
+	return v.RiskAssessment
+}
+
+func (v *VerifySignal) GetSummary() string {
+	if v == nil {
+		return ""
+	}
+	return v.Summary
+}
+
+func (v *VerifySignal) GetEvidence() []*VerifyEvidence {
+	if v == nil {
+		return nil
+	}
+	return v.Evidence
+}
+
+func (v *VerifySignal) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifySignal) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifySignal) SetID(id string) {
+	v.ID = id
+	v.require(verifySignalFieldID)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifySignal) SetType(type_ VerifySignalType) {
+	v.Type = type_
+	v.require(verifySignalFieldType)
+}
+
+// SetRiskAssessment sets the RiskAssessment field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifySignal) SetRiskAssessment(riskAssessment *VerifyRiskAssessment) {
+	v.RiskAssessment = riskAssessment
+	v.require(verifySignalFieldRiskAssessment)
+}
+
+// SetSummary sets the Summary field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifySignal) SetSummary(summary string) {
+	v.Summary = summary
+	v.require(verifySignalFieldSummary)
+}
+
+// SetEvidence sets the Evidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifySignal) SetEvidence(evidence []*VerifyEvidence) {
+	v.Evidence = evidence
+	v.require(verifySignalFieldEvidence)
+}
+
+func (v *VerifySignal) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifySignal
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifySignal(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifySignal) MarshalJSON() ([]byte, error) {
+	type embed VerifySignal
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifySignal) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The customer-facing Public Signal categories. Each detected signal in a run's `output.signals` has one of these types; signals that were not detected are not returned.
+//
+// * `"FILE_FORMAT_AND_PDF_STRUCTURE"` - Files disguised as another type, structure rebuilt or broken by an edit, content appended after the end of the file, and documents that read differently to different PDF software.
+// * `"DIGITAL_SIGNATURE_INTEGRITY"` - Content changed after the document was signed, signatures that do not match the file they are attached to, and signer certificates or timestamps that did not hold up when the signature was made.
+// * `"PROVENANCE_AND_ISSUER_MARKERS"` - Provenance credentials that fail to verify, and provenance watermarks whose manifest has been stripped.
+// * `"REVISION_AND_PRODUCTION_HISTORY"` - Documents re-saved after issuance, edited with software the issuer would not use, backdated, or carrying a page produced differently from the rest.
+// * `"CAPTURE_CONVERSION_AND_LAUNDERING"` - Annotation layers that hide or change what a reader sees.
+// * `"PDF_LAYERS_TEXT_AND_FORMS"` - Values covered over and retyped, image patches pasted over a scan, hidden text, form values that differ from what the form shows, numbers set in a typeface the rest of the line does not use, and an OCR text layer that disagrees with the page.
+// * `"IMAGE_COMPOSITING_AND_RECONSTRUCTION"` - Regions spliced in from another image, cloned from elsewhere on the page, or erased and painted back over.
+// * `"IMAGE_FORENSIC_INCONSISTENCIES"` - Edits that leave compression, noise, sharpness, or lighting different in one part of an image than the rest.
+// * `"AI_GENERATED_CONTENT"` - Pages or regions produced by a generative model rather than captured or typeset, including generator watermarks and content credentials that assert generation.
+// * `"ISSUER_TEMPLATE_AND_SECURITY_FEATURES"` - Documents that do not match the issuer's template, or that are missing a logo, seal, or security feature the real one carries.
+// * `"FIELD_IDENTIFIER_AND_MACHINE_READABLE_VALIDITY"` - Account numbers, licence numbers, MRZ lines, and barcodes that fail their own checks or contradict the values printed beside them.
+// * `"CROSS_FIELD_AND_SEMANTIC_CONSISTENCY"` - Names, dates, addresses, and identifiers that were changed in one place and left alone in another.
+// * `"FINANCIAL_RECONCILIATION_AND_SEQUENCE_CONTINUITY"` - Altered amounts that stop a statement adding up, and removed pages or transactions that leave a gap.
+// * `"REUSE_DUPLICATION_AND_NETWORK_HISTORY"` - A signature, stamp, or region reused from another document, and documents submitted before.
+//
+// Every supported check runs on every run; support for each category is added over time. See [Verify Signals](https://docs.extend.ai/2026-02-09/verify/signals) for what each category checks today and which require the `verify_agentic` engine.
+type VerifySignalType string
+
+const (
+	VerifySignalTypeFileFormatAndPdfStructure                    VerifySignalType = "FILE_FORMAT_AND_PDF_STRUCTURE"
+	VerifySignalTypeDigitalSignatureIntegrity                    VerifySignalType = "DIGITAL_SIGNATURE_INTEGRITY"
+	VerifySignalTypeProvenanceAndIssuerMarkers                   VerifySignalType = "PROVENANCE_AND_ISSUER_MARKERS"
+	VerifySignalTypeRevisionAndProductionHistory                 VerifySignalType = "REVISION_AND_PRODUCTION_HISTORY"
+	VerifySignalTypeCaptureConversionAndLaundering               VerifySignalType = "CAPTURE_CONVERSION_AND_LAUNDERING"
+	VerifySignalTypePdfLayersTextAndForms                        VerifySignalType = "PDF_LAYERS_TEXT_AND_FORMS"
+	VerifySignalTypeImageCompositingAndReconstruction            VerifySignalType = "IMAGE_COMPOSITING_AND_RECONSTRUCTION"
+	VerifySignalTypeImageForensicInconsistencies                 VerifySignalType = "IMAGE_FORENSIC_INCONSISTENCIES"
+	VerifySignalTypeAiGeneratedContent                           VerifySignalType = "AI_GENERATED_CONTENT"
+	VerifySignalTypeIssuerTemplateAndSecurityFeatures            VerifySignalType = "ISSUER_TEMPLATE_AND_SECURITY_FEATURES"
+	VerifySignalTypeFieldIdentifierAndMachineReadableValidity    VerifySignalType = "FIELD_IDENTIFIER_AND_MACHINE_READABLE_VALIDITY"
+	VerifySignalTypeCrossFieldAndSemanticConsistency             VerifySignalType = "CROSS_FIELD_AND_SEMANTIC_CONSISTENCY"
+	VerifySignalTypeFinancialReconciliationAndSequenceContinuity VerifySignalType = "FINANCIAL_RECONCILIATION_AND_SEQUENCE_CONTINUITY"
+	VerifySignalTypeReuseDuplicationAndNetworkHistory            VerifySignalType = "REUSE_DUPLICATION_AND_NETWORK_HISTORY"
+)
+
+func NewVerifySignalTypeFromString(s string) (VerifySignalType, error) {
+	switch s {
+	case "FILE_FORMAT_AND_PDF_STRUCTURE":
+		return VerifySignalTypeFileFormatAndPdfStructure, nil
+	case "DIGITAL_SIGNATURE_INTEGRITY":
+		return VerifySignalTypeDigitalSignatureIntegrity, nil
+	case "PROVENANCE_AND_ISSUER_MARKERS":
+		return VerifySignalTypeProvenanceAndIssuerMarkers, nil
+	case "REVISION_AND_PRODUCTION_HISTORY":
+		return VerifySignalTypeRevisionAndProductionHistory, nil
+	case "CAPTURE_CONVERSION_AND_LAUNDERING":
+		return VerifySignalTypeCaptureConversionAndLaundering, nil
+	case "PDF_LAYERS_TEXT_AND_FORMS":
+		return VerifySignalTypePdfLayersTextAndForms, nil
+	case "IMAGE_COMPOSITING_AND_RECONSTRUCTION":
+		return VerifySignalTypeImageCompositingAndReconstruction, nil
+	case "IMAGE_FORENSIC_INCONSISTENCIES":
+		return VerifySignalTypeImageForensicInconsistencies, nil
+	case "AI_GENERATED_CONTENT":
+		return VerifySignalTypeAiGeneratedContent, nil
+	case "ISSUER_TEMPLATE_AND_SECURITY_FEATURES":
+		return VerifySignalTypeIssuerTemplateAndSecurityFeatures, nil
+	case "FIELD_IDENTIFIER_AND_MACHINE_READABLE_VALIDITY":
+		return VerifySignalTypeFieldIdentifierAndMachineReadableValidity, nil
+	case "CROSS_FIELD_AND_SEMANTIC_CONSISTENCY":
+		return VerifySignalTypeCrossFieldAndSemanticConsistency, nil
+	case "FINANCIAL_RECONCILIATION_AND_SEQUENCE_CONTINUITY":
+		return VerifySignalTypeFinancialReconciliationAndSequenceContinuity, nil
+	case "REUSE_DUPLICATION_AND_NETWORK_HISTORY":
+		return VerifySignalTypeReuseDuplicationAndNetworkHistory, nil
+	}
+	var t VerifySignalType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (v VerifySignalType) Ptr() *VerifySignalType {
+	return &v
+}
+
+// A recognised arrangement of objects in the file, such as one drawn over another, with the part each component plays.
+var (
+	verifyStructuralPatternEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyStructuralPatternEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyStructuralPatternEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyStructuralPatternEvidence struct {
+	EvidenceID string                               `json:"evidenceId" url:"evidenceId"`
+	Data       *VerifyStructuralPatternEvidenceData `json:"data" url:"data"`
+	Locations  []*VerifyEvidenceLocation            `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyStructuralPatternEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyStructuralPatternEvidence) GetData() *VerifyStructuralPatternEvidenceData {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyStructuralPatternEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyStructuralPatternEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyStructuralPatternEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyStructuralPatternEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidence) SetData(data *VerifyStructuralPatternEvidenceData) {
+	v.Data = data
+	v.require(verifyStructuralPatternEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyStructuralPatternEvidenceFieldLocations)
+}
+
+func (v *VerifyStructuralPatternEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyStructuralPatternEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyStructuralPatternEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyStructuralPatternEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyStructuralPatternEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyStructuralPatternEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyStructuralPatternEvidenceDataFieldCode       = big.NewInt(1 << 0)
+	verifyStructuralPatternEvidenceDataFieldComponents = big.NewInt(1 << 1)
+)
+
+type VerifyStructuralPatternEvidenceData struct {
+	// A stable pattern code, such as `"OPAQUE_MASK_FOLLOWED_BY_TEXT"`.
+	Code       string                                               `json:"code" url:"code"`
+	Components []*VerifyStructuralPatternEvidenceDataComponentsItem `json:"components" url:"components"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyStructuralPatternEvidenceData) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *VerifyStructuralPatternEvidenceData) GetComponents() []*VerifyStructuralPatternEvidenceDataComponentsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Components
+}
+
+func (v *VerifyStructuralPatternEvidenceData) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyStructuralPatternEvidenceData) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidenceData) SetCode(code string) {
+	v.Code = code
+	v.require(verifyStructuralPatternEvidenceDataFieldCode)
+}
+
+// SetComponents sets the Components field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidenceData) SetComponents(components []*VerifyStructuralPatternEvidenceDataComponentsItem) {
+	v.Components = components
+	v.require(verifyStructuralPatternEvidenceDataFieldComponents)
+}
+
+func (v *VerifyStructuralPatternEvidenceData) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyStructuralPatternEvidenceData
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyStructuralPatternEvidenceData(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyStructuralPatternEvidenceData) MarshalJSON() ([]byte, error) {
+	type embed VerifyStructuralPatternEvidenceData
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyStructuralPatternEvidenceData) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyStructuralPatternEvidenceDataComponentsItemFieldRole        = big.NewInt(1 << 0)
+	verifyStructuralPatternEvidenceDataComponentsItemFieldLocationIDs = big.NewInt(1 << 1)
+	verifyStructuralPatternEvidenceDataComponentsItemFieldValue       = big.NewInt(1 << 2)
+)
+
+type VerifyStructuralPatternEvidenceDataComponentsItem struct {
+	// The part this component plays in the pattern, such as `"MASK"` or `"REPLACEMENT_TEXT"`.
+	Role        string            `json:"role" url:"role"`
+	LocationIDs []string          `json:"locationIds" url:"locationIds"`
+	Value       *VerifyNamedValue `json:"value,omitempty" url:"value,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) GetRole() string {
+	if v == nil {
+		return ""
+	}
+	return v.Role
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) GetLocationIDs() []string {
+	if v == nil {
+		return nil
+	}
+	return v.LocationIDs
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) GetValue() *VerifyNamedValue {
+	if v == nil {
+		return nil
+	}
+	return v.Value
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetRole sets the Role field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) SetRole(role string) {
+	v.Role = role
+	v.require(verifyStructuralPatternEvidenceDataComponentsItemFieldRole)
+}
+
+// SetLocationIDs sets the LocationIDs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) SetLocationIDs(locationIDs []string) {
+	v.LocationIDs = locationIDs
+	v.require(verifyStructuralPatternEvidenceDataComponentsItemFieldLocationIDs)
+}
+
+// SetValue sets the Value field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) SetValue(value *VerifyNamedValue) {
+	v.Value = value
+	v.require(verifyStructuralPatternEvidenceDataComponentsItemFieldValue)
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyStructuralPatternEvidenceDataComponentsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyStructuralPatternEvidenceDataComponentsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) MarshalJSON() ([]byte, error) {
+	type embed VerifyStructuralPatternEvidenceDataComponentsItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyStructuralPatternEvidenceDataComponentsItem) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// A rule the document was checked against and failed. Only material failures are returned; passing checks stay internal.
+var (
+	verifyValidationEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyValidationEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyValidationEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyValidationEvidence struct {
+	EvidenceID string                        `json:"evidenceId" url:"evidenceId"`
+	Data       *VerifyValidationEvidenceData `json:"data" url:"data"`
+	Locations  []*VerifyEvidenceLocation     `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyValidationEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyValidationEvidence) GetData() *VerifyValidationEvidenceData {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyValidationEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyValidationEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyValidationEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyValidationEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidence) SetData(data *VerifyValidationEvidenceData) {
+	v.Data = data
+	v.require(verifyValidationEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyValidationEvidenceFieldLocations)
+}
+
+func (v *VerifyValidationEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyValidationEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyValidationEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyValidationEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyValidationEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyValidationEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyValidationEvidenceDataFieldFindings = big.NewInt(1 << 0)
+)
+
+type VerifyValidationEvidenceData struct {
+	Findings []*VerifyValidationEvidenceDataFindingsItem `json:"findings" url:"findings"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyValidationEvidenceData) GetFindings() []*VerifyValidationEvidenceDataFindingsItem {
+	if v == nil {
+		return nil
+	}
+	return v.Findings
+}
+
+func (v *VerifyValidationEvidenceData) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyValidationEvidenceData) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetFindings sets the Findings field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidenceData) SetFindings(findings []*VerifyValidationEvidenceDataFindingsItem) {
+	v.Findings = findings
+	v.require(verifyValidationEvidenceDataFieldFindings)
+}
+
+func (v *VerifyValidationEvidenceData) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyValidationEvidenceData
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyValidationEvidenceData(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyValidationEvidenceData) MarshalJSON() ([]byte, error) {
+	type embed VerifyValidationEvidenceData
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyValidationEvidenceData) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyValidationEvidenceDataFindingsItemFieldCode   = big.NewInt(1 << 0)
+	verifyValidationEvidenceDataFindingsItemFieldValues = big.NewInt(1 << 1)
+)
+
+type VerifyValidationEvidenceDataFindingsItem struct {
+	// A stable finding code, such as `"SIGNED_BYTES_CHANGED"`.
+	Code   string              `json:"code" url:"code"`
+	Values []*VerifyNamedValue `json:"values,omitempty" url:"values,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) GetValues() []*VerifyNamedValue {
+	if v == nil {
+		return nil
+	}
+	return v.Values
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidenceDataFindingsItem) SetCode(code string) {
+	v.Code = code
+	v.require(verifyValidationEvidenceDataFindingsItemFieldCode)
+}
+
+// SetValues sets the Values field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValidationEvidenceDataFindingsItem) SetValues(values []*VerifyNamedValue) {
+	v.Values = values
+	v.require(verifyValidationEvidenceDataFindingsItemFieldValues)
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyValidationEvidenceDataFindingsItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyValidationEvidenceDataFindingsItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) MarshalJSON() ([]byte, error) {
+	type embed VerifyValidationEvidenceDataFindingsItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyValidationEvidenceDataFindingsItem) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// Two or more values from the document that should agree and do not. The disagreement itself is the finding.
+var (
+	verifyValueComparisonEvidenceFieldEvidenceID = big.NewInt(1 << 0)
+	verifyValueComparisonEvidenceFieldData       = big.NewInt(1 << 1)
+	verifyValueComparisonEvidenceFieldLocations  = big.NewInt(1 << 2)
+)
+
+type VerifyValueComparisonEvidence struct {
+	// Unique within the run, such as `"meta.timestamp_conflict:001"`. Treat it as an opaque identifier; do not parse it.
+	EvidenceID string                             `json:"evidenceId" url:"evidenceId"`
+	Data       *VerifyValueComparisonEvidenceData `json:"data" url:"data"`
+	Locations  []*VerifyEvidenceLocation          `json:"locations" url:"locations"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyValueComparisonEvidence) GetEvidenceID() string {
+	if v == nil {
+		return ""
+	}
+	return v.EvidenceID
+}
+
+func (v *VerifyValueComparisonEvidence) GetData() *VerifyValueComparisonEvidenceData {
+	if v == nil {
+		return nil
+	}
+	return v.Data
+}
+
+func (v *VerifyValueComparisonEvidence) GetLocations() []*VerifyEvidenceLocation {
+	if v == nil {
+		return nil
+	}
+	return v.Locations
+}
+
+func (v *VerifyValueComparisonEvidence) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyValueComparisonEvidence) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetEvidenceID sets the EvidenceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValueComparisonEvidence) SetEvidenceID(evidenceID string) {
+	v.EvidenceID = evidenceID
+	v.require(verifyValueComparisonEvidenceFieldEvidenceID)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValueComparisonEvidence) SetData(data *VerifyValueComparisonEvidenceData) {
+	v.Data = data
+	v.require(verifyValueComparisonEvidenceFieldData)
+}
+
+// SetLocations sets the Locations field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValueComparisonEvidence) SetLocations(locations []*VerifyEvidenceLocation) {
+	v.Locations = locations
+	v.require(verifyValueComparisonEvidenceFieldLocations)
+}
+
+func (v *VerifyValueComparisonEvidence) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyValueComparisonEvidence
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyValueComparisonEvidence(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyValueComparisonEvidence) MarshalJSON() ([]byte, error) {
+	type embed VerifyValueComparisonEvidence
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyValueComparisonEvidence) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	verifyValueComparisonEvidenceDataFieldCode   = big.NewInt(1 << 0)
+	verifyValueComparisonEvidenceDataFieldValues = big.NewInt(1 << 1)
+)
+
+type VerifyValueComparisonEvidenceData struct {
+	// A stable code for what the compared values describe, such as `"DOCUMENT_LIFECYCLE_TIMESTAMPS"`.
+	Code   string              `json:"code" url:"code"`
+	Values []*VerifyNamedValue `json:"values" url:"values"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *VerifyValueComparisonEvidenceData) GetCode() string {
+	if v == nil {
+		return ""
+	}
+	return v.Code
+}
+
+func (v *VerifyValueComparisonEvidenceData) GetValues() []*VerifyNamedValue {
+	if v == nil {
+		return nil
+	}
+	return v.Values
+}
+
+func (v *VerifyValueComparisonEvidenceData) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *VerifyValueComparisonEvidenceData) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetCode sets the Code field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValueComparisonEvidenceData) SetCode(code string) {
+	v.Code = code
+	v.require(verifyValueComparisonEvidenceDataFieldCode)
+}
+
+// SetValues sets the Values field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyValueComparisonEvidenceData) SetValues(values []*VerifyNamedValue) {
+	v.Values = values
+	v.require(verifyValueComparisonEvidenceDataFieldValues)
+}
+
+func (v *VerifyValueComparisonEvidenceData) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyValueComparisonEvidenceData
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = VerifyValueComparisonEvidenceData(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *VerifyValueComparisonEvidenceData) MarshalJSON() ([]byte, error) {
+	type embed VerifyValueComparisonEvidenceData
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *VerifyValueComparisonEvidenceData) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
 // A description of the changes in this version. This helps track the evolution of the processor over time.
 type VersionDescription = string
 
@@ -35715,7 +41477,7 @@ var (
 
 type WorkflowInlineExtractConfig struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
-	// The version of the `"extraction_performance"` or `"extraction_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
+	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
 	BaseVersion *string `json:"baseVersion,omitempty" url:"baseVersion,omitempty"`
 	// Custom rules to guide the extraction process in natural language.
 	ExtractionRules *string `json:"extractionRules,omitempty" url:"extractionRules,omitempty"`
@@ -36497,6 +42259,8 @@ type WorkflowStepDefinition struct {
 	ExternalDataValidation *ExternalDataValidationStepDefinition
 	WebhookResponse        *WebhookResponseStepDefinition
 	RuleValidation         *RuleValidationStepDefinition
+	Validation             *ValidationStepDefinition
+	Router                 *RouterStepDefinition
 	HumanReview            *HumanReviewStepDefinition
 	Collect                *CollectStepDefinition
 	FileConversion         *FileConversionStepDefinition
@@ -36586,6 +42350,20 @@ func (w *WorkflowStepDefinition) GetRuleValidation() *RuleValidationStepDefiniti
 		return nil
 	}
 	return w.RuleValidation
+}
+
+func (w *WorkflowStepDefinition) GetValidation() *ValidationStepDefinition {
+	if w == nil {
+		return nil
+	}
+	return w.Validation
+}
+
+func (w *WorkflowStepDefinition) GetRouter() *RouterStepDefinition {
+	if w == nil {
+		return nil
+	}
+	return w.Router
 }
 
 func (w *WorkflowStepDefinition) GetHumanReview() *HumanReviewStepDefinition {
@@ -36687,6 +42465,18 @@ func (w *WorkflowStepDefinition) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		w.RuleValidation = value
+	case "VALIDATION":
+		value := new(ValidationStepDefinition)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		w.Validation = value
+	case "ROUTER":
+		value := new(RouterStepDefinition)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		w.Router = value
 	case "HUMAN_REVIEW":
 		value := new(HumanReviewStepDefinition)
 		if err := json.Unmarshal(data, &value); err != nil {
@@ -36747,6 +42537,12 @@ func (w WorkflowStepDefinition) MarshalJSON() ([]byte, error) {
 	if w.RuleValidation != nil {
 		return internal.MarshalJSONWithExtraProperty(w.RuleValidation, "type", "RULE_VALIDATION")
 	}
+	if w.Validation != nil {
+		return internal.MarshalJSONWithExtraProperty(w.Validation, "type", "VALIDATION")
+	}
+	if w.Router != nil {
+		return internal.MarshalJSONWithExtraProperty(w.Router, "type", "ROUTER")
+	}
 	if w.HumanReview != nil {
 		return internal.MarshalJSONWithExtraProperty(w.HumanReview, "type", "HUMAN_REVIEW")
 	}
@@ -36774,6 +42570,8 @@ type WorkflowStepDefinitionVisitor interface {
 	VisitExternalDataValidation(*ExternalDataValidationStepDefinition) error
 	VisitWebhookResponse(*WebhookResponseStepDefinition) error
 	VisitRuleValidation(*RuleValidationStepDefinition) error
+	VisitValidation(*ValidationStepDefinition) error
+	VisitRouter(*RouterStepDefinition) error
 	VisitHumanReview(*HumanReviewStepDefinition) error
 	VisitCollect(*CollectStepDefinition) error
 	VisitFileConversion(*FileConversionStepDefinition) error
@@ -36812,6 +42610,12 @@ func (w *WorkflowStepDefinition) Accept(visitor WorkflowStepDefinitionVisitor) e
 	}
 	if w.RuleValidation != nil {
 		return visitor.VisitRuleValidation(w.RuleValidation)
+	}
+	if w.Validation != nil {
+		return visitor.VisitValidation(w.Validation)
+	}
+	if w.Router != nil {
+		return visitor.VisitRouter(w.Router)
 	}
 	if w.HumanReview != nil {
 		return visitor.VisitHumanReview(w.HumanReview)
@@ -36862,6 +42666,12 @@ func (w *WorkflowStepDefinition) validate() error {
 	}
 	if w.RuleValidation != nil {
 		fields = append(fields, "RULE_VALIDATION")
+	}
+	if w.Validation != nil {
+		fields = append(fields, "VALIDATION")
+	}
+	if w.Router != nil {
+		fields = append(fields, "ROUTER")
 	}
 	if w.HumanReview != nil {
 		fields = append(fields, "HUMAN_REVIEW")
@@ -37432,4 +43242,79 @@ func (w *WorkflowVersionSummary) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", w)
+}
+
+var (
+	verifyRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
+	verifyRequestFieldFile              = big.NewInt(1 << 1)
+	verifyRequestFieldConfig            = big.NewInt(1 << 2)
+	verifyRequestFieldMetadata          = big.NewInt(1 << 3)
+)
+
+type VerifyRequest struct {
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+	ExtendWorkspaceID *string `json:"-" url:"-"`
+	// The file to verify, as a public URL or an Extend file ID. Verify runs against the exact submitted bytes, so `text` and `base64` inputs are not accepted. Supported inputs are PDF, JPEG, PNG, and WebP files; other types fail with `FILE_TYPE_NOT_SUPPORTED`.
+	File     *VerifyRequestFile `json:"file" url:"-"`
+	Config   *VerifyConfig      `json:"config,omitempty" url:"-"`
+	Metadata *RunMetadata       `json:"metadata,omitempty" url:"-"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (v *VerifyRequest) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRequest) SetExtendWorkspaceID(extendWorkspaceID *string) {
+	v.ExtendWorkspaceID = extendWorkspaceID
+	v.require(verifyRequestFieldExtendWorkspaceID)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRequest) SetFile(file *VerifyRequestFile) {
+	v.File = file
+	v.require(verifyRequestFieldFile)
+}
+
+// SetConfig sets the Config field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRequest) SetConfig(config *VerifyConfig) {
+	v.Config = config
+	v.require(verifyRequestFieldConfig)
+}
+
+// SetMetadata sets the Metadata field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *VerifyRequest) SetMetadata(metadata *RunMetadata) {
+	v.Metadata = metadata
+	v.require(verifyRequestFieldMetadata)
+}
+
+func (v *VerifyRequest) UnmarshalJSON(data []byte) error {
+	type unmarshaler VerifyRequest
+	var body unmarshaler
+	if err := json.Unmarshal(data, &body); err != nil {
+		return err
+	}
+	*v = VerifyRequest(body)
+	return nil
+}
+
+func (v *VerifyRequest) MarshalJSON() ([]byte, error) {
+	type embed VerifyRequest
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
 }

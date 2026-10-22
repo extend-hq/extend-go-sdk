@@ -96,7 +96,7 @@ func TestEditSchemasGenerateWithWireMock(
 		},
 		Config: &extend.EditSchemaGenerationConfig{
 			EngineVersion: extend.String(
-				"0.0.1",
+				"1.0.0",
 			),
 			Instructions: extend.String(
 				"Detect the form fields and use human-readable field names.",

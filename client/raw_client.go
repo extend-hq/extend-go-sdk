@@ -174,6 +174,53 @@ func (r *RawClient) DetectForm(
 	}, nil
 }
 
+func (r *RawClient) Verify(
+	ctx context.Context,
+	request *extend.VerifyRequest,
+	opts ...option.RequestOption,
+) (*core.Response[*extend.VerifyRun], error) {
+	options := core.NewRequestOptions(opts...)
+	baseURL := internal.ResolveBaseURL(
+		options.BaseURL,
+		r.baseURL,
+		"https://api.extend.ai",
+	)
+	endpointURL := baseURL + "/verify"
+	headers := internal.MergeHeaders(
+		r.options.ToHeader(),
+		options.ToHeader(),
+	)
+	if request.ExtendWorkspaceID != nil {
+		headers.Add("x-extend-workspace-id", *request.ExtendWorkspaceID)
+	}
+	headers.Add("Content-Type", "application/json")
+	var response *extend.VerifyRun
+	raw, err := r.caller.Call(
+		ctx,
+		&internal.CallParams{
+			URL:             endpointURL,
+			Method:          http.MethodPost,
+			Headers:         headers,
+			MaxAttempts:     options.MaxAttempts,
+			DisableRetries:  options.DisableRetries,
+			BodyProperties:  options.BodyProperties,
+			QueryParameters: options.QueryParameters,
+			Client:          options.HTTPClient,
+			Request:         request,
+			Response:        &response,
+			ErrorDecoder:    internal.NewErrorDecoder(extend.ErrorCodes),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &core.Response[*extend.VerifyRun]{
+		StatusCode: raw.StatusCode,
+		Header:     raw.Header,
+		Body:       response,
+	}, nil
+}
+
 func (r *RawClient) Extract(
 	ctx context.Context,
 	request *extend.ExtractRequest,

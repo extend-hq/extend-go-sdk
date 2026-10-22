@@ -474,6 +474,7 @@ type ClassifyStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -889,6 +890,7 @@ type ConditionalExtractStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -1407,6 +1409,7 @@ type ExternalDataValidationStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -1822,6 +1825,7 @@ type ExtractStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -2373,6 +2377,7 @@ type MergeExtractStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -2788,6 +2793,7 @@ type ParseStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -3091,6 +3097,695 @@ func (p *ParseStepRunStep) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+// The result of evaluating one router branch predicate.
+var (
+	routerBranchResultFieldID        = big.NewInt(1 << 0)
+	routerBranchResultFieldName      = big.NewInt(1 << 1)
+	routerBranchResultFieldMatched   = big.NewInt(1 << 2)
+	routerBranchResultFieldReasoning = big.NewInt(1 << 3)
+	routerBranchResultFieldError     = big.NewInt(1 << 4)
+)
+
+type RouterBranchResult struct {
+	// The branch ID.
+	ID string `json:"id" url:"id"`
+	// The branch name.
+	Name string `json:"name" url:"name"`
+	// Whether the branch predicate matched.
+	Matched bool `json:"matched" url:"matched"`
+	// Reasoning returned by the branch predicate, when available.
+	Reasoning *string `json:"reasoning,omitempty" url:"reasoning,omitempty"`
+	// Error details when the branch predicate could not be evaluated.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterBranchResult) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RouterBranchResult) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RouterBranchResult) GetMatched() bool {
+	if r == nil {
+		return false
+	}
+	return r.Matched
+}
+
+func (r *RouterBranchResult) GetReasoning() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Reasoning
+}
+
+func (r *RouterBranchResult) GetError() *string {
+	if r == nil {
+		return nil
+	}
+	return r.Error
+}
+
+func (r *RouterBranchResult) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterBranchResult) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterBranchResult) SetID(id string) {
+	r.ID = id
+	r.require(routerBranchResultFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterBranchResult) SetName(name string) {
+	r.Name = name
+	r.require(routerBranchResultFieldName)
+}
+
+// SetMatched sets the Matched field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterBranchResult) SetMatched(matched bool) {
+	r.Matched = matched
+	r.require(routerBranchResultFieldMatched)
+}
+
+// SetReasoning sets the Reasoning field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterBranchResult) SetReasoning(reasoning *string) {
+	r.Reasoning = reasoning
+	r.require(routerBranchResultFieldReasoning)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterBranchResult) SetError(error_ *string) {
+	r.Error = error_
+	r.require(routerBranchResultFieldError)
+}
+
+func (r *RouterBranchResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterBranchResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterBranchResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterBranchResult) MarshalJSON() ([]byte, error) {
+	type embed RouterBranchResult
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterBranchResult) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+// The result of a router step.
+var (
+	routerResultFieldMatchedBranch = big.NewInt(1 << 0)
+	routerResultFieldBranches      = big.NewInt(1 << 1)
+)
+
+type RouterResult struct {
+	// The first matching branch, or `null` when no branch matched and the `"otherwise"` route was taken.
+	MatchedBranch *RouterResultMatchedBranch `json:"matchedBranch,omitempty" url:"matchedBranch,omitempty"`
+	// Evaluated branch predicates, in evaluation order. Evaluation stops after the first matching branch.
+	Branches []*RouterBranchResult `json:"branches" url:"branches"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterResult) GetMatchedBranch() *RouterResultMatchedBranch {
+	if r == nil {
+		return nil
+	}
+	return r.MatchedBranch
+}
+
+func (r *RouterResult) GetBranches() []*RouterBranchResult {
+	if r == nil {
+		return nil
+	}
+	return r.Branches
+}
+
+func (r *RouterResult) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterResult) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetMatchedBranch sets the MatchedBranch field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterResult) SetMatchedBranch(matchedBranch *RouterResultMatchedBranch) {
+	r.MatchedBranch = matchedBranch
+	r.require(routerResultFieldMatchedBranch)
+}
+
+// SetBranches sets the Branches field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterResult) SetBranches(branches []*RouterBranchResult) {
+	r.Branches = branches
+	r.require(routerResultFieldBranches)
+}
+
+func (r *RouterResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterResult) MarshalJSON() ([]byte, error) {
+	type embed RouterResult
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterResult) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+var (
+	routerResultMatchedBranchFieldID   = big.NewInt(1 << 0)
+	routerResultMatchedBranchFieldName = big.NewInt(1 << 1)
+)
+
+type RouterResultMatchedBranch struct {
+	// The matched branch ID.
+	ID string `json:"id" url:"id"`
+	// The matched branch name.
+	Name string `json:"name" url:"name"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterResultMatchedBranch) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RouterResultMatchedBranch) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RouterResultMatchedBranch) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterResultMatchedBranch) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterResultMatchedBranch) SetID(id string) {
+	r.ID = id
+	r.require(routerResultMatchedBranchFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterResultMatchedBranch) SetName(name string) {
+	r.Name = name
+	r.require(routerResultMatchedBranchFieldName)
+}
+
+func (r *RouterResultMatchedBranch) UnmarshalJSON(data []byte) error {
+	type unmarshaler RouterResultMatchedBranch
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*r = RouterResultMatchedBranch(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *r)
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterResultMatchedBranch) MarshalJSON() ([]byte, error) {
+	type embed RouterResultMatchedBranch
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*r),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterResultMatchedBranch) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+var (
+	routerStepRunFieldID            = big.NewInt(1 << 0)
+	routerStepRunFieldWorkflowRunID = big.NewInt(1 << 1)
+	routerStepRunFieldStatus        = big.NewInt(1 << 2)
+	routerStepRunFieldFiles         = big.NewInt(1 << 3)
+	routerStepRunFieldStep          = big.NewInt(1 << 4)
+	routerStepRunFieldResult        = big.NewInt(1 << 5)
+)
+
+type RouterStepRun struct {
+	// The ID of the workflow step run.
+	//
+	// Example: `"workflow_step_run_xKm9pNv3qWsY_jL2tR5Dh"`
+	ID string `json:"id" url:"id"`
+	// The ID of the parent workflow run.
+	//
+	// Example: `"workflow_run_xKm9pNv3qWsY_jL2tR5Dh"`
+	WorkflowRunID string `json:"workflowRunId" url:"workflowRunId"`
+	// The status of the workflow step run:
+	// * `"PENDING"` - The step run is waiting to be executed
+	// * `"WAITING"` - The step run is waiting for a dependency to complete
+	// * `"PROCESSING"` - The step run is currently executing
+	// * `"PROCESSED"` - The step run completed successfully
+	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
+	// * `"CANCELLED"` - The step run was cancelled
+	Status StepRunBaseStatus `json:"status" url:"status"`
+	// The files associated with this step run.
+	Files []*FileSummary     `json:"files" url:"files"`
+	Step  *RouterStepRunStep `json:"step" url:"step"`
+	// The result of this router step. Nullable for step runs without a result.
+	Result *RouterResult `json:"result,omitempty" url:"result,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterStepRun) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RouterStepRun) GetWorkflowRunID() string {
+	if r == nil {
+		return ""
+	}
+	return r.WorkflowRunID
+}
+
+func (r *RouterStepRun) GetStatus() StepRunBaseStatus {
+	if r == nil {
+		return ""
+	}
+	return r.Status
+}
+
+func (r *RouterStepRun) GetFiles() []*FileSummary {
+	if r == nil {
+		return nil
+	}
+	return r.Files
+}
+
+func (r *RouterStepRun) GetStep() *RouterStepRunStep {
+	if r == nil {
+		return nil
+	}
+	return r.Step
+}
+
+func (r *RouterStepRun) GetResult() *RouterResult {
+	if r == nil {
+		return nil
+	}
+	return r.Result
+}
+
+func (r *RouterStepRun) Object() string {
+	return r.object
+}
+
+func (r *RouterStepRun) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterStepRun) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetID(id string) {
+	r.ID = id
+	r.require(routerStepRunFieldID)
+}
+
+// SetWorkflowRunID sets the WorkflowRunID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetWorkflowRunID(workflowRunID string) {
+	r.WorkflowRunID = workflowRunID
+	r.require(routerStepRunFieldWorkflowRunID)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetStatus(status StepRunBaseStatus) {
+	r.Status = status
+	r.require(routerStepRunFieldStatus)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetFiles(files []*FileSummary) {
+	r.Files = files
+	r.require(routerStepRunFieldFiles)
+}
+
+// SetStep sets the Step field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetStep(step *RouterStepRunStep) {
+	r.Step = step
+	r.require(routerStepRunFieldStep)
+}
+
+// SetResult sets the Result field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRun) SetResult(result *RouterResult) {
+	r.Result = result
+	r.require(routerStepRunFieldResult)
+}
+
+func (r *RouterStepRun) UnmarshalJSON(data []byte) error {
+	type embed RouterStepRun
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*r),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*r = RouterStepRun(unmarshaler.embed)
+	if unmarshaler.Object != "workflow_step_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", r, "workflow_step_run", unmarshaler.Object)
+	}
+	r.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *r, "object")
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterStepRun) MarshalJSON() ([]byte, error) {
+	type embed RouterStepRun
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*r),
+		Object: "workflow_step_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterStepRun) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
+}
+
+var (
+	routerStepRunStepFieldID   = big.NewInt(1 << 0)
+	routerStepRunStepFieldName = big.NewInt(1 << 1)
+	routerStepRunStepFieldType = big.NewInt(1 << 2)
+)
+
+type RouterStepRunStep struct {
+	// **Deprecated:** This ID is not consistent across workflow versions. This field will be removed in a future API version.
+	//
+	// The ID of the workflow step.
+	//
+	// Example: `"step_xKm9pNv3qWsY_jL2tR5Dh"`
+	ID string `json:"id" url:"id"`
+	// The name of the workflow step.
+	//
+	// Example: `"Validate Invoice Total"`
+	Name string `json:"name" url:"name"`
+	// The type of workflow step. Will always be `"ROUTER"` for this step run type.
+	Type *string `json:"type,omitempty" url:"type,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (r *RouterStepRunStep) GetID() string {
+	if r == nil {
+		return ""
+	}
+	return r.ID
+}
+
+func (r *RouterStepRunStep) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
+func (r *RouterStepRunStep) Object() string {
+	return r.object
+}
+
+func (r *RouterStepRunStep) GetExtraProperties() map[string]interface{} {
+	if r == nil {
+		return nil
+	}
+	return r.extraProperties
+}
+
+func (r *RouterStepRunStep) require(field *big.Int) {
+	if r.explicitFields == nil {
+		r.explicitFields = big.NewInt(0)
+	}
+	r.explicitFields.Or(r.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRunStep) SetID(id string) {
+	r.ID = id
+	r.require(routerStepRunStepFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRunStep) SetName(name string) {
+	r.Name = name
+	r.require(routerStepRunStepFieldName)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (r *RouterStepRunStep) SetType(type_ *string) {
+	r.Type = type_
+	r.require(routerStepRunStepFieldType)
+}
+
+func (r *RouterStepRunStep) UnmarshalJSON(data []byte) error {
+	type embed RouterStepRunStep
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*r),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*r = RouterStepRunStep(unmarshaler.embed)
+	if unmarshaler.Object != "workflow_step" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", r, "workflow_step", unmarshaler.Object)
+	}
+	r.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *r, "object")
+	if err != nil {
+		return err
+	}
+	r.extraProperties = extraProperties
+	r.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (r *RouterStepRunStep) MarshalJSON() ([]byte, error) {
+	type embed RouterStepRunStep
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*r),
+		Object: "workflow_step",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, r.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (r *RouterStepRunStep) String() string {
+	if r == nil {
+		return "<nil>"
+	}
+	if len(r.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(r.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(r); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", r)
 }
 
 // The result of a rule validation step.
@@ -3405,6 +4100,7 @@ type RuleValidationStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -3823,6 +4519,7 @@ type SplitStepRun struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -4139,6 +4836,8 @@ type StepRun struct {
 	ConditionalExtract     *ConditionalExtractStepRun
 	RuleValidation         *RuleValidationStepRun
 	ExternalDataValidation *ExternalDataValidationStepRun
+	Validation             *ValidationStepRun
+	Router                 *RouterStepRun
 
 	rawJSON json.RawMessage
 }
@@ -4206,6 +4905,20 @@ func (s *StepRun) GetExternalDataValidation() *ExternalDataValidationStepRun {
 	return s.ExternalDataValidation
 }
 
+func (s *StepRun) GetValidation() *ValidationStepRun {
+	if s == nil {
+		return nil
+	}
+	return s.Validation
+}
+
+func (s *StepRun) GetRouter() *RouterStepRun {
+	if s == nil {
+		return nil
+	}
+	return s.Router
+}
+
 func (s *StepRun) UnmarshalJSON(data []byte) error {
 	var unmarshaler struct {
 		StepType string `json:"stepType"`
@@ -4266,6 +4979,18 @@ func (s *StepRun) UnmarshalJSON(data []byte) error {
 			return err
 		}
 		s.ExternalDataValidation = value
+	case "VALIDATION":
+		value := new(ValidationStepRun)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Validation = value
+	case "ROUTER":
+		value := new(RouterStepRun)
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+		s.Router = value
 	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
@@ -4299,6 +5024,12 @@ func (s StepRun) MarshalJSON() ([]byte, error) {
 	if s.ExternalDataValidation != nil {
 		return internal.MarshalJSONWithExtraProperty(s.ExternalDataValidation, "stepType", "EXTERNAL_DATA_VALIDATION")
 	}
+	if s.Validation != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Validation, "stepType", "VALIDATION")
+	}
+	if s.Router != nil {
+		return internal.MarshalJSONWithExtraProperty(s.Router, "stepType", "ROUTER")
+	}
 	if len(s.rawJSON) > 0 {
 		return s.rawJSON, nil
 	}
@@ -4314,6 +5045,8 @@ type StepRunVisitor interface {
 	VisitConditionalExtract(*ConditionalExtractStepRun) error
 	VisitRuleValidation(*RuleValidationStepRun) error
 	VisitExternalDataValidation(*ExternalDataValidationStepRun) error
+	VisitValidation(*ValidationStepRun) error
+	VisitRouter(*RouterStepRun) error
 }
 
 func (s *StepRun) Accept(visitor StepRunVisitor) error {
@@ -4340,6 +5073,12 @@ func (s *StepRun) Accept(visitor StepRunVisitor) error {
 	}
 	if s.ExternalDataValidation != nil {
 		return visitor.VisitExternalDataValidation(s.ExternalDataValidation)
+	}
+	if s.Validation != nil {
+		return visitor.VisitValidation(s.Validation)
+	}
+	if s.Router != nil {
+		return visitor.VisitRouter(s.Router)
 	}
 	return fmt.Errorf("type %T does not define a non-empty union type", s)
 }
@@ -4372,6 +5111,12 @@ func (s *StepRun) validate() error {
 	}
 	if s.ExternalDataValidation != nil {
 		fields = append(fields, "EXTERNAL_DATA_VALIDATION")
+	}
+	if s.Validation != nil {
+		fields = append(fields, "VALIDATION")
+	}
+	if s.Router != nil {
+		fields = append(fields, "ROUTER")
 	}
 	if len(fields) == 0 {
 		if s.StepType != "" {
@@ -4422,6 +5167,7 @@ type StepRunBase struct {
 	// * `"PROCESSING"` - The step run is currently executing
 	// * `"PROCESSED"` - The step run completed successfully
 	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
 	// * `"CANCELLED"` - The step run was cancelled
 	Status StepRunBaseStatus `json:"status" url:"status"`
 	// The files associated with this step run.
@@ -4568,16 +5314,18 @@ func (s *StepRunBase) String() string {
 // * `"PROCESSING"` - The step run is currently executing
 // * `"PROCESSED"` - The step run completed successfully
 // * `"FAILED"` - The step run encountered an error
+// * `"INVALIDATED"` - The step run was invalidated
 // * `"CANCELLED"` - The step run was cancelled
 type StepRunBaseStatus string
 
 const (
-	StepRunBaseStatusPending    StepRunBaseStatus = "PENDING"
-	StepRunBaseStatusWaiting    StepRunBaseStatus = "WAITING"
-	StepRunBaseStatusProcessing StepRunBaseStatus = "PROCESSING"
-	StepRunBaseStatusProcessed  StepRunBaseStatus = "PROCESSED"
-	StepRunBaseStatusFailed     StepRunBaseStatus = "FAILED"
-	StepRunBaseStatusCancelled  StepRunBaseStatus = "CANCELLED"
+	StepRunBaseStatusPending     StepRunBaseStatus = "PENDING"
+	StepRunBaseStatusWaiting     StepRunBaseStatus = "WAITING"
+	StepRunBaseStatusProcessing  StepRunBaseStatus = "PROCESSING"
+	StepRunBaseStatusProcessed   StepRunBaseStatus = "PROCESSED"
+	StepRunBaseStatusFailed      StepRunBaseStatus = "FAILED"
+	StepRunBaseStatusInvalidated StepRunBaseStatus = "INVALIDATED"
+	StepRunBaseStatusCancelled   StepRunBaseStatus = "CANCELLED"
 )
 
 func NewStepRunBaseStatusFromString(s string) (StepRunBaseStatus, error) {
@@ -4592,6 +5340,8 @@ func NewStepRunBaseStatusFromString(s string) (StepRunBaseStatus, error) {
 		return StepRunBaseStatusProcessed, nil
 	case "FAILED":
 		return StepRunBaseStatusFailed, nil
+	case "INVALIDATED":
+		return StepRunBaseStatusInvalidated, nil
 	case "CANCELLED":
 		return StepRunBaseStatusCancelled, nil
 	}
@@ -4601,6 +5351,593 @@ func NewStepRunBaseStatusFromString(s string) (StepRunBaseStatus, error) {
 
 func (s StepRunBaseStatus) Ptr() *StepRunBaseStatus {
 	return &s
+}
+
+// The result of evaluating one validation block.
+var (
+	validationBlockResultFieldID        = big.NewInt(1 << 0)
+	validationBlockResultFieldName      = big.NewInt(1 << 1)
+	validationBlockResultFieldValid     = big.NewInt(1 << 2)
+	validationBlockResultFieldError     = big.NewInt(1 << 3)
+	validationBlockResultFieldReasoning = big.NewInt(1 << 4)
+)
+
+type ValidationBlockResult struct {
+	// The validation block ID.
+	ID string `json:"id" url:"id"`
+	// The validation block name.
+	Name string `json:"name" url:"name"`
+	// Whether the validation block passed.
+	Valid bool `json:"valid" url:"valid"`
+	// Error details when the block could not be evaluated.
+	Error *string `json:"error,omitempty" url:"error,omitempty"`
+	// Reasoning returned by the validation block, when available.
+	Reasoning *string `json:"reasoning,omitempty" url:"reasoning,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationBlockResult) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValidationBlockResult) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *ValidationBlockResult) GetValid() bool {
+	if v == nil {
+		return false
+	}
+	return v.Valid
+}
+
+func (v *ValidationBlockResult) GetError() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Error
+}
+
+func (v *ValidationBlockResult) GetReasoning() *string {
+	if v == nil {
+		return nil
+	}
+	return v.Reasoning
+}
+
+func (v *ValidationBlockResult) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationBlockResult) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationBlockResult) SetID(id string) {
+	v.ID = id
+	v.require(validationBlockResultFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationBlockResult) SetName(name string) {
+	v.Name = name
+	v.require(validationBlockResultFieldName)
+}
+
+// SetValid sets the Valid field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationBlockResult) SetValid(valid bool) {
+	v.Valid = valid
+	v.require(validationBlockResultFieldValid)
+}
+
+// SetError sets the Error field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationBlockResult) SetError(error_ *string) {
+	v.Error = error_
+	v.require(validationBlockResultFieldError)
+}
+
+// SetReasoning sets the Reasoning field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationBlockResult) SetReasoning(reasoning *string) {
+	v.Reasoning = reasoning
+	v.require(validationBlockResultFieldReasoning)
+}
+
+func (v *ValidationBlockResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationBlockResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationBlockResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationBlockResult) MarshalJSON() ([]byte, error) {
+	type embed ValidationBlockResult
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationBlockResult) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+// The result of a validation step.
+var (
+	validationResultFieldValid  = big.NewInt(1 << 0)
+	validationResultFieldBlocks = big.NewInt(1 << 1)
+)
+
+type ValidationResult struct {
+	// Whether all validation blocks passed.
+	Valid bool `json:"valid" url:"valid"`
+	// The validation blocks and their results.
+	Blocks []*ValidationBlockResult `json:"blocks" url:"blocks"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationResult) GetValid() bool {
+	if v == nil {
+		return false
+	}
+	return v.Valid
+}
+
+func (v *ValidationResult) GetBlocks() []*ValidationBlockResult {
+	if v == nil {
+		return nil
+	}
+	return v.Blocks
+}
+
+func (v *ValidationResult) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationResult) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetValid sets the Valid field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationResult) SetValid(valid bool) {
+	v.Valid = valid
+	v.require(validationResultFieldValid)
+}
+
+// SetBlocks sets the Blocks field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationResult) SetBlocks(blocks []*ValidationBlockResult) {
+	v.Blocks = blocks
+	v.require(validationResultFieldBlocks)
+}
+
+func (v *ValidationResult) UnmarshalJSON(data []byte) error {
+	type unmarshaler ValidationResult
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*v = ValidationResult(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *v)
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationResult) MarshalJSON() ([]byte, error) {
+	type embed ValidationResult
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*v),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationResult) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	validationStepRunFieldID            = big.NewInt(1 << 0)
+	validationStepRunFieldWorkflowRunID = big.NewInt(1 << 1)
+	validationStepRunFieldStatus        = big.NewInt(1 << 2)
+	validationStepRunFieldFiles         = big.NewInt(1 << 3)
+	validationStepRunFieldStep          = big.NewInt(1 << 4)
+	validationStepRunFieldResult        = big.NewInt(1 << 5)
+)
+
+type ValidationStepRun struct {
+	// The ID of the workflow step run.
+	//
+	// Example: `"workflow_step_run_xKm9pNv3qWsY_jL2tR5Dh"`
+	ID string `json:"id" url:"id"`
+	// The ID of the parent workflow run.
+	//
+	// Example: `"workflow_run_xKm9pNv3qWsY_jL2tR5Dh"`
+	WorkflowRunID string `json:"workflowRunId" url:"workflowRunId"`
+	// The status of the workflow step run:
+	// * `"PENDING"` - The step run is waiting to be executed
+	// * `"WAITING"` - The step run is waiting for a dependency to complete
+	// * `"PROCESSING"` - The step run is currently executing
+	// * `"PROCESSED"` - The step run completed successfully
+	// * `"FAILED"` - The step run encountered an error
+	// * `"INVALIDATED"` - The step run was invalidated
+	// * `"CANCELLED"` - The step run was cancelled
+	Status StepRunBaseStatus `json:"status" url:"status"`
+	// The files associated with this step run.
+	Files []*FileSummary         `json:"files" url:"files"`
+	Step  *ValidationStepRunStep `json:"step" url:"step"`
+	// The result of this validation step. Nullable for step runs without a result.
+	Result *ValidationResult `json:"result,omitempty" url:"result,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationStepRun) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValidationStepRun) GetWorkflowRunID() string {
+	if v == nil {
+		return ""
+	}
+	return v.WorkflowRunID
+}
+
+func (v *ValidationStepRun) GetStatus() StepRunBaseStatus {
+	if v == nil {
+		return ""
+	}
+	return v.Status
+}
+
+func (v *ValidationStepRun) GetFiles() []*FileSummary {
+	if v == nil {
+		return nil
+	}
+	return v.Files
+}
+
+func (v *ValidationStepRun) GetStep() *ValidationStepRunStep {
+	if v == nil {
+		return nil
+	}
+	return v.Step
+}
+
+func (v *ValidationStepRun) GetResult() *ValidationResult {
+	if v == nil {
+		return nil
+	}
+	return v.Result
+}
+
+func (v *ValidationStepRun) Object() string {
+	return v.object
+}
+
+func (v *ValidationStepRun) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationStepRun) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetID(id string) {
+	v.ID = id
+	v.require(validationStepRunFieldID)
+}
+
+// SetWorkflowRunID sets the WorkflowRunID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetWorkflowRunID(workflowRunID string) {
+	v.WorkflowRunID = workflowRunID
+	v.require(validationStepRunFieldWorkflowRunID)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetStatus(status StepRunBaseStatus) {
+	v.Status = status
+	v.require(validationStepRunFieldStatus)
+}
+
+// SetFiles sets the Files field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetFiles(files []*FileSummary) {
+	v.Files = files
+	v.require(validationStepRunFieldFiles)
+}
+
+// SetStep sets the Step field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetStep(step *ValidationStepRunStep) {
+	v.Step = step
+	v.require(validationStepRunFieldStep)
+}
+
+// SetResult sets the Result field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRun) SetResult(result *ValidationResult) {
+	v.Result = result
+	v.require(validationStepRunFieldResult)
+}
+
+func (v *ValidationStepRun) UnmarshalJSON(data []byte) error {
+	type embed ValidationStepRun
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*v = ValidationStepRun(unmarshaler.embed)
+	if unmarshaler.Object != "workflow_step_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", v, "workflow_step_run", unmarshaler.Object)
+	}
+	v.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *v, "object")
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationStepRun) MarshalJSON() ([]byte, error) {
+	type embed ValidationStepRun
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*v),
+		Object: "workflow_step_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationStepRun) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
+}
+
+var (
+	validationStepRunStepFieldID   = big.NewInt(1 << 0)
+	validationStepRunStepFieldName = big.NewInt(1 << 1)
+	validationStepRunStepFieldType = big.NewInt(1 << 2)
+)
+
+type ValidationStepRunStep struct {
+	// **Deprecated:** This ID is not consistent across workflow versions. This field will be removed in a future API version.
+	//
+	// The ID of the workflow step.
+	//
+	// Example: `"step_xKm9pNv3qWsY_jL2tR5Dh"`
+	ID string `json:"id" url:"id"`
+	// The name of the workflow step.
+	//
+	// Example: `"Validate Invoice Total"`
+	Name string `json:"name" url:"name"`
+	// The type of workflow step. Will always be `"VALIDATION"` for this step run type.
+	Type *string `json:"type,omitempty" url:"type,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (v *ValidationStepRunStep) GetID() string {
+	if v == nil {
+		return ""
+	}
+	return v.ID
+}
+
+func (v *ValidationStepRunStep) GetName() string {
+	if v == nil {
+		return ""
+	}
+	return v.Name
+}
+
+func (v *ValidationStepRunStep) Object() string {
+	return v.object
+}
+
+func (v *ValidationStepRunStep) GetExtraProperties() map[string]interface{} {
+	if v == nil {
+		return nil
+	}
+	return v.extraProperties
+}
+
+func (v *ValidationStepRunStep) require(field *big.Int) {
+	if v.explicitFields == nil {
+		v.explicitFields = big.NewInt(0)
+	}
+	v.explicitFields.Or(v.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRunStep) SetID(id string) {
+	v.ID = id
+	v.require(validationStepRunStepFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRunStep) SetName(name string) {
+	v.Name = name
+	v.require(validationStepRunStepFieldName)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (v *ValidationStepRunStep) SetType(type_ *string) {
+	v.Type = type_
+	v.require(validationStepRunStepFieldType)
+}
+
+func (v *ValidationStepRunStep) UnmarshalJSON(data []byte) error {
+	type embed ValidationStepRunStep
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*v),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*v = ValidationStepRunStep(unmarshaler.embed)
+	if unmarshaler.Object != "workflow_step" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", v, "workflow_step", unmarshaler.Object)
+	}
+	v.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *v, "object")
+	if err != nil {
+		return err
+	}
+	v.extraProperties = extraProperties
+	v.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (v *ValidationStepRunStep) MarshalJSON() ([]byte, error) {
+	type embed ValidationStepRunStep
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*v),
+		Object: "workflow_step",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, v.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (v *ValidationStepRunStep) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+	if len(v.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(v.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(v); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", v)
 }
 
 // The workflow to run.

@@ -33,6 +33,7 @@ import (
 	splitruns "github.com/extend-hq/extend-go-sdk/splitruns"
 	splitters "github.com/extend-hq/extend-go-sdk/splitters"
 	splitterversions "github.com/extend-hq/extend-go-sdk/splitterversions"
+	verifyruns "github.com/extend-hq/extend-go-sdk/verifyruns"
 	webhookendpoints "github.com/extend-hq/extend-go-sdk/webhookendpoints"
 	webhooksubscriptions "github.com/extend-hq/extend-go-sdk/webhooksubscriptions"
 	workflowruns "github.com/extend-hq/extend-go-sdk/workflowruns"
@@ -48,6 +49,7 @@ type Client struct {
 	EditTemplates        *edittemplates.Client
 	EditSchemas          *editschemas.Client
 	FormDetectionRuns    *formdetectionruns.Client
+	VerifyRuns           *verifyruns.Client
 	ExtractRuns          *extractruns.Client
 	Extractors           *extractors.Client
 	ExtractorVersions    *extractorversions.Client
@@ -88,6 +90,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		EditTemplates:        edittemplates.NewClient(options),
 		EditSchemas:          editschemas.NewClient(options),
 		FormDetectionRuns:    formdetectionruns.NewClient(options),
+		VerifyRuns:           verifyruns.NewClient(options),
 		ExtractRuns:          extractruns.NewClient(options),
 		Extractors:           extractors.NewClient(options),
 		ExtractorVersions:    extractorversions.NewClient(options),
@@ -152,6 +155,8 @@ func (c *Client) Parse(
 //
 // The Edit endpoint allows you to detect and fill form fields in PDF documents.
 //
+// Pass `file` to edit a document directly, or `templateId` to run against a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template). Exactly one of `file` or `templateId` must be provided.
+//
 // For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview). See [Editing Error Handling](https://docs.extend.ai/2026-02-09/editing/error-handling) for HTTP errors and run failure reasons.
 func (c *Client) Edit(
 	ctx context.Context,
@@ -178,6 +183,25 @@ func (c *Client) DetectForm(
 	opts ...option.RequestOption,
 ) (*extend.FormDetectionRun, error) {
 	response, err := c.WithRawResponse.DetectForm(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
+// Check a single document for evidence of tampering, forgery, or AI generation and wait for the result. This endpoint times out after 5 minutes on both engines. A timed-out request usually fails with `504 Gateway Timeout`; the run keeps processing in the background. Use `POST /verify_runs` for `verify_agentic` and for any document that may take longer.
+//
+// For production workloads, use `POST /verify_runs` and poll `GET /verify_runs/{id}` instead. The response is a completed `verify_run`; read `output.riskLevel`, `output.summary`, and `output.signals`. An empty `signals` array means no Public Signals were detected; it is not a claim that the document is authentic.
+func (c *Client) Verify(
+	ctx context.Context,
+	request *extend.VerifyRequest,
+	opts ...option.RequestOption,
+) (*extend.VerifyRun, error) {
+	response, err := c.WithRawResponse.Verify(
 		ctx,
 		request,
 		opts...,

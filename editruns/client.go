@@ -38,6 +38,25 @@ func NewClient(options *core.RequestOptions) *Client {
 	}
 }
 
+// List edit runs, with optional filters for status, source, and file name.
+//
+// Returns a paginated list of edit runs. Use `GET /edit_runs/{id}` to retrieve the full result, including `config` and `output`, for a specific run.
+func (c *Client) List(
+	ctx context.Context,
+	request *extend.EditRunsListRequest,
+	opts ...option.RequestOption,
+) (*extend.EditRunsListResponse, error) {
+	response, err := c.WithRawResponse.List(
+		ctx,
+		request,
+		opts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return response.Body, nil
+}
+
 // Edit and manipulate PDF documents by detecting and filling form fields.
 //
 // The Edit Runs endpoint allows you to convert and edit documents and get an edit run ID that can be used to check status and retrieve results with the Get Edit Run endpoint.
