@@ -135,6 +135,8 @@ Edit a file synchronously, waiting for the result before returning. This endpoin
 
 The Edit endpoint allows you to detect and fill form fields in PDF documents.
 
+Pass `file` to edit a document directly, or `templateId` to run against a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template). Exactly one of `file` or `templateId` must be provided.
+
 For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview). See [Editing Error Handling](https://docs.extend.ai/2026-02-09/editing/error-handling) for HTTP errors and run failure reasons.
 </dd>
 </dl>
@@ -158,7 +160,7 @@ request := &extend.EditRequest{
         },
         Config: &extend.EditConfig{
             EngineVersion: extend.String(
-                "0.0.1",
+                "1.0.0",
             ),
             Instructions: extend.String(
                 "Fill out the form with the provided data",
@@ -189,7 +191,25 @@ client.Edit(
 <dl>
 <dd>
 
-**file:** `*extend.EditRequestFile` — The file to be edited. Files can be provided as a URL or an Extend file ID.
+**file:** `*extend.EditRequestFile` 
+
+The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+
+Files can be provided as a URL or an Extend file ID.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**templateID:** `*string` 
+
+The ID of a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template) to run against. Mutually exclusive with `file` — provide one or the other.
+
+The template's saved file is used as the input file, and its saved `config` (schema, instructions, engine version, and advanced options) is used to fill in any values not set on the request's own `config`. Values set on the request's `config` always take precedence over the template's.
+
+Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
     
 </dd>
 </dl>
@@ -246,7 +266,7 @@ request := &extend.DetectFormRequest{
         },
         Config: &extend.EditSchemaGenerationConfig{
             EngineVersion: extend.String(
-                "0.0.1",
+                "1.0.0",
             ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
@@ -286,6 +306,97 @@ client.DetectForm(
 <dd>
 
 **config:** `*extend.EditSchemaGenerationConfig` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Verify(request) -> *extend.VerifyRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Check a single document for evidence of tampering, forgery, or AI generation and wait for the result. This endpoint times out after 5 minutes on both engines. A timed-out request usually fails with `504 Gateway Timeout`; the run keeps processing in the background. Use `POST /verify_runs` for `verify_agentic` and for any document that may take longer.
+
+For production workloads, use `POST /verify_runs` and poll `GET /verify_runs/{id}` instead. The response is a completed `verify_run`; read `output.riskLevel`, `output.summary`, and `output.signals`. An empty `signals` array means no Public Signals were detected; it is not a claim that the document is authentic.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRequest{
+        File: &extend.VerifyRequestFile{
+            FileFromURL: &extend.FileFromURL{
+                URL: "https://example.com/bank_statement.pdf",
+            },
+        },
+    }
+client.Verify(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**file:** `*extend.VerifyRequestFile` — The file to verify, as a public URL or an Extend file ID. Verify runs against the exact submitted bytes, so `text` and `base64` inputs are not accepted. Supported inputs are PDF, JPEG, PNG, and WebP files; other types fail with `FILE_TYPE_NOT_SUPPORTED`.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**config:** `*extend.VerifyConfig` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `*extend.RunMetadata` 
     
 </dd>
 </dl>
@@ -1629,6 +1740,131 @@ client.ParseRuns.CreateBatch(
 </details>
 
 ## EditRuns
+<details><summary><code>client.EditRuns.List() -> *extend.EditRunsListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List edit runs, with optional filters for status, source, and file name.
+
+Returns a paginated list of edit runs. Use `GET /edit_runs/{id}` to retrieve the full result, including `config` and `output`, for a specific run.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.EditRunsListRequest{
+        NextPageToken: extend.String(
+            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+        ),
+    }
+client.EditRuns.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**status:** `*extend.EditRunsListRequestStatus` — Filter edit runs by status.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**source:** `*extend.EditRunSource` — Filters edit runs by the source that created them. If not provided, runs from all sources are returned.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**fileNameContains:** `*string` 
+
+Filters runs by the name of the file. Only returns runs where the file name contains this string.
+
+Example: `"invoice"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortBy:** `*extend.SortBy` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortDir:** `*extend.SortDir` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nextPageToken:** `*extend.NextPageToken` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxPageSize:** `*extend.MaxPageSize` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.EditRuns.Create(request) -> *extend.EditRun</code></summary>
 <dl>
 <dd>
@@ -1668,7 +1904,7 @@ request := &extend.EditRunsCreateRequest{
         },
         Config: &extend.EditConfig{
             EngineVersion: extend.String(
-                "0.0.1",
+                "1.0.0",
             ),
             Instructions: extend.String(
                 "Fill out the form with the provided data",
@@ -1699,7 +1935,25 @@ client.EditRuns.Create(
 <dl>
 <dd>
 
-**file:** `*extend.EditRunsCreateRequestFile` — The file to be edited. Files can be provided as a URL or an Extend file ID.
+**file:** `*extend.EditRunsCreateRequestFile` 
+
+The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+
+Files can be provided as a URL or an Extend file ID.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**templateID:** `*string` 
+
+The ID of a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template) to run against. Mutually exclusive with `file` — provide one or the other.
+
+The template's saved file is used as the input file, and its saved `config` (schema, instructions, engine version, and advanced options) is used to fill in any values not set on the request's own `config`. Values set on the request's `config` always take precedence over the template's.
+
+Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
     
 </dd>
 </dl>
@@ -1868,6 +2122,115 @@ Example: `"edr_xK9mLPqRtN3vS8wF5hB2cQ"`
 </details>
 
 ## EditTemplates
+<details><summary><code>client.EditTemplates.List() -> *extend.EditTemplatesListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List the edit templates saved in a workspace, with an optional filter on the template name.
+
+Returns a paginated list of edit template summaries. Use `GET /edit_templates/{id}` to retrieve a specific template in full, including its `config` and `schemaConfig`.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.EditTemplatesListRequest{
+        NextPageToken: extend.String(
+            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+        ),
+    }
+client.EditTemplates.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**nameContains:** `*string` 
+
+Filters edit templates to only include those that contain the given string in the name. The match is case-insensitive.
+
+Example: `"W-9"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortBy:** `*extend.SortBy` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortDir:** `*extend.SortDir` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nextPageToken:** `*extend.NextPageToken` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxPageSize:** `*extend.MaxPageSize` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
 <details><summary><code>client.EditTemplates.Retrieve(ID) -> *extend.EditTemplate</code></summary>
 <dl>
 <dd>
@@ -1882,7 +2245,7 @@ Example: `"edr_xK9mLPqRtN3vS8wF5hB2cQ"`
 
 Retrieve a saved edit template by ID.
 
-Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. You can reuse the returned `config` with `POST /edit` or `POST /edit_runs`, and reuse `schemaConfig` with `POST /detect_form` or `POST /form_detection_runs`.
+Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. To run an edit directly from a template, pass its ID as the top-level `templateId` field (in place of `file`) to `POST /edit` or `POST /edit_runs` — the template's file and `config` are used automatically, and any `config` values also set on the request take precedence over the template's. Reuse `schemaConfig` with `POST /detect_form` or `POST /form_detection_runs`.
 </dd>
 </dl>
 </dd>
@@ -1986,7 +2349,7 @@ request := &extend.EditSchemasGenerateRequest{
         },
         Config: &extend.EditSchemaGenerationConfig{
             EngineVersion: extend.String(
-                "0.0.1",
+                "1.0.0",
             ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
@@ -2075,7 +2438,7 @@ request := &extend.FormDetectionRunsCreateRequest{
         },
         Config: &extend.EditSchemaGenerationConfig{
             EngineVersion: extend.String(
-                "0.0.1",
+                "1.0.0",
             ),
             Instructions: extend.String(
                 "Detect the form fields and use human-readable field names.",
@@ -2181,6 +2544,463 @@ client.FormDetectionRuns.Retrieve(
 The unique identifier for the form detection run.
 
 Example: `"sgr_xK9mLPqRtN3vS8wF5hB2cQ"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## VerifyRuns
+<details><summary><code>client.VerifyRuns.List() -> *extend.VerifyRunsListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List verify runs, with optional filters for status, source, risk level, and file name.
+
+Returns a paginated list of run summaries, each carrying the run's `riskLevel` but not its `output`. Use `GET /verify_runs/{id}` to retrieve the signals and evidence for a specific run.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRunsListRequest{
+        NextPageToken: extend.String(
+            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+        ),
+    }
+client.VerifyRuns.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**status:** `*extend.VerifyRunStatus` — Filter verify runs by status.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**source:** `*extend.VerifyRunsListRequestSource` — Filter verify runs by the source that created them. If not provided, runs from all sources are returned.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sourceID:** `*string` — Filter verify runs by `sourceId`. For API-created runs this is the request ID of the creating request.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**riskLevel:** `*extend.VerifyRiskLevel` — Return only processed runs whose result has this risk level. A zero-retention run stops matching once its result has been purged.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**fileNameContains:** `*string` 
+
+Filters runs by file. A verify run ID (`vr_...`) matches that run, a file ID (`file_...`) matches runs on that file, and any other value matches runs whose file name contains it.
+
+Example: `"statement"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortBy:** `*extend.SortBy` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**sortDir:** `*extend.SortDir` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nextPageToken:** `*extend.NextPageToken` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxPageSize:** `*extend.MaxPageSize` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.VerifyRuns.Create(request) -> *extend.VerifyRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Start checking a single document for evidence of tampering, forgery, or AI generation and return immediately with a `verify_run` resource in the `PROCESSING` state.
+
+Poll `GET /verify_runs/{id}` until the status is `PROCESSED`, `FAILED`, or `CANCELLED`. When processing succeeds, `output` contains the document-level `riskLevel`, a `summary`, and the detected `signals` with their evidence.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRunsCreateRequest{
+        File: &extend.VerifyRunsCreateRequestFile{
+            FileFromURL: &extend.FileFromURL{
+                URL: "https://example.com/bank_statement.pdf",
+            },
+        },
+    }
+client.VerifyRuns.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**file:** `*extend.VerifyRunsCreateRequestFile` — The file to verify, as a public URL or an Extend file ID. Verify runs against the exact submitted bytes, so `text` and `base64` inputs are not accepted. Supported inputs are PDF, JPEG, PNG, and WebP files; other types fail with `FILE_TYPE_NOT_SUPPORTED`.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**config:** `*extend.VerifyConfig` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**metadata:** `*extend.RunMetadata` 
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.VerifyRuns.Retrieve(ID) -> *extend.VerifyRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Retrieve the status and result of a verify run.
+
+Use this endpoint to poll a run created with `POST /verify_runs`. When `status` is `PROCESSED`, `output` contains the document-level `riskLevel`, `summary`, and detected `signals`. When `status` is `FAILED`, read `failureReason` and `failureMessage`.
+
+For a zero-retention run, the first `GET` that returns the result also schedules its purge, so store what you need from that response.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRunsRetrieveRequest{}
+client.VerifyRuns.Retrieve(
+        context.TODO(),
+        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The unique identifier for the verify run.
+
+Example: `"vr_xK9mLPqRtN3vS8wF5hB2cQ"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.VerifyRuns.Delete(ID) -> *extend.VerifyRunsDeleteResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Delete a verify run and all data derived from its document: the result, the evidence artifacts, and the embedded parse. This operation is permanent and cannot be undone. The input file itself is not deleted.
+
+A run that is still `PROCESSING` is cancelled first. After deletion the run returns `404` from every read and no longer appears in `GET /verify_runs`.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRunsDeleteRequest{}
+client.VerifyRuns.Delete(
+        context.TODO(),
+        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The ID of the verify run to delete.
+
+Example: `"vr_xK9mLPqRtN3vS8wF5hB2cQ"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.VerifyRuns.Cancel(ID) -> *extend.VerifyRun</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Cancel an in-progress verify run.
+
+Only runs with a status of `"PROCESSING"` are cancelled. Cancelling a run that has already completed, failed, or been cancelled is a no-op that returns the run unchanged. A cancelled run never produces `output`.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.VerifyRunsCancelRequest{}
+client.VerifyRuns.Cancel(
+        context.TODO(),
+        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The ID of the verify run to cancel.
+
+Example: `"vr_xK9mLPqRtN3vS8wF5hB2cQ"`
     
 </dd>
 </dl>
@@ -8924,6 +9744,11 @@ Example: `"ev_2LcgeY_mp2T5yPaEuq5Lw"`
 
 Evaluation set items are the individual files and expected outputs that are used to evaluate the performance of a given extractor, classifier, or splitter in Extend. This endpoint will create new evaluation set items in Extend, which will be used during an evaluation run.
 
+Each item references exactly one of:
+
+- **`fileId`** — a single file. The item is evaluated as one single-file run.
+- **`fileIds`** — an ordered package of 2–50 files. The item is evaluated as one [multifile extraction](https://docs.extend.ai/2026-02-09/extraction/multifile) run, with a single `expectedOutput` covering the whole package. Multifile items are only supported on evaluation sets attached to a JSON-schema extractor.
+
 **Limit:** You can create up to 100 items at a time.
 
 Learn more about how to create evaluation set items in the [Evaluation Sets](https://docs.extend.ai/2026-02-09/evaluation/overview) product page.
@@ -8944,7 +9769,9 @@ Learn more about how to create evaluation set items in the [Evaluation Sets](htt
 request := &extend.EvaluationSetItemsCreateRequest{
         Items: []*extend.EvaluationSetItemsCreateRequestItemsItem{
             &extend.EvaluationSetItemsCreateRequestItemsItem{
-                FileID: "file_xK9mLPqRtN3vS8wF5hB2cQ",
+                FileID: extend.String(
+                    "file_xK9mLPqRtN3vS8wF5hB2cQ",
+                ),
                 ExpectedOutput: &extend.ProvidedProcessorOutput{
                     ProvidedExtractOutput: &extend.ProvidedExtractOutput{
                         Value: &extend.JSONObject{

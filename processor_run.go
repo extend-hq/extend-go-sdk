@@ -1321,17 +1321,20 @@ var (
 	legacyJSONOutputMetadataValueCitationsItemFieldPage          = big.NewInt(1 << 0)
 	legacyJSONOutputMetadataValueCitationsItemFieldReferenceText = big.NewInt(1 << 1)
 	legacyJSONOutputMetadataValueCitationsItemFieldPolygon       = big.NewInt(1 << 2)
-	legacyJSONOutputMetadataValueCitationsItemFieldPageWidth     = big.NewInt(1 << 3)
-	legacyJSONOutputMetadataValueCitationsItemFieldPageHeight    = big.NewInt(1 << 4)
+	legacyJSONOutputMetadataValueCitationsItemFieldCellRange     = big.NewInt(1 << 3)
+	legacyJSONOutputMetadataValueCitationsItemFieldPageWidth     = big.NewInt(1 << 4)
+	legacyJSONOutputMetadataValueCitationsItemFieldPageHeight    = big.NewInt(1 << 5)
 )
 
 type LegacyJSONOutputMetadataValueCitationsItem struct {
-	// Page number where the citation was found
+	// Page number where the citation was found. For Excel, the 1-based worksheet index; for CSV, always 1.
 	Page *float64 `json:"page,omitempty" url:"page,omitempty"`
 	// The text that was referenced
 	ReferenceText *string `json:"referenceText,omitempty" url:"referenceText,omitempty"`
 	// Array of points defining the polygon around the referenced text
 	Polygon []*LegacyJSONOutputMetadataValueCitationsItemPolygonItem `json:"polygon,omitempty" url:"polygon,omitempty"`
+	// The cited cell or range in A1 notation for Excel and CSV files. Returned instead of a polygon when a cell reference is available.
+	CellRange *string `json:"cellRange,omitempty" url:"cellRange,omitempty"`
 	// Width of the page in points
 	PageWidth *float64 `json:"pageWidth,omitempty" url:"pageWidth,omitempty"`
 	// Height of the page in points
@@ -1363,6 +1366,13 @@ func (l *LegacyJSONOutputMetadataValueCitationsItem) GetPolygon() []*LegacyJSONO
 		return nil
 	}
 	return l.Polygon
+}
+
+func (l *LegacyJSONOutputMetadataValueCitationsItem) GetCellRange() *string {
+	if l == nil {
+		return nil
+	}
+	return l.CellRange
 }
 
 func (l *LegacyJSONOutputMetadataValueCitationsItem) GetPageWidth() *float64 {
@@ -1412,6 +1422,13 @@ func (l *LegacyJSONOutputMetadataValueCitationsItem) SetReferenceText(referenceT
 func (l *LegacyJSONOutputMetadataValueCitationsItem) SetPolygon(polygon []*LegacyJSONOutputMetadataValueCitationsItemPolygonItem) {
 	l.Polygon = polygon
 	l.require(legacyJSONOutputMetadataValueCitationsItemFieldPolygon)
+}
+
+// SetCellRange sets the CellRange field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (l *LegacyJSONOutputMetadataValueCitationsItem) SetCellRange(cellRange *string) {
+	l.CellRange = cellRange
+	l.require(legacyJSONOutputMetadataValueCitationsItemFieldCellRange)
 }
 
 // SetPageWidth sets the PageWidth field and marks it as non-optional;

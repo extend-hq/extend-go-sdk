@@ -77,6 +77,34 @@ func VerifyRequestCount(
 	require.Equal(t, expected, len(result.Requests))
 }
 
+func TestEditRunsListWithWireMock(
+	t *testing.T,
+) {
+	WireMockBaseURL := os.Getenv("WIREMOCK_URL")
+	if WireMockBaseURL == "" {
+		WireMockBaseURL = "http://localhost:8080"
+	}
+	client := client.NewClient(
+		option.WithBaseURL(WireMockBaseURL),
+		option.WithToken("test-token"),
+	)
+	request := &extend.EditRunsListRequest{
+		NextPageToken: extend.String(
+			"xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+		),
+	}
+	_, invocationErr := client.EditRuns.List(
+		context.TODO(),
+		request,
+		option.WithHTTPHeader(
+			http.Header{"X-Test-Id": []string{"TestEditRunsListWithWireMock"}},
+		),
+	)
+
+	require.NoError(t, invocationErr, "Client method call should succeed")
+	VerifyRequestCount(t, "TestEditRunsListWithWireMock", "GET", "/edit_runs", map[string]interface{}{"nextPageToken": "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ="}, 1)
+}
+
 func TestEditRunsCreateWithWireMock(
 	t *testing.T,
 ) {
@@ -96,7 +124,7 @@ func TestEditRunsCreateWithWireMock(
 		},
 		Config: &extend.EditConfig{
 			EngineVersion: extend.String(
-				"0.0.1",
+				"1.0.0",
 			),
 			Instructions: extend.String(
 				"Fill out the form with the provided data",

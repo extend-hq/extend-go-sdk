@@ -11,6 +11,80 @@ import (
 )
 
 var (
+	editTemplatesListRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
+	editTemplatesListRequestFieldNameContains      = big.NewInt(1 << 1)
+	editTemplatesListRequestFieldSortBy            = big.NewInt(1 << 2)
+	editTemplatesListRequestFieldSortDir           = big.NewInt(1 << 3)
+	editTemplatesListRequestFieldNextPageToken     = big.NewInt(1 << 4)
+	editTemplatesListRequestFieldMaxPageSize       = big.NewInt(1 << 5)
+)
+
+type EditTemplatesListRequest struct {
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+	ExtendWorkspaceID *string `json:"-" url:"-"`
+	// Filters edit templates to only include those that contain the given string in the name. The match is case-insensitive.
+	//
+	// Example: `"W-9"`
+	NameContains  *string        `json:"-" url:"nameContains,omitempty"`
+	SortBy        *SortBy        `json:"-" url:"sortBy,omitempty"`
+	SortDir       *SortDir       `json:"-" url:"sortDir,omitempty"`
+	NextPageToken *NextPageToken `json:"-" url:"nextPageToken,omitempty"`
+	MaxPageSize   *MaxPageSize   `json:"-" url:"maxPageSize,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (e *EditTemplatesListRequest) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetExtendWorkspaceID(extendWorkspaceID *string) {
+	e.ExtendWorkspaceID = extendWorkspaceID
+	e.require(editTemplatesListRequestFieldExtendWorkspaceID)
+}
+
+// SetNameContains sets the NameContains field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetNameContains(nameContains *string) {
+	e.NameContains = nameContains
+	e.require(editTemplatesListRequestFieldNameContains)
+}
+
+// SetSortBy sets the SortBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetSortBy(sortBy *SortBy) {
+	e.SortBy = sortBy
+	e.require(editTemplatesListRequestFieldSortBy)
+}
+
+// SetSortDir sets the SortDir field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetSortDir(sortDir *SortDir) {
+	e.SortDir = sortDir
+	e.require(editTemplatesListRequestFieldSortDir)
+}
+
+// SetNextPageToken sets the NextPageToken field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetNextPageToken(nextPageToken *NextPageToken) {
+	e.NextPageToken = nextPageToken
+	e.require(editTemplatesListRequestFieldNextPageToken)
+}
+
+// SetMaxPageSize sets the MaxPageSize field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListRequest) SetMaxPageSize(maxPageSize *MaxPageSize) {
+	e.MaxPageSize = maxPageSize
+	e.require(editTemplatesListRequestFieldMaxPageSize)
+}
+
+var (
 	editTemplatesRetrieveRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
 )
 
@@ -251,6 +325,317 @@ func (e *EditTemplate) MarshalJSON() ([]byte, error) {
 }
 
 func (e *EditTemplate) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Summary representation of an edit template.
+var (
+	editTemplateSummaryFieldID          = big.NewInt(1 << 0)
+	editTemplateSummaryFieldName        = big.NewInt(1 << 1)
+	editTemplateSummaryFieldDescription = big.NewInt(1 << 2)
+	editTemplateSummaryFieldFile        = big.NewInt(1 << 3)
+	editTemplateSummaryFieldCreatedAt   = big.NewInt(1 << 4)
+	editTemplateSummaryFieldUpdatedAt   = big.NewInt(1 << 5)
+)
+
+type EditTemplateSummary struct {
+	// A unique identifier for the edit template.
+	//
+	// Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID string `json:"id" url:"id"`
+	// The name of the edit template.
+	Name string `json:"name" url:"name"`
+	// The description of the edit template, if one was provided.
+	Description *string `json:"description,omitempty" url:"description,omitempty"`
+	// The source file associated with this edit template.
+	File      *FileSummary `json:"file" url:"file"`
+	CreatedAt CreatedAt    `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt    `json:"updatedAt" url:"updatedAt"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditTemplateSummary) GetID() string {
+	if e == nil {
+		return ""
+	}
+	return e.ID
+}
+
+func (e *EditTemplateSummary) GetName() string {
+	if e == nil {
+		return ""
+	}
+	return e.Name
+}
+
+func (e *EditTemplateSummary) GetDescription() *string {
+	if e == nil {
+		return nil
+	}
+	return e.Description
+}
+
+func (e *EditTemplateSummary) GetFile() *FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.File
+}
+
+func (e *EditTemplateSummary) GetCreatedAt() CreatedAt {
+	if e == nil {
+		return time.Time{}
+	}
+	return e.CreatedAt
+}
+
+func (e *EditTemplateSummary) GetUpdatedAt() UpdatedAt {
+	if e == nil {
+		return time.Time{}
+	}
+	return e.UpdatedAt
+}
+
+func (e *EditTemplateSummary) Object() string {
+	return e.object
+}
+
+func (e *EditTemplateSummary) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditTemplateSummary) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetID(id string) {
+	e.ID = id
+	e.require(editTemplateSummaryFieldID)
+}
+
+// SetName sets the Name field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetName(name string) {
+	e.Name = name
+	e.require(editTemplateSummaryFieldName)
+}
+
+// SetDescription sets the Description field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetDescription(description *string) {
+	e.Description = description
+	e.require(editTemplateSummaryFieldDescription)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetFile(file *FileSummary) {
+	e.File = file
+	e.require(editTemplateSummaryFieldFile)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetCreatedAt(createdAt CreatedAt) {
+	e.CreatedAt = createdAt
+	e.require(editTemplateSummaryFieldCreatedAt)
+}
+
+// SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplateSummary) SetUpdatedAt(updatedAt UpdatedAt) {
+	e.UpdatedAt = updatedAt
+	e.require(editTemplateSummaryFieldUpdatedAt)
+}
+
+func (e *EditTemplateSummary) UnmarshalJSON(data []byte) error {
+	type embed EditTemplateSummary
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed: embed(*e),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*e = EditTemplateSummary(unmarshaler.embed)
+	e.CreatedAt = unmarshaler.CreatedAt.Time()
+	e.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	if unmarshaler.Object != "edit_template" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", e, "edit_template", unmarshaler.Object)
+	}
+	e.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *e, "object")
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditTemplateSummary) MarshalJSON() ([]byte, error) {
+	type embed EditTemplateSummary
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed:     embed(*e),
+		CreatedAt: internal.NewDateTime(e.CreatedAt),
+		UpdatedAt: internal.NewDateTime(e.UpdatedAt),
+		Object:    "edit_template",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditTemplateSummary) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+var (
+	editTemplatesListResponseFieldData          = big.NewInt(1 << 0)
+	editTemplatesListResponseFieldNextPageToken = big.NewInt(1 << 1)
+)
+
+type EditTemplatesListResponse struct {
+	Data          []*EditTemplateSummary `json:"data" url:"data"`
+	NextPageToken *NextPageToken         `json:"nextPageToken,omitempty" url:"nextPageToken,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditTemplatesListResponse) GetData() []*EditTemplateSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Data
+}
+
+func (e *EditTemplatesListResponse) GetNextPageToken() *NextPageToken {
+	if e == nil {
+		return nil
+	}
+	return e.NextPageToken
+}
+
+func (e *EditTemplatesListResponse) Object() string {
+	return e.object
+}
+
+func (e *EditTemplatesListResponse) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditTemplatesListResponse) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListResponse) SetData(data []*EditTemplateSummary) {
+	e.Data = data
+	e.require(editTemplatesListResponseFieldData)
+}
+
+// SetNextPageToken sets the NextPageToken field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditTemplatesListResponse) SetNextPageToken(nextPageToken *NextPageToken) {
+	e.NextPageToken = nextPageToken
+	e.require(editTemplatesListResponseFieldNextPageToken)
+}
+
+func (e *EditTemplatesListResponse) UnmarshalJSON(data []byte) error {
+	type embed EditTemplatesListResponse
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*e),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*e = EditTemplatesListResponse(unmarshaler.embed)
+	if unmarshaler.Object != "list" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", e, "list", unmarshaler.Object)
+	}
+	e.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *e, "object")
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditTemplatesListResponse) MarshalJSON() ([]byte, error) {
+	type embed EditTemplatesListResponse
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*e),
+		Object: "list",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditTemplatesListResponse) String() string {
 	if e == nil {
 		return "<nil>"
 	}

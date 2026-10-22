@@ -7,17 +7,27 @@ import (
 	fmt "fmt"
 	internal "github.com/extend-hq/extend-go-sdk/internal"
 	big "math/big"
+	time "time"
 )
 
 var (
-	editRunsCreateRequestFieldFile   = big.NewInt(1 << 0)
-	editRunsCreateRequestFieldConfig = big.NewInt(1 << 1)
+	editRunsCreateRequestFieldFile       = big.NewInt(1 << 0)
+	editRunsCreateRequestFieldTemplateID = big.NewInt(1 << 1)
+	editRunsCreateRequestFieldConfig     = big.NewInt(1 << 2)
 )
 
 type EditRunsCreateRequest struct {
-	// The file to be edited. Files can be provided as a URL or an Extend file ID.
-	File   *EditRunsCreateRequestFile `json:"file" url:"-"`
-	Config *EditConfig                `json:"config,omitempty" url:"-"`
+	// The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+	//
+	// Files can be provided as a URL or an Extend file ID.
+	File *EditRunsCreateRequestFile `json:"file,omitempty" url:"-"`
+	// The ID of a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template) to run against. Mutually exclusive with `file` — provide one or the other.
+	//
+	// The template's saved file is used as the input file, and its saved `config` (schema, instructions, engine version, and advanced options) is used to fill in any values not set on the request's own `config`. Values set on the request's `config` always take precedence over the template's.
+	//
+	// Example: `"edt_xK9mLPqRtN3vS8wF5hB2cQ"`
+	TemplateID *string     `json:"templateId,omitempty" url:"-"`
+	Config     *EditConfig `json:"config,omitempty" url:"-"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -35,6 +45,13 @@ func (e *EditRunsCreateRequest) require(field *big.Int) {
 func (e *EditRunsCreateRequest) SetFile(file *EditRunsCreateRequestFile) {
 	e.File = file
 	e.require(editRunsCreateRequestFieldFile)
+}
+
+// SetTemplateID sets the TemplateID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsCreateRequest) SetTemplateID(templateID *string) {
+	e.TemplateID = templateID
+	e.require(editRunsCreateRequestFieldTemplateID)
 }
 
 // SetConfig sets the Config field and marks it as non-optional;
@@ -92,6 +109,100 @@ func (e *EditRunsDeleteRequest) SetExtendWorkspaceID(extendWorkspaceID *string) 
 }
 
 var (
+	editRunsListRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
+	editRunsListRequestFieldStatus            = big.NewInt(1 << 1)
+	editRunsListRequestFieldSource            = big.NewInt(1 << 2)
+	editRunsListRequestFieldFileNameContains  = big.NewInt(1 << 3)
+	editRunsListRequestFieldSortBy            = big.NewInt(1 << 4)
+	editRunsListRequestFieldSortDir           = big.NewInt(1 << 5)
+	editRunsListRequestFieldNextPageToken     = big.NewInt(1 << 6)
+	editRunsListRequestFieldMaxPageSize       = big.NewInt(1 << 7)
+)
+
+type EditRunsListRequest struct {
+	// The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+	ExtendWorkspaceID *string `json:"-" url:"-"`
+	// Filter edit runs by status.
+	Status *EditRunsListRequestStatus `json:"-" url:"status,omitempty"`
+	// Filters edit runs by the source that created them. If not provided, runs from all sources are returned.
+	Source *EditRunSource `json:"-" url:"source,omitempty"`
+	// Filters runs by the name of the file. Only returns runs where the file name contains this string.
+	//
+	// Example: `"invoice"`
+	FileNameContains *string        `json:"-" url:"fileNameContains,omitempty"`
+	SortBy           *SortBy        `json:"-" url:"sortBy,omitempty"`
+	SortDir          *SortDir       `json:"-" url:"sortDir,omitempty"`
+	NextPageToken    *NextPageToken `json:"-" url:"nextPageToken,omitempty"`
+	MaxPageSize      *MaxPageSize   `json:"-" url:"maxPageSize,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+}
+
+func (e *EditRunsListRequest) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetExtendWorkspaceID(extendWorkspaceID *string) {
+	e.ExtendWorkspaceID = extendWorkspaceID
+	e.require(editRunsListRequestFieldExtendWorkspaceID)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetStatus(status *EditRunsListRequestStatus) {
+	e.Status = status
+	e.require(editRunsListRequestFieldStatus)
+}
+
+// SetSource sets the Source field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetSource(source *EditRunSource) {
+	e.Source = source
+	e.require(editRunsListRequestFieldSource)
+}
+
+// SetFileNameContains sets the FileNameContains field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetFileNameContains(fileNameContains *string) {
+	e.FileNameContains = fileNameContains
+	e.require(editRunsListRequestFieldFileNameContains)
+}
+
+// SetSortBy sets the SortBy field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetSortBy(sortBy *SortBy) {
+	e.SortBy = sortBy
+	e.require(editRunsListRequestFieldSortBy)
+}
+
+// SetSortDir sets the SortDir field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetSortDir(sortDir *SortDir) {
+	e.SortDir = sortDir
+	e.require(editRunsListRequestFieldSortDir)
+}
+
+// SetNextPageToken sets the NextPageToken field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetNextPageToken(nextPageToken *NextPageToken) {
+	e.NextPageToken = nextPageToken
+	e.require(editRunsListRequestFieldNextPageToken)
+}
+
+// SetMaxPageSize sets the MaxPageSize field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListRequest) SetMaxPageSize(maxPageSize *MaxPageSize) {
+	e.MaxPageSize = maxPageSize
+	e.require(editRunsListRequestFieldMaxPageSize)
+}
+
+var (
 	editRunsRetrieveRequestFieldExtendWorkspaceID = big.NewInt(1 << 0)
 )
 
@@ -117,7 +228,547 @@ func (e *EditRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *string
 	e.require(editRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// The file to be edited. Files can be provided as a URL or an Extend file ID.
+// The source that created the edit run:
+// * `"API"` - Created via API
+// * `"STUDIO"` - Created from Studio
+// * `"ADMIN"` - Created by admin
+type EditRunSource string
+
+const (
+	EditRunSourceAPI    EditRunSource = "API"
+	EditRunSourceStudio EditRunSource = "STUDIO"
+	EditRunSourceAdmin  EditRunSource = "ADMIN"
+)
+
+func NewEditRunSourceFromString(s string) (EditRunSource, error) {
+	switch s {
+	case "API":
+		return EditRunSourceAPI, nil
+	case "STUDIO":
+		return EditRunSourceStudio, nil
+	case "ADMIN":
+		return EditRunSourceAdmin, nil
+	}
+	var t EditRunSource
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (e EditRunSource) Ptr() *EditRunSource {
+	return &e
+}
+
+// Summary representation of an edit run.
+var (
+	editRunSummaryFieldID             = big.NewInt(1 << 0)
+	editRunSummaryFieldFile           = big.NewInt(1 << 1)
+	editRunSummaryFieldStatus         = big.NewInt(1 << 2)
+	editRunSummaryFieldFailureReason  = big.NewInt(1 << 3)
+	editRunSummaryFieldFailureMessage = big.NewInt(1 << 4)
+	editRunSummaryFieldMetrics        = big.NewInt(1 << 5)
+	editRunSummaryFieldUsage          = big.NewInt(1 << 6)
+	editRunSummaryFieldCreatedAt      = big.NewInt(1 << 7)
+	editRunSummaryFieldUpdatedAt      = big.NewInt(1 << 8)
+)
+
+type EditRunSummary struct {
+	// A unique identifier for the edit run.
+	//
+	// Example: `"edr_xK9mLPqRtN3vS8wF5hB2cQ"`
+	ID string `json:"id" url:"id"`
+	// The input file that was submitted for editing. May be `null` if the underlying file record is no longer available.
+	File *FileSummary `json:"file" url:"file"`
+	// The status of the edit run:
+	// * `"PROCESSING"` - The file is still being processed
+	// * `"PROCESSED"` - The file was successfully edited
+	// * `"FAILED"` - The editing failed (see `failureReason` for details)
+	Status EditRunSummaryStatus `json:"status" url:"status"`
+	// The reason for failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	//
+	// Possible values include:
+	// * `UNABLE_TO_DOWNLOAD_FILE` - Failed to load the requested file
+	// * `FILE_TYPE_NOT_SUPPORTED` - File type not supported. Edit runs currently require a PDF
+	// * `FILE_SIZE_TOO_LARGE` - The file exceeds the maximum allowed size
+	// * `CORRUPT_FILE` - The file appears to be corrupted and cannot be edited
+	// * `FIELD_DETECTION_ERROR` - An error occurred during field detection
+	// * `PASSWORD_PROTECTED_FILE` - The file is password protected and cannot be edited
+	// * `FAILED_TO_CONVERT_TO_PDF` - The file could not be converted to PDF for processing
+	// * `INTERNAL_ERROR` - An unexpected internal error occurred
+	// * `INVALID_OPTIONS` - The provided configuration options are invalid
+	// * `EMPTY_SCHEMA` - No schema was provided and no fields could be detected
+	// * `OUT_OF_CREDITS` - Insufficient credits to process the file
+	// * `SCHEMA_VALIDATION_ERROR` - The generated output value failed validation against the edit schema
+	//
+	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
+	FailureReason *string `json:"failureReason,omitempty" url:"failureReason,omitempty"`
+	// A human-readable description of the failure.
+	//
+	// **Availability:** Present when `status` is `"FAILED"`.
+	FailureMessage *string `json:"failureMessage,omitempty" url:"failureMessage,omitempty"`
+	// Metrics about the editing process.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`.
+	Metrics *EditRunSummaryMetrics `json:"metrics,omitempty" url:"metrics,omitempty"`
+	// Usage credits consumed by this edit run. Omits `breakdown` — fetch the full edit run by id to see the per-line items.
+	//
+	// **Availability:** Present when `status` is `"PROCESSED"`, the run was created after October 7, 2025, and the customer is on the current billing system.
+	Usage     *RunUsageSummary `json:"usage,omitempty" url:"usage,omitempty"`
+	CreatedAt CreatedAt        `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt        `json:"updatedAt" url:"updatedAt"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditRunSummary) GetID() string {
+	if e == nil {
+		return ""
+	}
+	return e.ID
+}
+
+func (e *EditRunSummary) GetFile() *FileSummary {
+	if e == nil {
+		return nil
+	}
+	return e.File
+}
+
+func (e *EditRunSummary) GetStatus() EditRunSummaryStatus {
+	if e == nil {
+		return ""
+	}
+	return e.Status
+}
+
+func (e *EditRunSummary) GetFailureReason() *string {
+	if e == nil {
+		return nil
+	}
+	return e.FailureReason
+}
+
+func (e *EditRunSummary) GetFailureMessage() *string {
+	if e == nil {
+		return nil
+	}
+	return e.FailureMessage
+}
+
+func (e *EditRunSummary) GetMetrics() *EditRunSummaryMetrics {
+	if e == nil {
+		return nil
+	}
+	return e.Metrics
+}
+
+func (e *EditRunSummary) GetUsage() *RunUsageSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Usage
+}
+
+func (e *EditRunSummary) GetCreatedAt() CreatedAt {
+	if e == nil {
+		return time.Time{}
+	}
+	return e.CreatedAt
+}
+
+func (e *EditRunSummary) GetUpdatedAt() UpdatedAt {
+	if e == nil {
+		return time.Time{}
+	}
+	return e.UpdatedAt
+}
+
+func (e *EditRunSummary) Object() string {
+	return e.object
+}
+
+func (e *EditRunSummary) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditRunSummary) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetID(id string) {
+	e.ID = id
+	e.require(editRunSummaryFieldID)
+}
+
+// SetFile sets the File field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetFile(file *FileSummary) {
+	e.File = file
+	e.require(editRunSummaryFieldFile)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetStatus(status EditRunSummaryStatus) {
+	e.Status = status
+	e.require(editRunSummaryFieldStatus)
+}
+
+// SetFailureReason sets the FailureReason field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetFailureReason(failureReason *string) {
+	e.FailureReason = failureReason
+	e.require(editRunSummaryFieldFailureReason)
+}
+
+// SetFailureMessage sets the FailureMessage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetFailureMessage(failureMessage *string) {
+	e.FailureMessage = failureMessage
+	e.require(editRunSummaryFieldFailureMessage)
+}
+
+// SetMetrics sets the Metrics field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetMetrics(metrics *EditRunSummaryMetrics) {
+	e.Metrics = metrics
+	e.require(editRunSummaryFieldMetrics)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetUsage(usage *RunUsageSummary) {
+	e.Usage = usage
+	e.require(editRunSummaryFieldUsage)
+}
+
+// SetCreatedAt sets the CreatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetCreatedAt(createdAt CreatedAt) {
+	e.CreatedAt = createdAt
+	e.require(editRunSummaryFieldCreatedAt)
+}
+
+// SetUpdatedAt sets the UpdatedAt field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummary) SetUpdatedAt(updatedAt UpdatedAt) {
+	e.UpdatedAt = updatedAt
+	e.require(editRunSummaryFieldUpdatedAt)
+}
+
+func (e *EditRunSummary) UnmarshalJSON(data []byte) error {
+	type embed EditRunSummary
+	var unmarshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed: embed(*e),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*e = EditRunSummary(unmarshaler.embed)
+	e.CreatedAt = unmarshaler.CreatedAt.Time()
+	e.UpdatedAt = unmarshaler.UpdatedAt.Time()
+	if unmarshaler.Object != "edit_run" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", e, "edit_run", unmarshaler.Object)
+	}
+	e.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *e, "object")
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditRunSummary) MarshalJSON() ([]byte, error) {
+	type embed EditRunSummary
+	var marshaler = struct {
+		embed
+		CreatedAt *internal.DateTime `json:"createdAt"`
+		UpdatedAt *internal.DateTime `json:"updatedAt"`
+		Object    string             `json:"object"`
+	}{
+		embed:     embed(*e),
+		CreatedAt: internal.NewDateTime(e.CreatedAt),
+		UpdatedAt: internal.NewDateTime(e.UpdatedAt),
+		Object:    "edit_run",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditRunSummary) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Metrics about the editing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
+var (
+	editRunSummaryMetricsFieldProcessingTimeMs      = big.NewInt(1 << 0)
+	editRunSummaryMetricsFieldPageCount             = big.NewInt(1 << 1)
+	editRunSummaryMetricsFieldFieldCount            = big.NewInt(1 << 2)
+	editRunSummaryMetricsFieldFieldsDetectedCount   = big.NewInt(1 << 3)
+	editRunSummaryMetricsFieldFieldsAnnotatedCount  = big.NewInt(1 << 4)
+	editRunSummaryMetricsFieldFieldDetectionTimeMs  = big.NewInt(1 << 5)
+	editRunSummaryMetricsFieldFieldAnnotationTimeMs = big.NewInt(1 << 6)
+	editRunSummaryMetricsFieldFieldFillingTimeMs    = big.NewInt(1 << 7)
+)
+
+type EditRunSummaryMetrics struct {
+	// Total processing time in milliseconds.
+	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
+	// The number of pages in the document.
+	PageCount int `json:"pageCount" url:"pageCount"`
+	// The total number of fields in the schema.
+	FieldCount int `json:"fieldCount" url:"fieldCount"`
+	// The number of fields that were automatically detected.
+	FieldsDetectedCount int `json:"fieldsDetectedCount" url:"fieldsDetectedCount"`
+	// The number of fields that were annotated with bounding boxes.
+	FieldsAnnotatedCount int `json:"fieldsAnnotatedCount" url:"fieldsAnnotatedCount"`
+	// The time taken to detect fields in the document, in milliseconds.
+	FieldDetectionTimeMs float64 `json:"fieldDetectionTimeMs" url:"fieldDetectionTimeMs"`
+	// The time taken to annotate field positions in the document, in milliseconds.
+	FieldAnnotationTimeMs float64 `json:"fieldAnnotationTimeMs" url:"fieldAnnotationTimeMs"`
+	// The time taken to fill the fields in the document, in milliseconds.
+	FieldFillingTimeMs float64 `json:"fieldFillingTimeMs" url:"fieldFillingTimeMs"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditRunSummaryMetrics) GetProcessingTimeMs() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.ProcessingTimeMs
+}
+
+func (e *EditRunSummaryMetrics) GetPageCount() int {
+	if e == nil {
+		return 0
+	}
+	return e.PageCount
+}
+
+func (e *EditRunSummaryMetrics) GetFieldCount() int {
+	if e == nil {
+		return 0
+	}
+	return e.FieldCount
+}
+
+func (e *EditRunSummaryMetrics) GetFieldsDetectedCount() int {
+	if e == nil {
+		return 0
+	}
+	return e.FieldsDetectedCount
+}
+
+func (e *EditRunSummaryMetrics) GetFieldsAnnotatedCount() int {
+	if e == nil {
+		return 0
+	}
+	return e.FieldsAnnotatedCount
+}
+
+func (e *EditRunSummaryMetrics) GetFieldDetectionTimeMs() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.FieldDetectionTimeMs
+}
+
+func (e *EditRunSummaryMetrics) GetFieldAnnotationTimeMs() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.FieldAnnotationTimeMs
+}
+
+func (e *EditRunSummaryMetrics) GetFieldFillingTimeMs() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.FieldFillingTimeMs
+}
+
+func (e *EditRunSummaryMetrics) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditRunSummaryMetrics) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetProcessingTimeMs(processingTimeMs float64) {
+	e.ProcessingTimeMs = processingTimeMs
+	e.require(editRunSummaryMetricsFieldProcessingTimeMs)
+}
+
+// SetPageCount sets the PageCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetPageCount(pageCount int) {
+	e.PageCount = pageCount
+	e.require(editRunSummaryMetricsFieldPageCount)
+}
+
+// SetFieldCount sets the FieldCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldCount(fieldCount int) {
+	e.FieldCount = fieldCount
+	e.require(editRunSummaryMetricsFieldFieldCount)
+}
+
+// SetFieldsDetectedCount sets the FieldsDetectedCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldsDetectedCount(fieldsDetectedCount int) {
+	e.FieldsDetectedCount = fieldsDetectedCount
+	e.require(editRunSummaryMetricsFieldFieldsDetectedCount)
+}
+
+// SetFieldsAnnotatedCount sets the FieldsAnnotatedCount field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldsAnnotatedCount(fieldsAnnotatedCount int) {
+	e.FieldsAnnotatedCount = fieldsAnnotatedCount
+	e.require(editRunSummaryMetricsFieldFieldsAnnotatedCount)
+}
+
+// SetFieldDetectionTimeMs sets the FieldDetectionTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldDetectionTimeMs(fieldDetectionTimeMs float64) {
+	e.FieldDetectionTimeMs = fieldDetectionTimeMs
+	e.require(editRunSummaryMetricsFieldFieldDetectionTimeMs)
+}
+
+// SetFieldAnnotationTimeMs sets the FieldAnnotationTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldAnnotationTimeMs(fieldAnnotationTimeMs float64) {
+	e.FieldAnnotationTimeMs = fieldAnnotationTimeMs
+	e.require(editRunSummaryMetricsFieldFieldAnnotationTimeMs)
+}
+
+// SetFieldFillingTimeMs sets the FieldFillingTimeMs field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunSummaryMetrics) SetFieldFillingTimeMs(fieldFillingTimeMs float64) {
+	e.FieldFillingTimeMs = fieldFillingTimeMs
+	e.require(editRunSummaryMetricsFieldFieldFillingTimeMs)
+}
+
+func (e *EditRunSummaryMetrics) UnmarshalJSON(data []byte) error {
+	type unmarshaler EditRunSummaryMetrics
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EditRunSummaryMetrics(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditRunSummaryMetrics) MarshalJSON() ([]byte, error) {
+	type embed EditRunSummaryMetrics
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditRunSummaryMetrics) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// The status of the edit run:
+// * `"PROCESSING"` - The file is still being processed
+// * `"PROCESSED"` - The file was successfully edited
+// * `"FAILED"` - The editing failed (see `failureReason` for details)
+type EditRunSummaryStatus string
+
+const (
+	EditRunSummaryStatusProcessing EditRunSummaryStatus = "PROCESSING"
+	EditRunSummaryStatusProcessed  EditRunSummaryStatus = "PROCESSED"
+	EditRunSummaryStatusFailed     EditRunSummaryStatus = "FAILED"
+)
+
+func NewEditRunSummaryStatusFromString(s string) (EditRunSummaryStatus, error) {
+	switch s {
+	case "PROCESSING":
+		return EditRunSummaryStatusProcessing, nil
+	case "PROCESSED":
+		return EditRunSummaryStatusProcessed, nil
+	case "FAILED":
+		return EditRunSummaryStatusFailed, nil
+	}
+	var t EditRunSummaryStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (e EditRunSummaryStatus) Ptr() *EditRunSummaryStatus {
+	return &e
+}
+
+// The file to be edited. Mutually exclusive with `templateId` — provide one or the other.
+//
+// Files can be provided as a URL or an Extend file ID.
 type EditRunsCreateRequestFile struct {
 	FileFromURL *FileFromURL
 	FileFromID  *FileFromID
@@ -251,6 +902,147 @@ func (e *EditRunsDeleteResponse) MarshalJSON() ([]byte, error) {
 }
 
 func (e *EditRunsDeleteResponse) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+type EditRunsListRequestStatus string
+
+const (
+	EditRunsListRequestStatusProcessing EditRunsListRequestStatus = "PROCESSING"
+	EditRunsListRequestStatusProcessed  EditRunsListRequestStatus = "PROCESSED"
+	EditRunsListRequestStatusFailed     EditRunsListRequestStatus = "FAILED"
+)
+
+func NewEditRunsListRequestStatusFromString(s string) (EditRunsListRequestStatus, error) {
+	switch s {
+	case "PROCESSING":
+		return EditRunsListRequestStatusProcessing, nil
+	case "PROCESSED":
+		return EditRunsListRequestStatusProcessed, nil
+	case "FAILED":
+		return EditRunsListRequestStatusFailed, nil
+	}
+	var t EditRunsListRequestStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (e EditRunsListRequestStatus) Ptr() *EditRunsListRequestStatus {
+	return &e
+}
+
+var (
+	editRunsListResponseFieldData          = big.NewInt(1 << 0)
+	editRunsListResponseFieldNextPageToken = big.NewInt(1 << 1)
+)
+
+type EditRunsListResponse struct {
+	Data          []*EditRunSummary `json:"data" url:"data"`
+	NextPageToken *NextPageToken    `json:"nextPageToken,omitempty" url:"nextPageToken,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	object         string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EditRunsListResponse) GetData() []*EditRunSummary {
+	if e == nil {
+		return nil
+	}
+	return e.Data
+}
+
+func (e *EditRunsListResponse) GetNextPageToken() *NextPageToken {
+	if e == nil {
+		return nil
+	}
+	return e.NextPageToken
+}
+
+func (e *EditRunsListResponse) Object() string {
+	return e.object
+}
+
+func (e *EditRunsListResponse) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EditRunsListResponse) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetData sets the Data field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListResponse) SetData(data []*EditRunSummary) {
+	e.Data = data
+	e.require(editRunsListResponseFieldData)
+}
+
+// SetNextPageToken sets the NextPageToken field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditRunsListResponse) SetNextPageToken(nextPageToken *NextPageToken) {
+	e.NextPageToken = nextPageToken
+	e.require(editRunsListResponseFieldNextPageToken)
+}
+
+func (e *EditRunsListResponse) UnmarshalJSON(data []byte) error {
+	type embed EditRunsListResponse
+	var unmarshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed: embed(*e),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*e = EditRunsListResponse(unmarshaler.embed)
+	if unmarshaler.Object != "list" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", e, "list", unmarshaler.Object)
+	}
+	e.object = unmarshaler.Object
+	extraProperties, err := internal.ExtractExtraProperties(data, *e, "object")
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EditRunsListResponse) MarshalJSON() ([]byte, error) {
+	type embed EditRunsListResponse
+	var marshaler = struct {
+		embed
+		Object string `json:"object"`
+	}{
+		embed:  embed(*e),
+		Object: "list",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EditRunsListResponse) String() string {
 	if e == nil {
 		return "<nil>"
 	}

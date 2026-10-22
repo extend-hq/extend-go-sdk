@@ -120,7 +120,9 @@ func TestEvaluationSetItemsCreateWithWireMock(
 	request := &extend.EvaluationSetItemsCreateRequest{
 		Items: []*extend.EvaluationSetItemsCreateRequestItemsItem{
 			&extend.EvaluationSetItemsCreateRequestItemsItem{
-				FileID: "file_xK9mLPqRtN3vS8wF5hB2cQ",
+				FileID: extend.String(
+					"file_xK9mLPqRtN3vS8wF5hB2cQ",
+				),
 				ExpectedOutput: &extend.ProvidedProcessorOutput{
 					ProvidedExtractOutput: &extend.ProvidedExtractOutput{
 						Value: &extend.JSONObject{

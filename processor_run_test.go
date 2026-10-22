@@ -2736,6 +2736,14 @@ func TestSettersLegacyJSONOutputMetadataValueCitationsItem(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetCellRange", func(t *testing.T) {
+		obj := &LegacyJSONOutputMetadataValueCitationsItem{}
+		var fernTestValueCellRange *string
+		obj.SetCellRange(fernTestValueCellRange)
+		assert.Equal(t, fernTestValueCellRange, obj.CellRange)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetPageWidth", func(t *testing.T) {
 		obj := &LegacyJSONOutputMetadataValueCitationsItem{}
 		var fernTestValuePageWidth *float64
@@ -2852,6 +2860,39 @@ func TestGettersLegacyJSONOutputMetadataValueCitationsItem(t *testing.T) {
 			}
 		}()
 		_ = obj.GetPolygon() // Should return zero value
+	})
+
+	t.Run("GetCellRange", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &LegacyJSONOutputMetadataValueCitationsItem{}
+		var expected *string
+		obj.CellRange = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetCellRange(), "getter should return the property value")
+	})
+
+	t.Run("GetCellRange_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &LegacyJSONOutputMetadataValueCitationsItem{}
+		obj.CellRange = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetCellRange(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetCellRange_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *LegacyJSONOutputMetadataValueCitationsItem
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetCellRange() // Should return zero value
 	})
 
 	t.Run("GetPageWidth", func(t *testing.T) {
@@ -2993,6 +3034,37 @@ func TestSettersMarkExplicitLegacyJSONOutputMetadataValueCitationsItem(t *testin
 
 		// Act
 		obj.SetPolygon(fernTestValuePolygon)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetCellRange_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &LegacyJSONOutputMetadataValueCitationsItem{}
+		var fernTestValueCellRange *string
+
+		// Act
+		obj.SetCellRange(fernTestValueCellRange)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
