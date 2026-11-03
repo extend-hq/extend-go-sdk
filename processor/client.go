@@ -39,6 +39,14 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List all processors in your organization
+//
+// Example:
+//
+//	request := &extend.ProcessorListRequest{}
+//	_, err := client.Processor.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ProcessorListRequest,
@@ -56,6 +64,17 @@ func (c *Client) List(
 }
 
 // Create a new processor in Extend, optionally cloning from an existing processor
+//
+// Example:
+//
+//	request := &extend.ProcessorCreateRequest{
+//	    Name: "My Processor Name",
+//	    Type: extend.LegacyProcessorTypeExtract,
+//	}
+//	_, err := client.Processor.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ProcessorCreateRequest,
@@ -73,6 +92,15 @@ func (c *Client) Create(
 }
 
 // Update an existing processor in Extend
+//
+// Example:
+//
+//	request := &extend.ProcessorUpdateRequest{}
+//	_, err := client.Processor.Update(
+//	    context.TODO(),
+//	    "processor_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the processor to update.

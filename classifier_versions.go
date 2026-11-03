@@ -29,10 +29,12 @@ type ClassifierVersionsCreateRequest struct {
 }
 
 func (c *ClassifierVersionsCreateRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -103,10 +105,12 @@ type ClassifierVersionsListRequest struct {
 }
 
 func (c *ClassifierVersionsListRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -150,10 +154,12 @@ type ClassifierVersionsRetrieveRequest struct {
 }
 
 func (c *ClassifierVersionsRetrieveRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -206,10 +212,12 @@ func (c *ClassifierVersionsListResponse) GetExtraProperties() map[string]interfa
 }
 
 func (c *ClassifierVersionsListResponse) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

@@ -39,6 +39,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List all webhook endpoints.
+//
+// Example:
+//
+//	request := &extend.WebhookEndpointsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.WebhookEndpoints.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.WebhookEndpointsListRequest,
@@ -60,6 +72,22 @@ func (c *Client) List(
 // The `enabledEvents` array specifies which global event types this endpoint should receive. Use the [Webhook Events](https://docs.extend.ai/2026-02-09/api-reference/webhook-events) reference to see available event types.
 //
 // To subscribe to events scoped to a specific resource (e.g., a single extractor or workflow), use [Create Webhook Subscription](https://docs.extend.ai/2026-02-09/api-reference/endpoints/webhook/create-webhook-subscription) after creating the endpoint.
+//
+// Example:
+//
+//	request := &extend.WebhookEndpointsCreateRequest{
+//	    URL: "https://example.com/webhooks",
+//	    Name: "Production webhook",
+//	    EnabledEvents: []extend.WebhookEndpointEventType{
+//	        extend.WebhookEndpointEventTypeExtractRunProcessed,
+//	        extend.WebhookEndpointEventTypeWorkflowCreated,
+//	    },
+//	    APIVersion: "apiVersion",
+//	}
+//	_, err := client.WebhookEndpoints.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.WebhookEndpointsCreateRequest,
@@ -77,6 +105,15 @@ func (c *Client) Create(
 }
 
 // Retrieve a webhook endpoint by ID.
+//
+// Example:
+//
+//	request := &extend.WebhookEndpointsRetrieveRequest{}
+//	_, err := client.WebhookEndpoints.Retrieve(
+//	    context.TODO(),
+//	    "webhook_endpoint_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the webhook endpoint.
@@ -101,6 +138,15 @@ func (c *Client) Retrieve(
 // Update a webhook endpoint. Only the fields you include in the request body will be updated; omitted fields remain unchanged.
 //
 // The `apiVersion` of a webhook endpoint cannot be changed after creation.
+//
+// Example:
+//
+//	request := &extend.WebhookEndpointsUpdateRequest{}
+//	_, err := client.WebhookEndpoints.Update(
+//	    context.TODO(),
+//	    "webhook_endpoint_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the webhook endpoint to update.
@@ -123,6 +169,15 @@ func (c *Client) Update(
 }
 
 // Delete a webhook endpoint and all of its subscriptions. This operation is permanent and cannot be undone.
+//
+// Example:
+//
+//	request := &extend.WebhookEndpointsDeleteRequest{}
+//	_, err := client.WebhookEndpoints.Delete(
+//	    context.TODO(),
+//	    "webhook_endpoint_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the webhook endpoint to delete.

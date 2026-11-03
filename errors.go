@@ -33,6 +33,13 @@ func (b *BadRequestError) Unwrap() error {
 	return b.APIError
 }
 
+func (b *BadRequestError) GetBody() any {
+	if b == nil {
+		return nil
+	}
+	return b.Body
+}
+
 // Standard error response format for all Extend API errors.
 //
 // See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
@@ -57,6 +64,13 @@ func (f *ForbiddenError) MarshalJSON() ([]byte, error) {
 
 func (f *ForbiddenError) Unwrap() error {
 	return f.APIError
+}
+
+func (f *ForbiddenError) GetBody() *APIError {
+	if f == nil {
+		return nil
+	}
+	return f.Body
 }
 
 // Standard error response format for all Extend API errors.
@@ -85,6 +99,13 @@ func (i *InternalServerError) Unwrap() error {
 	return i.APIError
 }
 
+func (i *InternalServerError) GetBody() any {
+	if i == nil {
+		return nil
+	}
+	return i.Body
+}
+
 // Standard error response format for all Extend API errors.
 //
 // See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
@@ -109,6 +130,13 @@ func (n *NotFoundError) MarshalJSON() ([]byte, error) {
 
 func (n *NotFoundError) Unwrap() error {
 	return n.APIError
+}
+
+func (n *NotFoundError) GetBody() any {
+	if n == nil {
+		return nil
+	}
+	return n.Body
 }
 
 // Standard error response format for all Extend API errors.
@@ -137,6 +165,13 @@ func (p *PaymentRequiredError) Unwrap() error {
 	return p.APIError
 }
 
+func (p *PaymentRequiredError) GetBody() *APIError {
+	if p == nil {
+		return nil
+	}
+	return p.Body
+}
+
 // Standard error response format for all Extend API errors.
 //
 // See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
@@ -161,6 +196,13 @@ func (t *TooManyRequestsError) MarshalJSON() ([]byte, error) {
 
 func (t *TooManyRequestsError) Unwrap() error {
 	return t.APIError
+}
+
+func (t *TooManyRequestsError) GetBody() any {
+	if t == nil {
+		return nil
+	}
+	return t.Body
 }
 
 // Standard error response format for all Extend API errors.
@@ -189,6 +231,13 @@ func (u *UnauthorizedError) Unwrap() error {
 	return u.APIError
 }
 
+func (u *UnauthorizedError) GetBody() any {
+	if u == nil {
+		return nil
+	}
+	return u.Body
+}
+
 // Standard error response format for all Extend API errors.
 //
 // See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
@@ -213,4 +262,11 @@ func (u *UnprocessableEntityError) MarshalJSON() ([]byte, error) {
 
 func (u *UnprocessableEntityError) Unwrap() error {
 	return u.APIError
+}
+
+func (u *UnprocessableEntityError) GetBody() *APIError {
+	if u == nil {
+		return nil
+	}
+	return u.Body
 }

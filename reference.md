@@ -33,20 +33,19 @@ For more details, see the [Parse File guide](https://docs.extend.ai/2026-02-09/p
 
 ```go
 request := &extend.ParseRequest{
-        File: &extend.ParseRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/bank_statement.pdf",
-                Name: extend.String(
-                    "bank_statement.pdf",
-                ),
-            },
+    File: &extend.ParseRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/bank_statement.pdf",
+            Name: extend.String(
+                "bank_statement.pdf",
+            ),
         },
-    }
-client.Parse(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Parse(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -153,30 +152,29 @@ For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/ed
 
 ```go
 request := &extend.EditRequest{
-        File: &extend.EditRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/form.pdf",
-            },
+    File: &extend.EditRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/form.pdf",
         },
-        Config: &extend.EditConfig{
-            EngineVersion: extend.String(
-                "1.0.0",
+    },
+    Config: &extend.EditConfig{
+        EngineVersion: extend.String(
+            "1.0.0",
+        ),
+        Instructions: extend.String(
+            "Fill out the form with the provided data",
+        ),
+        AdvancedOptions: &extend.EditConfigAdvancedOptions{
+            FlattenPdf: extend.Bool(
+                true,
             ),
-            Instructions: extend.String(
-                "Fill out the form with the provided data",
-            ),
-            AdvancedOptions: &extend.EditConfigAdvancedOptions{
-                FlattenPdf: extend.Bool(
-                    true,
-                ),
-            },
         },
-    }
-client.Edit(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Edit(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -259,30 +257,29 @@ For production workloads, use `POST /form_detection_runs` and receive the result
 
 ```go
 request := &extend.DetectFormRequest{
-        File: &extend.DetectFormRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/form.pdf",
-            },
+    File: &extend.DetectFormRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/form.pdf",
         },
-        Config: &extend.EditSchemaGenerationConfig{
-            EngineVersion: extend.String(
-                "1.0.0",
+    },
+    Config: &extend.EditSchemaGenerationConfig{
+        EngineVersion: extend.String(
+            "1.0.0",
+        ),
+        Instructions: extend.String(
+            "Detect the form fields and use human-readable field names.",
+        ),
+        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+            RadioEnumsEnabled: extend.Bool(
+                true,
             ),
-            Instructions: extend.String(
-                "Detect the form fields and use human-readable field names.",
-            ),
-            AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
-                RadioEnumsEnabled: extend.Bool(
-                    true,
-                ),
-            },
         },
-    }
-client.DetectForm(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.DetectForm(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -347,17 +344,16 @@ For production workloads, use `POST /verify_runs` and poll `GET /verify_runs/{id
 
 ```go
 request := &extend.VerifyRequest{
-        File: &extend.VerifyRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/bank_statement.pdf",
-            },
+    File: &extend.VerifyRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/bank_statement.pdf",
         },
-    }
-client.Verify(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Verify(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -444,55 +440,54 @@ For more details, see the [Extract File guide](https://docs.extend.ai/2026-02-09
 
 ```go
 request := &extend.ExtractRequest{
-        Config: &extend.ExtractConfigJSON{
-            Schema: &extend.JSONObject{
-                "properties": map[string]any{
-                    "invoice_number": map[string]any{
-                        "description": "The invoice number",
-                        "type": "string",
-                    },
-                    "total_amount": map[string]any{
-                        "description": "The total amount due",
-                        "extend:type": "currency",
-                        "properties": map[string]any{
-                            "amount": map[string]any{
-                                "type": []any{
-                                    "number",
-                                    "null",
-                                },
-                            },
-                            "iso_4217_currency_code": map[string]any{
-                                "type": []any{
-                                    "string",
-                                    "null",
-                                },
-                            },
-                        },
-                        "required": []any{
-                            "amount",
-                            "iso_4217_currency_code",
-                        },
-                        "type": "object",
-                    },
-                    "vendor_name": map[string]any{
-                        "description": "The name of the vendor",
-                        "type": "string",
-                    },
+    Config: &extend.ExtractConfigJSON{
+        Schema: &extend.JSONObject{
+            "properties": map[string]any{
+                "invoice_number": map[string]any{
+                    "description": "The invoice number",
+                    "type": "string",
                 },
-                "type": "object",
+                "total_amount": map[string]any{
+                    "description": "The total amount due",
+                    "extend:type": "currency",
+                    "properties": map[string]any{
+                        "amount": map[string]any{
+                            "type": []any{
+                                "number",
+                                "null",
+                            },
+                        },
+                        "iso_4217_currency_code": map[string]any{
+                            "type": []any{
+                                "string",
+                                "null",
+                            },
+                        },
+                    },
+                    "required": []any{
+                        "amount",
+                        "iso_4217_currency_code",
+                    },
+                    "type": "object",
+                },
+                "vendor_name": map[string]any{
+                    "description": "The name of the vendor",
+                    "type": "string",
+                },
             },
+            "type": "object",
         },
-        File: &extend.ExtractRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/invoice.pdf",
-            },
+    },
+    File: &extend.ExtractRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/invoice.pdf",
         },
-    }
-client.Extract(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Extract(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -593,36 +588,35 @@ For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-0
 
 ```go
 request := &extend.ClassifyRequest{
-        Config: &extend.ClassifyConfig{
-            Classifications: []*extend.Classification{
-                &extend.Classification{
-                    ID: "invoice",
-                    Type: "invoice",
-                    Description: "An invoice or bill for goods or services",
-                },
-                &extend.Classification{
-                    ID: "receipt",
-                    Type: "receipt",
-                    Description: "A receipt confirming payment",
-                },
-                &extend.Classification{
-                    ID: "other",
-                    Type: "other",
-                    Description: "Any other document type",
-                },
+    Config: &extend.ClassifyConfig{
+        Classifications: []*extend.Classification{
+            &extend.Classification{
+                ID: "invoice",
+                Type: "invoice",
+                Description: "An invoice or bill for goods or services",
+            },
+            &extend.Classification{
+                ID: "receipt",
+                Type: "receipt",
+                Description: "A receipt confirming payment",
+            },
+            &extend.Classification{
+                ID: "other",
+                Type: "other",
+                Description: "Any other document type",
             },
         },
-        File: &extend.ClassifyRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/document.pdf",
-            },
+    },
+    File: &extend.ClassifyRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/document.pdf",
         },
-    }
-client.Classify(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Classify(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -707,42 +701,41 @@ For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/s
 
 ```go
 request := &extend.SplitRequest{
-        Config: &extend.SplitConfig{
-            SplitClassifications: []*extend.SplitClassification{
-                &extend.SplitClassification{
-                    ID: "invoice",
-                    Type: "invoice",
-                    Description: "An invoice or bill for goods or services",
-                    IdentifierKey: extend.String(
-                        "invoice number from the document header",
-                    ),
-                },
-                &extend.SplitClassification{
-                    ID: "receipt",
-                    Type: "receipt",
-                    Description: "A receipt confirming payment",
-                    IdentifierKey: extend.String(
-                        "receipt number",
-                    ),
-                },
-                &extend.SplitClassification{
-                    ID: "other",
-                    Type: "other",
-                    Description: "Any other document type",
-                },
+    Config: &extend.SplitConfig{
+        SplitClassifications: []*extend.SplitClassification{
+            &extend.SplitClassification{
+                ID: "invoice",
+                Type: "invoice",
+                Description: "An invoice or bill for goods or services",
+                IdentifierKey: extend.String(
+                    "invoice number from the document header",
+                ),
+            },
+            &extend.SplitClassification{
+                ID: "receipt",
+                Type: "receipt",
+                Description: "A receipt confirming payment",
+                IdentifierKey: extend.String(
+                    "receipt number",
+                ),
+            },
+            &extend.SplitClassification{
+                ID: "other",
+                Type: "other",
+                Description: "Any other document type",
             },
         },
-        File: &extend.SplitRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/multi-document.pdf",
-            },
+    },
+    File: &extend.SplitRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/multi-document.pdf",
         },
-    }
-client.Split(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Split(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -822,15 +815,14 @@ List files.
 
 ```go
 request := &extend.FilesListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.Files.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.Files.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -921,12 +913,11 @@ Fetch a file by its ID.
 
 ```go
 request := &extend.FilesRetrieveRequest{}
-client.Files.Retrieve(
-        context.TODO(),
-        "file_id_here",
-        request,
-    )
-}
+_, err := client.Files.Retrieve(
+    context.TODO(),
+    "file_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1035,12 +1026,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.FilesDeleteRequest{}
-client.Files.Delete(
-        context.TODO(),
-        "file_id_here",
-        request,
-    )
-}
+_, err := client.Files.Delete(
+    context.TODO(),
+    "file_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1115,14 +1105,13 @@ This endpoint requires multipart form encoding. Most HTTP clients will handle th
 
 ```go
 request := &extend.FilesUploadRequest{}
-client.Files.Upload(
-        context.TODO(),
-        strings.NewReader(
-            "",
-        ),
-        request,
-    )
-}
+_, err := client.Files.Upload(
+    context.TODO(),
+    strings.NewReader(
+        "",
+    ),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1188,15 +1177,14 @@ Returns a paginated list of parse runs. Use `GET /parse_runs/{id}` to retrieve t
 
 ```go
 request := &extend.ParseRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ParseRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ParseRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1323,20 +1311,19 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.ParseRunsCreateRequest{
-        File: &extend.ParseRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/bank_statement.pdf",
-                Name: extend.String(
-                    "bank_statement.pdf",
-                ),
-            },
+    File: &extend.ParseRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/bank_statement.pdf",
+            Name: extend.String(
+                "bank_statement.pdf",
+            ),
         },
-    }
-client.ParseRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.ParseRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1417,12 +1404,11 @@ Use this endpoint to get results for a parse run that has already completed, or 
 
 ```go
 request := &extend.ParseRunsRetrieveRequest{}
-client.ParseRuns.Retrieve(
-        context.TODO(),
-        "parse_run_id_here",
-        request,
-    )
-}
+_, err := client.ParseRuns.Retrieve(
+    context.TODO(),
+    "parse_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1503,12 +1489,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.ParseRunsDeleteRequest{}
-client.ParseRuns.Delete(
-        context.TODO(),
-        "parse_run_id_here",
-        request,
-    )
-}
+_, err := client.ParseRuns.Delete(
+    context.TODO(),
+    "parse_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1577,12 +1562,11 @@ Note: Only parse runs with a status of `"PROCESSING"` can be cancelled. Parse ru
 
 ```go
 request := &extend.ParseRunsCancelRequest{}
-client.ParseRuns.Cancel(
-        context.TODO(),
-        "parse_run_id_here",
-        request,
-    )
-}
+_, err := client.ParseRuns.Cancel(
+    context.TODO(),
+    "parse_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1659,44 +1643,43 @@ Unlike the single [Parse File (Async)](https://docs.extend.ai/2026-02-09/api-ref
 
 ```go
 request := &extend.ParseRunsCreateBatchRequest{
-        Inputs: []*extend.ParseRunsCreateBatchRequestInputsItem{
-            &extend.ParseRunsCreateBatchRequestInputsItem{
-                File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/document1.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_abc123",
+    Inputs: []*extend.ParseRunsCreateBatchRequestInputsItem{
+        &extend.ParseRunsCreateBatchRequestInputsItem{
+            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/document1.pdf",
                 },
             },
-            &extend.ParseRunsCreateBatchRequestInputsItem{
-                File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/document2.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_def456",
-                },
-            },
-            &extend.ParseRunsCreateBatchRequestInputsItem{
-                File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
-                    FileFromText: &extend.FileFromText{
-                        Text: "This is some raw text to parse.",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "source": "manual-entry",
-                },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_abc123",
             },
         },
-    }
-client.ParseRuns.CreateBatch(
-        context.TODO(),
-        request,
-    )
+        &extend.ParseRunsCreateBatchRequestInputsItem{
+            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/document2.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_def456",
+            },
+        },
+        &extend.ParseRunsCreateBatchRequestInputsItem{
+            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+                FileFromText: &extend.FileFromText{
+                    Text: "This is some raw text to parse.",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "source": "manual-entry",
+            },
+        },
+    },
 }
+_, err := client.ParseRuns.CreateBatch(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1770,15 +1753,14 @@ Returns a paginated list of edit runs. Use `GET /edit_runs/{id}` to retrieve the
 
 ```go
 request := &extend.EditRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.EditRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.EditRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -1897,30 +1879,29 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.EditRunsCreateRequest{
-        File: &extend.EditRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/form.pdf",
-            },
+    File: &extend.EditRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/form.pdf",
         },
-        Config: &extend.EditConfig{
-            EngineVersion: extend.String(
-                "1.0.0",
+    },
+    Config: &extend.EditConfig{
+        EngineVersion: extend.String(
+            "1.0.0",
+        ),
+        Instructions: extend.String(
+            "Fill out the form with the provided data",
+        ),
+        AdvancedOptions: &extend.EditConfigAdvancedOptions{
+            FlattenPdf: extend.Bool(
+                true,
             ),
-            Instructions: extend.String(
-                "Fill out the form with the provided data",
-            ),
-            AdvancedOptions: &extend.EditConfigAdvancedOptions{
-                FlattenPdf: extend.Bool(
-                    true,
-                ),
-            },
         },
-    }
-client.EditRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.EditRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2003,12 +1984,11 @@ Use this endpoint to get results for an edit run that has already completed, or 
 
 ```go
 request := &extend.EditRunsRetrieveRequest{}
-client.EditRuns.Retrieve(
-        context.TODO(),
-        "edit_run_id_here",
-        request,
-    )
-}
+_, err := client.EditRuns.Retrieve(
+    context.TODO(),
+    "edit_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2077,12 +2057,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.EditRunsDeleteRequest{}
-client.EditRuns.Delete(
-        context.TODO(),
-        "edit_run_id_here",
-        request,
-    )
-}
+_, err := client.EditRuns.Delete(
+    context.TODO(),
+    "edit_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2152,15 +2131,14 @@ Returns a paginated list of edit template summaries. Use `GET /edit_templates/{i
 
 ```go
 request := &extend.EditTemplatesListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.EditTemplates.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.EditTemplates.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2261,12 +2239,11 @@ Use this endpoint to inspect the source file, default edit configuration, and op
 
 ```go
 request := &extend.EditTemplatesRetrieveRequest{}
-client.EditTemplates.Retrieve(
-        context.TODO(),
-        "edit_template_id_here",
-        request,
-    )
-}
+_, err := client.EditTemplates.Retrieve(
+    context.TODO(),
+    "edit_template_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2342,30 +2319,29 @@ For more details, see the [Detect Form guide](https://docs.extend.ai/2026-02-09/
 
 ```go
 request := &extend.EditSchemasGenerateRequest{
-        File: &extend.EditSchemasGenerateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/form.pdf",
-            },
+    File: &extend.EditSchemasGenerateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/form.pdf",
         },
-        Config: &extend.EditSchemaGenerationConfig{
-            EngineVersion: extend.String(
-                "1.0.0",
+    },
+    Config: &extend.EditSchemaGenerationConfig{
+        EngineVersion: extend.String(
+            "1.0.0",
+        ),
+        Instructions: extend.String(
+            "Detect the form fields and use human-readable field names.",
+        ),
+        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+            RadioEnumsEnabled: extend.Bool(
+                true,
             ),
-            Instructions: extend.String(
-                "Detect the form fields and use human-readable field names.",
-            ),
-            AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
-                RadioEnumsEnabled: extend.Bool(
-                    true,
-                ),
-            },
         },
-    }
-client.EditSchemas.Generate(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.EditSchemas.Generate(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2431,30 +2407,29 @@ Subscribe to the `form_detection_run.processed` and `form_detection_run.failed` 
 
 ```go
 request := &extend.FormDetectionRunsCreateRequest{
-        File: &extend.FormDetectionRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/form.pdf",
-            },
+    File: &extend.FormDetectionRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/form.pdf",
         },
-        Config: &extend.EditSchemaGenerationConfig{
-            EngineVersion: extend.String(
-                "1.0.0",
+    },
+    Config: &extend.EditSchemaGenerationConfig{
+        EngineVersion: extend.String(
+            "1.0.0",
+        ),
+        Instructions: extend.String(
+            "Detect the form fields and use human-readable field names.",
+        ),
+        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+            RadioEnumsEnabled: extend.Bool(
+                true,
             ),
-            Instructions: extend.String(
-                "Detect the form fields and use human-readable field names.",
-            ),
-            AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
-                RadioEnumsEnabled: extend.Bool(
-                    true,
-                ),
-            },
         },
-    }
-client.FormDetectionRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.FormDetectionRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2519,12 +2494,11 @@ Use this endpoint to poll a run created with `POST /form_detection_runs`. When `
 
 ```go
 request := &extend.FormDetectionRunsRetrieveRequest{}
-client.FormDetectionRuns.Retrieve(
-        context.TODO(),
-        "sgr_xK9mLPqRtN3vS8wF5hB2cQ",
-        request,
-    )
-}
+_, err := client.FormDetectionRuns.Retrieve(
+    context.TODO(),
+    "sgr_xK9mLPqRtN3vS8wF5hB2cQ",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2594,15 +2568,14 @@ Returns a paginated list of run summaries, each carrying the run's `riskLevel` b
 
 ```go
 request := &extend.VerifyRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.VerifyRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.VerifyRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2735,17 +2708,16 @@ Poll `GET /verify_runs/{id}` until the status is `PROCESSED`, `FAILED`, or `CANC
 
 ```go
 request := &extend.VerifyRunsCreateRequest{
-        File: &extend.VerifyRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/bank_statement.pdf",
-            },
+    File: &extend.VerifyRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/bank_statement.pdf",
         },
-    }
-client.VerifyRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.VerifyRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2828,12 +2800,11 @@ For a zero-retention run, the first `GET` that returns the result also schedules
 
 ```go
 request := &extend.VerifyRunsRetrieveRequest{}
-client.VerifyRuns.Retrieve(
-        context.TODO(),
-        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
-        request,
-    )
-}
+_, err := client.VerifyRuns.Retrieve(
+    context.TODO(),
+    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2902,12 +2873,11 @@ A run that is still `PROCESSING` is cancelled first. After deletion the run retu
 
 ```go
 request := &extend.VerifyRunsDeleteRequest{}
-client.VerifyRuns.Delete(
-        context.TODO(),
-        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
-        request,
-    )
-}
+_, err := client.VerifyRuns.Delete(
+    context.TODO(),
+    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -2976,12 +2946,11 @@ Only runs with a status of `"PROCESSING"` are cancelled. Cancelling a run that h
 
 ```go
 request := &extend.VerifyRunsCancelRequest{}
-client.VerifyRuns.Cancel(
-        context.TODO(),
-        "vr_xK9mLPqRtN3vS8wF5hB2cQ",
-        request,
-    )
-}
+_, err := client.VerifyRuns.Cancel(
+    context.TODO(),
+    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3051,15 +3020,14 @@ Returns a summary of each run. Use `GET /extract_runs/{id}` to retrieve the full
 
 ```go
 request := &extend.ExtractRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ExtractRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ExtractRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3208,20 +3176,19 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.ExtractRunsCreateRequest{
-        Extractor: &extend.ExtractRunsCreateRequestExtractor{
-            ID: "ex_1234567890",
+    Extractor: &extend.ExtractRunsCreateRequestExtractor{
+        ID: "ex_1234567890",
+    },
+    File: &extend.ExtractRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/invoice.pdf",
         },
-        File: &extend.ExtractRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/invoice.pdf",
-            },
-        },
-    }
-client.ExtractRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.ExtractRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3326,12 +3293,11 @@ A common use case for this endpoint is to poll for the status and final output o
 
 ```go
 request := &extend.ExtractRunsRetrieveRequest{}
-client.ExtractRuns.Retrieve(
-        context.TODO(),
-        "extract_run_id_here",
-        request,
-    )
-}
+_, err := client.ExtractRuns.Retrieve(
+    context.TODO(),
+    "extract_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3400,12 +3366,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.ExtractRunsDeleteRequest{}
-client.ExtractRuns.Delete(
-        context.TODO(),
-        "id",
-        request,
-    )
-}
+_, err := client.ExtractRuns.Delete(
+    context.TODO(),
+    "id",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3470,12 +3435,11 @@ Note: Only extract runs with a status of `"PROCESSING"` can be cancelled. Extrac
 
 ```go
 request := &extend.ExtractRunsCancelRequest{}
-client.ExtractRuns.Cancel(
-        context.TODO(),
-        "extract_run_id_here",
-        request,
-    )
-}
+_, err := client.ExtractRuns.Cancel(
+    context.TODO(),
+    "extract_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3553,47 +3517,46 @@ Unlike the single [Extract File (Async)](https://docs.extend.ai/2026-02-09/api-r
 
 ```go
 request := &extend.ExtractRunsCreateBatchRequest{
-        Extractor: &extend.ExtractRunsCreateBatchRequestExtractor{
-            ID: "ex_xK9mLPqRtN3vS8wF5hB2cQ",
-        },
-        Inputs: []*extend.ExtractRunsCreateBatchRequestInputsItem{
-            &extend.ExtractRunsCreateBatchRequestInputsItem{
-                File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/invoice1.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_abc123",
+    Extractor: &extend.ExtractRunsCreateBatchRequestExtractor{
+        ID: "ex_xK9mLPqRtN3vS8wF5hB2cQ",
+    },
+    Inputs: []*extend.ExtractRunsCreateBatchRequestInputsItem{
+        &extend.ExtractRunsCreateBatchRequestInputsItem{
+            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/invoice1.pdf",
                 },
             },
-            &extend.ExtractRunsCreateBatchRequestInputsItem{
-                File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/invoice2.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_def456",
-                },
-            },
-            &extend.ExtractRunsCreateBatchRequestInputsItem{
-                File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/invoice3.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_ghi789",
-                },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_abc123",
             },
         },
-    }
-client.ExtractRuns.CreateBatch(
-        context.TODO(),
-        request,
-    )
+        &extend.ExtractRunsCreateBatchRequestInputsItem{
+            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/invoice2.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_def456",
+            },
+        },
+        &extend.ExtractRunsCreateBatchRequestInputsItem{
+            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/invoice3.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_ghi789",
+            },
+        },
+    },
 }
+_, err := client.ExtractRuns.CreateBatch(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3667,15 +3630,14 @@ Returns a summary of each extractor. Use `GET /extractors/{id}` to retrieve the 
 
 ```go
 request := &extend.ExtractorsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.Extractors.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.Extractors.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3764,57 +3726,56 @@ You can optionally provide a `generate` object to automatically generate an extr
 
 ```go
 request := &extend.ExtractorsCreateRequest{
-        Name: "Invoice Extractor",
-        Config: &extend.ExtractConfigJSON{
-            Schema: &extend.JSONObject{
-                "properties": map[string]any{
-                    "invoice_number": map[string]any{
-                        "description": "The invoice number",
-                        "type": []any{
-                            "string",
-                            "null",
-                        },
-                    },
-                    "total_amount": map[string]any{
-                        "description": "The total amount due",
-                        "extend:type": "currency",
-                        "properties": map[string]any{
-                            "amount": map[string]any{
-                                "type": []any{
-                                    "number",
-                                    "null",
-                                },
-                            },
-                            "iso_4217_currency_code": map[string]any{
-                                "type": []any{
-                                    "string",
-                                    "null",
-                                },
-                            },
-                        },
-                        "required": []any{
-                            "amount",
-                            "iso_4217_currency_code",
-                        },
-                        "type": "object",
-                    },
-                    "vendor_name": map[string]any{
-                        "description": "The name of the vendor",
-                        "type": []any{
-                            "string",
-                            "null",
-                        },
+    Name: "Invoice Extractor",
+    Config: &extend.ExtractConfigJSON{
+        Schema: &extend.JSONObject{
+            "properties": map[string]any{
+                "invoice_number": map[string]any{
+                    "description": "The invoice number",
+                    "type": []any{
+                        "string",
+                        "null",
                     },
                 },
-                "type": "object",
+                "total_amount": map[string]any{
+                    "description": "The total amount due",
+                    "extend:type": "currency",
+                    "properties": map[string]any{
+                        "amount": map[string]any{
+                            "type": []any{
+                                "number",
+                                "null",
+                            },
+                        },
+                        "iso_4217_currency_code": map[string]any{
+                            "type": []any{
+                                "string",
+                                "null",
+                            },
+                        },
+                    },
+                    "required": []any{
+                        "amount",
+                        "iso_4217_currency_code",
+                    },
+                    "type": "object",
+                },
+                "vendor_name": map[string]any{
+                    "description": "The name of the vendor",
+                    "type": []any{
+                        "string",
+                        "null",
+                    },
+                },
             },
+            "type": "object",
         },
-    }
-client.Extractors.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Extractors.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3901,12 +3862,11 @@ Get details of an extractor.
 
 ```go
 request := &extend.ExtractorsRetrieveRequest{}
-client.Extractors.Retrieve(
-        context.TODO(),
-        "extractor_id_here",
-        request,
-    )
-}
+_, err := client.Extractors.Retrieve(
+    context.TODO(),
+    "extractor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -3973,16 +3933,15 @@ Update an existing extractor.
 
 ```go
 request := &extend.ExtractorsUpdateRequest{
-        Name: extend.String(
-            "Invoice Extractor v2",
-        ),
-    }
-client.Extractors.Update(
-        context.TODO(),
-        "extractor_id_here",
-        request,
-    )
+    Name: extend.String(
+        "Invoice Extractor v2",
+    ),
 }
+_, err := client.Extractors.Update(
+    context.TODO(),
+    "extractor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4068,16 +4027,15 @@ Versions are returned in descending order of creation (newest first) with the `d
 
 ```go
 request := &extend.ExtractorVersionsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ExtractorVersions.List(
-        context.TODO(),
-        "extractor_id_here",
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ExtractorVersions.List(
+    context.TODO(),
+    "extractor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4170,17 +4128,16 @@ Publishing a new version does not automatically update existing workflows using 
 
 ```go
 request := &extend.ExtractorVersionsCreateRequest{
-        ReleaseType: extend.ReleaseTypeMinor,
-        Description: extend.String(
-            "Updated extraction rules for better accuracy",
-        ),
-    }
-client.ExtractorVersions.Create(
-        context.TODO(),
-        "extractor_id_here",
-        request,
-    )
+    ReleaseType: extend.ReleaseTypeMinor,
+    Description: extend.String(
+        "Updated extraction rules for better accuracy",
+    ),
 }
+_, err := client.ExtractorVersions.Create(
+    context.TODO(),
+    "extractor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4215,7 +4172,7 @@ Example: `"ex_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**releaseType:** `*extend.ReleaseType` 
+**releaseType:** `extend.ReleaseType` 
     
 </dd>
 </dl>
@@ -4271,13 +4228,12 @@ Retrieve a specific version of an extractor in Extend
 
 ```go
 request := &extend.ExtractorVersionsRetrieveRequest{}
-client.ExtractorVersions.Retrieve(
-        context.TODO(),
-        "extractor_id_here",
-        "draft",
-        request,
-    )
-}
+_, err := client.ExtractorVersions.Retrieve(
+    context.TODO(),
+    "extractor_id_here",
+    "draft",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4362,15 +4318,14 @@ Returns a summary of each run. Use `GET /classify_runs/{id}` to retrieve the ful
 
 ```go
 request := &extend.ClassifyRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ClassifyRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ClassifyRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4519,20 +4474,19 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.ClassifyRunsCreateRequest{
-        Classifier: &extend.ClassifyRunsCreateRequestClassifier{
-            ID: "cl_1234567890",
+    Classifier: &extend.ClassifyRunsCreateRequestClassifier{
+        ID: "cl_1234567890",
+    },
+    File: &extend.ClassifyRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/document.pdf",
         },
-        File: &extend.ClassifyRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/document.pdf",
-            },
-        },
-    }
-client.ClassifyRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.ClassifyRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4621,12 +4575,11 @@ A common use case for this endpoint is to poll for the status and final output o
 
 ```go
 request := &extend.ClassifyRunsRetrieveRequest{}
-client.ClassifyRuns.Retrieve(
-        context.TODO(),
-        "classify_run_id_here",
-        request,
-    )
-}
+_, err := client.ClassifyRuns.Retrieve(
+    context.TODO(),
+    "classify_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4695,12 +4648,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.ClassifyRunsDeleteRequest{}
-client.ClassifyRuns.Delete(
-        context.TODO(),
-        "id",
-        request,
-    )
-}
+_, err := client.ClassifyRuns.Delete(
+    context.TODO(),
+    "id",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4765,12 +4717,11 @@ Note: Only classify runs with a status of `"PROCESSING"` can be cancelled. Class
 
 ```go
 request := &extend.ClassifyRunsCancelRequest{}
-client.ClassifyRuns.Cancel(
-        context.TODO(),
-        "classify_run_id_here",
-        request,
-    )
-}
+_, err := client.ClassifyRuns.Cancel(
+    context.TODO(),
+    "classify_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4848,47 +4799,46 @@ Unlike the single [Classify File (Async)](https://docs.extend.ai/2026-02-09/api-
 
 ```go
 request := &extend.ClassifyRunsCreateBatchRequest{
-        Classifier: &extend.ClassifyRunsCreateBatchRequestClassifier{
-            ID: "cl_xK9mLPqRtN3vS8wF5hB2cQ",
-        },
-        Inputs: []*extend.ClassifyRunsCreateBatchRequestInputsItem{
-            &extend.ClassifyRunsCreateBatchRequestInputsItem{
-                File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/document1.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_abc123",
+    Classifier: &extend.ClassifyRunsCreateBatchRequestClassifier{
+        ID: "cl_xK9mLPqRtN3vS8wF5hB2cQ",
+    },
+    Inputs: []*extend.ClassifyRunsCreateBatchRequestInputsItem{
+        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/document1.pdf",
                 },
             },
-            &extend.ClassifyRunsCreateBatchRequestInputsItem{
-                File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/document2.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_def456",
-                },
-            },
-            &extend.ClassifyRunsCreateBatchRequestInputsItem{
-                File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/document3.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_ghi789",
-                },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_abc123",
             },
         },
-    }
-client.ClassifyRuns.CreateBatch(
-        context.TODO(),
-        request,
-    )
+        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/document2.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_def456",
+            },
+        },
+        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/document3.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_ghi789",
+            },
+        },
+    },
 }
+_, err := client.ClassifyRuns.CreateBatch(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -4962,15 +4912,14 @@ Returns a summary of each classifier. Use `GET /classifiers/{id}` to retrieve th
 
 ```go
 request := &extend.ClassifiersListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.Classifiers.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.Classifiers.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5057,32 +5006,31 @@ Create a new classifier.
 
 ```go
 request := &extend.ClassifiersCreateRequest{
-        Name: "Document Classifier",
-        Config: &extend.ClassifyConfig{
-            Classifications: []*extend.Classification{
-                &extend.Classification{
-                    ID: "invoice",
-                    Type: "invoice",
-                    Description: "An invoice or bill for goods or services",
-                },
-                &extend.Classification{
-                    ID: "receipt",
-                    Type: "receipt",
-                    Description: "A receipt confirming payment",
-                },
-                &extend.Classification{
-                    ID: "other",
-                    Type: "other",
-                    Description: "Any other document type",
-                },
+    Name: "Document Classifier",
+    Config: &extend.ClassifyConfig{
+        Classifications: []*extend.Classification{
+            &extend.Classification{
+                ID: "invoice",
+                Type: "invoice",
+                Description: "An invoice or bill for goods or services",
+            },
+            &extend.Classification{
+                ID: "receipt",
+                Type: "receipt",
+                Description: "A receipt confirming payment",
+            },
+            &extend.Classification{
+                ID: "other",
+                Type: "other",
+                Description: "Any other document type",
             },
         },
-    }
-client.Classifiers.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Classifiers.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5157,12 +5105,11 @@ Get details of a classifier.
 
 ```go
 request := &extend.ClassifiersRetrieveRequest{}
-client.Classifiers.Retrieve(
-        context.TODO(),
-        "classifier_id_here",
-        request,
-    )
-}
+_, err := client.Classifiers.Retrieve(
+    context.TODO(),
+    "classifier_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5229,16 +5176,15 @@ Update an existing classifier.
 
 ```go
 request := &extend.ClassifiersUpdateRequest{
-        Name: extend.String(
-            "Document Classifier v2",
-        ),
-    }
-client.Classifiers.Update(
-        context.TODO(),
-        "classifier_id_here",
-        request,
-    )
+    Name: extend.String(
+        "Document Classifier v2",
+    ),
 }
+_, err := client.Classifiers.Update(
+    context.TODO(),
+    "classifier_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5324,16 +5270,15 @@ Versions are returned in descending order of creation (newest first) with the `d
 
 ```go
 request := &extend.ClassifierVersionsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ClassifierVersions.List(
-        context.TODO(),
-        "classifier_id_here",
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ClassifierVersions.List(
+    context.TODO(),
+    "classifier_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5426,17 +5371,16 @@ Publishing a new version does not automatically update existing workflows using 
 
 ```go
 request := &extend.ClassifierVersionsCreateRequest{
-        ReleaseType: extend.ReleaseTypeMinor,
-        Description: extend.String(
-            "Added new document classification type",
-        ),
-    }
-client.ClassifierVersions.Create(
-        context.TODO(),
-        "classifier_id_here",
-        request,
-    )
+    ReleaseType: extend.ReleaseTypeMinor,
+    Description: extend.String(
+        "Added new document classification type",
+    ),
 }
+_, err := client.ClassifierVersions.Create(
+    context.TODO(),
+    "classifier_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5471,7 +5415,7 @@ Example: `"cl_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**releaseType:** `*extend.ReleaseType` 
+**releaseType:** `extend.ReleaseType` 
     
 </dd>
 </dl>
@@ -5527,13 +5471,12 @@ Retrieve a specific version of a classifier in Extend
 
 ```go
 request := &extend.ClassifierVersionsRetrieveRequest{}
-client.ClassifierVersions.Retrieve(
-        context.TODO(),
-        "classifier_id_here",
-        "draft",
-        request,
-    )
-}
+_, err := client.ClassifierVersions.Retrieve(
+    context.TODO(),
+    "classifier_id_here",
+    "draft",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5618,15 +5561,14 @@ Returns a summary of each run. Use `GET /split_runs/{id}` to retrieve the full o
 
 ```go
 request := &extend.SplitRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.SplitRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.SplitRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5775,20 +5717,19 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.SplitRunsCreateRequest{
-        Splitter: &extend.SplitRunsCreateRequestSplitter{
-            ID: "spl_1234567890",
+    Splitter: &extend.SplitRunsCreateRequestSplitter{
+        ID: "spl_1234567890",
+    },
+    File: &extend.SplitRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/multi-document.pdf",
         },
-        File: &extend.SplitRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/multi-document.pdf",
-            },
-        },
-    }
-client.SplitRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.SplitRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5877,12 +5818,11 @@ A common use case for this endpoint is to poll for the status and final output o
 
 ```go
 request := &extend.SplitRunsRetrieveRequest{}
-client.SplitRuns.Retrieve(
-        context.TODO(),
-        "split_run_id_here",
-        request,
-    )
-}
+_, err := client.SplitRuns.Retrieve(
+    context.TODO(),
+    "split_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -5951,12 +5891,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.SplitRunsDeleteRequest{}
-client.SplitRuns.Delete(
-        context.TODO(),
-        "id",
-        request,
-    )
-}
+_, err := client.SplitRuns.Delete(
+    context.TODO(),
+    "id",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6021,12 +5960,11 @@ Note: Only split runs with a status of `"PROCESSING"` can be cancelled. Splitter
 
 ```go
 request := &extend.SplitRunsCancelRequest{}
-client.SplitRuns.Cancel(
-        context.TODO(),
-        "split_run_id_here",
-        request,
-    )
-}
+_, err := client.SplitRuns.Cancel(
+    context.TODO(),
+    "split_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6105,47 +6043,46 @@ Unlike the single [Split File (Async)](https://docs.extend.ai/2026-02-09/api-ref
 
 ```go
 request := &extend.SplitRunsCreateBatchRequest{
-        Splitter: &extend.SplitRunsCreateBatchRequestSplitter{
-            ID: "spl_xK9mLPqRtN3vS8wF5hB2cQ",
-        },
-        Inputs: []*extend.SplitRunsCreateBatchRequestInputsItem{
-            &extend.SplitRunsCreateBatchRequestInputsItem{
-                File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/multi-doc1.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_abc123",
+    Splitter: &extend.SplitRunsCreateBatchRequestSplitter{
+        ID: "spl_xK9mLPqRtN3vS8wF5hB2cQ",
+    },
+    Inputs: []*extend.SplitRunsCreateBatchRequestInputsItem{
+        &extend.SplitRunsCreateBatchRequestInputsItem{
+            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/multi-doc1.pdf",
                 },
             },
-            &extend.SplitRunsCreateBatchRequestInputsItem{
-                File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/multi-doc2.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_def456",
-                },
-            },
-            &extend.SplitRunsCreateBatchRequestInputsItem{
-                File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/multi-doc3.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_ghi789",
-                },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_abc123",
             },
         },
-    }
-client.SplitRuns.CreateBatch(
-        context.TODO(),
-        request,
-    )
+        &extend.SplitRunsCreateBatchRequestInputsItem{
+            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/multi-doc2.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_def456",
+            },
+        },
+        &extend.SplitRunsCreateBatchRequestInputsItem{
+            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/multi-doc3.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_ghi789",
+            },
+        },
+    },
 }
+_, err := client.SplitRuns.CreateBatch(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6219,15 +6156,14 @@ Returns a summary of each splitter. Use `GET /splitters/{id}` to retrieve the fu
 
 ```go
 request := &extend.SplittersListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.Splitters.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.Splitters.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6314,38 +6250,37 @@ Create a new splitter.
 
 ```go
 request := &extend.SplittersCreateRequest{
-        Name: "Document Splitter",
-        Config: &extend.SplitConfig{
-            SplitClassifications: []*extend.SplitClassification{
-                &extend.SplitClassification{
-                    ID: "invoice",
-                    Type: "invoice",
-                    Description: "An invoice or bill for goods or services",
-                    IdentifierKey: extend.String(
-                        "invoice number from the document header",
-                    ),
-                },
-                &extend.SplitClassification{
-                    ID: "receipt",
-                    Type: "receipt",
-                    Description: "A receipt confirming payment",
-                    IdentifierKey: extend.String(
-                        "receipt number",
-                    ),
-                },
-                &extend.SplitClassification{
-                    ID: "other",
-                    Type: "other",
-                    Description: "Any other document type",
-                },
+    Name: "Document Splitter",
+    Config: &extend.SplitConfig{
+        SplitClassifications: []*extend.SplitClassification{
+            &extend.SplitClassification{
+                ID: "invoice",
+                Type: "invoice",
+                Description: "An invoice or bill for goods or services",
+                IdentifierKey: extend.String(
+                    "invoice number from the document header",
+                ),
+            },
+            &extend.SplitClassification{
+                ID: "receipt",
+                Type: "receipt",
+                Description: "A receipt confirming payment",
+                IdentifierKey: extend.String(
+                    "receipt number",
+                ),
+            },
+            &extend.SplitClassification{
+                ID: "other",
+                Type: "other",
+                Description: "Any other document type",
             },
         },
-    }
-client.Splitters.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.Splitters.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6420,12 +6355,11 @@ Get details of a splitter.
 
 ```go
 request := &extend.SplittersRetrieveRequest{}
-client.Splitters.Retrieve(
-        context.TODO(),
-        "splitter_id_here",
-        request,
-    )
-}
+_, err := client.Splitters.Retrieve(
+    context.TODO(),
+    "splitter_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6492,16 +6426,15 @@ Update an existing splitter.
 
 ```go
 request := &extend.SplittersUpdateRequest{
-        Name: extend.String(
-            "Document Splitter v2",
-        ),
-    }
-client.Splitters.Update(
-        context.TODO(),
-        "splitter_id_here",
-        request,
-    )
+    Name: extend.String(
+        "Document Splitter v2",
+    ),
 }
+_, err := client.Splitters.Update(
+    context.TODO(),
+    "splitter_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6587,16 +6520,15 @@ Versions are returned in descending order of creation (newest first) with the `d
 
 ```go
 request := &extend.SplitterVersionsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.SplitterVersions.List(
-        context.TODO(),
-        "splitter_id_here",
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.SplitterVersions.List(
+    context.TODO(),
+    "splitter_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6689,17 +6621,16 @@ Publishing a new version does not automatically update existing workflows using 
 
 ```go
 request := &extend.SplitterVersionsCreateRequest{
-        ReleaseType: extend.ReleaseTypeMinor,
-        Description: extend.String(
-            "Improved split boundary detection",
-        ),
-    }
-client.SplitterVersions.Create(
-        context.TODO(),
-        "splitter_id_here",
-        request,
-    )
+    ReleaseType: extend.ReleaseTypeMinor,
+    Description: extend.String(
+        "Improved split boundary detection",
+    ),
 }
+_, err := client.SplitterVersions.Create(
+    context.TODO(),
+    "splitter_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6734,7 +6665,7 @@ Example: `"spl_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**releaseType:** `*extend.ReleaseType` 
+**releaseType:** `extend.ReleaseType` 
     
 </dd>
 </dl>
@@ -6790,13 +6721,12 @@ Retrieve a specific version of a splitter in Extend
 
 ```go
 request := &extend.SplitterVersionsRetrieveRequest{}
-client.SplitterVersions.Retrieve(
-        context.TODO(),
-        "splitter_id_here",
-        "draft",
-        request,
-    )
-}
+_, err := client.SplitterVersions.Retrieve(
+    context.TODO(),
+    "splitter_id_here",
+    "draft",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6879,15 +6809,14 @@ List all workflows. Returns a paginated list of workflow summaries.
 
 ```go
 request := &extend.WorkflowsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.Workflows.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.Workflows.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -6970,13 +6899,12 @@ When `steps` is omitted, the workflow is created with default steps (`TRIGGER` �
 
 ```go
 request := &extend.WorkflowsCreateRequest{
-        Name: "Invoice Processing",
-    }
-client.Workflows.Create(
-        context.TODO(),
-        request,
-    )
+    Name: "Invoice Processing",
 }
+_, err := client.Workflows.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7044,11 +6972,10 @@ Get details of a workflow, including its draft version and steps.
 <dd>
 
 ```go
-client.Workflows.Retrieve(
-        context.TODO(),
-        "workflow_abc123",
-    )
-}
+_, err := client.Workflows.Retrieve(
+    context.TODO(),
+    "workflow_abc123",
+)
 ```
 </dd>
 </dl>
@@ -7105,16 +7032,15 @@ When `steps` is provided, the draft version's steps are replaced with the new se
 
 ```go
 request := &extend.WorkflowsUpdateRequest{
-        Name: extend.String(
-            "Updated Invoice Processing",
-        ),
-    }
-client.Workflows.Update(
-        context.TODO(),
-        "workflow_abc123",
-        request,
-    )
+    Name: extend.String(
+        "Updated Invoice Processing",
+    ),
 }
+_, err := client.Workflows.Update(
+    context.TODO(),
+    "workflow_abc123",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7190,16 +7116,15 @@ List all versions of a workflow, including the draft version. Returns a paginate
 
 ```go
 request := &extend.WorkflowVersionsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.WorkflowVersions.List(
-        context.TODO(),
-        "workflow_abc123",
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.WorkflowVersions.List(
+    context.TODO(),
+    "workflow_abc123",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7280,12 +7205,11 @@ When `steps` is omitted, the current draft is deployed as-is. When `steps` is pr
 
 ```go
 request := &extend.WorkflowVersionsCreateRequest{}
-client.WorkflowVersions.Create(
-        context.TODO(),
-        "workflow_abc123",
-        request,
-    )
-}
+_, err := client.WorkflowVersions.Create(
+    context.TODO(),
+    "workflow_abc123",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7361,12 +7285,11 @@ Get a specific version of a workflow, including its step definitions.
 <dd>
 
 ```go
-client.WorkflowVersions.Retrieve(
-        context.TODO(),
-        "workflow_abc123",
-        "draft",
-    )
-}
+_, err := client.WorkflowVersions.Retrieve(
+    context.TODO(),
+    "workflow_abc123",
+    "draft",
+)
 ```
 </dd>
 </dl>
@@ -7437,15 +7360,14 @@ List runs of a Workflow. Workflows are sequences of steps that process files and
 
 ```go
 request := &extend.WorkflowRunsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.WorkflowRuns.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.WorkflowRuns.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7580,20 +7502,19 @@ The request returns immediately with a `PROCESSING` status. Use webhooks or poll
 
 ```go
 request := &extend.WorkflowRunsCreateRequest{
-        Workflow: &extend.WorkflowReference{
-            ID: "wf_1234567890",
+    Workflow: &extend.WorkflowReference{
+        ID: "wf_1234567890",
+    },
+    File: &extend.WorkflowRunsCreateRequestFile{
+        FileFromURL: &extend.FileFromURL{
+            URL: "https://example.com/invoice.pdf",
         },
-        File: &extend.WorkflowRunsCreateRequestFile{
-            FileFromURL: &extend.FileFromURL{
-                URL: "https://example.com/invoice.pdf",
-            },
-        },
-    }
-client.WorkflowRuns.Create(
-        context.TODO(),
-        request,
-    )
+    },
 }
+_, err := client.WorkflowRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7696,12 +7617,11 @@ Once a workflow has been run, you can check the status and output of a specific 
 
 ```go
 request := &extend.WorkflowRunsRetrieveRequest{}
-client.WorkflowRuns.Retrieve(
-        context.TODO(),
-        "workflow_run_id_here",
-        request,
-    )
-}
+_, err := client.WorkflowRuns.Retrieve(
+    context.TODO(),
+    "workflow_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7768,20 +7688,19 @@ You can update the name and metadata of an in progress WorkflowRun at any time u
 
 ```go
 request := &extend.WorkflowRunsUpdateRequest{
-        Name: extend.String(
-            "Invoice #12345",
-        ),
-        Metadata: map[string]any{
-            "customerId": "cust_abc123",
-            "source": "email-inbox",
-        },
-    }
-client.WorkflowRuns.Update(
-        context.TODO(),
-        "workflow_run_id_here",
-        request,
-    )
+    Name: extend.String(
+        "Invoice #12345",
+    ),
+    Metadata: map[string]any{
+        "customerId": "cust_abc123",
+        "source": "email-inbox",
+    },
 }
+_, err := client.WorkflowRuns.Update(
+    context.TODO(),
+    "workflow_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7872,12 +7791,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.WorkflowRunsDeleteRequest{}
-client.WorkflowRuns.Delete(
-        context.TODO(),
-        "workflow_run_id_here",
-        request,
-    )
-}
+_, err := client.WorkflowRuns.Delete(
+    context.TODO(),
+    "workflow_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -7946,12 +7864,11 @@ Note: Only workflow runs with a status of `PROCESSING` or `PENDING` can be cance
 
 ```go
 request := &extend.WorkflowRunsCancelRequest{}
-client.WorkflowRuns.Cancel(
-        context.TODO(),
-        "workflow_run_id_here",
-        request,
-    )
-}
+_, err := client.WorkflowRuns.Cancel(
+    context.TODO(),
+    "workflow_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8030,37 +7947,36 @@ Upon successful submission, the endpoint returns a `batchId`. The individual wor
 
 ```go
 request := &extend.WorkflowRunsCreateBatchRequest{
-        Workflow: &extend.WorkflowReference{
-            ID: "wf_1234567890",
-        },
-        Inputs: []*extend.WorkflowRunsCreateBatchRequestInputsItem{
-            &extend.WorkflowRunsCreateBatchRequestInputsItem{
-                File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/invoice1.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_abc123",
+    Workflow: &extend.WorkflowReference{
+        ID: "wf_1234567890",
+    },
+    Inputs: []*extend.WorkflowRunsCreateBatchRequestInputsItem{
+        &extend.WorkflowRunsCreateBatchRequestInputsItem{
+            File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/invoice1.pdf",
                 },
             },
-            &extend.WorkflowRunsCreateBatchRequestInputsItem{
-                File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
-                    FileFromURL: &extend.FileFromURL{
-                        URL: "https://example.com/invoice2.pdf",
-                    },
-                },
-                Metadata: &extend.RunMetadata{
-                    "customerId": "cust_def456",
-                },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_abc123",
             },
         },
-    }
-client.WorkflowRuns.CreateBatch(
-        context.TODO(),
-        request,
-    )
+        &extend.WorkflowRunsCreateBatchRequestInputsItem{
+            File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
+                FileFromURL: &extend.FileFromURL{
+                    URL: "https://example.com/invoice2.pdf",
+                },
+            },
+            Metadata: &extend.RunMetadata{
+                "customerId": "cust_def456",
+            },
+        },
+    },
 }
+_, err := client.WorkflowRuns.CreateBatch(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8132,15 +8048,14 @@ List runs of a Processor. A ProcessorRun represents a single execution of a proc
 
 ```go
 request := &extend.ProcessorRunListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.ProcessorRun.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.ProcessorRun.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8319,13 +8234,12 @@ Run processors (extraction, classification, splitting, etc.) on a given document
 
 ```go
 request := &extend.ProcessorRunCreateRequest{
-        ProcessorID: "processor_id_here",
-    }
-client.ProcessorRun.Create(
-        context.TODO(),
-        request,
-    )
+    ProcessorID: "processor_id_here",
 }
+_, err := client.ProcessorRun.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8451,12 +8365,11 @@ A common use case for this endpoint is to poll for the status and final output o
 
 ```go
 request := &extend.ProcessorRunGetRequest{}
-client.ProcessorRun.Get(
-        context.TODO(),
-        "processor_run_id_here",
-        request,
-    )
-}
+_, err := client.ProcessorRun.Get(
+    context.TODO(),
+    "processor_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8525,12 +8438,11 @@ This endpoint can be used if you'd like to manage data retention on your own rat
 
 ```go
 request := &extend.ProcessorRunDeleteRequest{}
-client.ProcessorRun.Delete(
-        context.TODO(),
-        "processor_run_id_here",
-        request,
-    )
-}
+_, err := client.ProcessorRun.Delete(
+    context.TODO(),
+    "processor_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8599,12 +8511,11 @@ Note: Only processor runs with a status of `"PROCESSING"` can be cancelled. Proc
 
 ```go
 request := &extend.ProcessorRunCancelRequest{}
-client.ProcessorRun.Cancel(
-        context.TODO(),
-        "processor_run_id_here",
-        request,
-    )
-}
+_, err := client.ProcessorRun.Cancel(
+    context.TODO(),
+    "processor_run_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8672,11 +8583,10 @@ List all processors in your organization
 
 ```go
 request := &extend.ProcessorListRequest{}
-client.Processor.List(
-        context.TODO(),
-        request,
-    )
-}
+_, err := client.Processor.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8771,14 +8681,13 @@ Create a new processor in Extend, optionally cloning from an existing processor
 
 ```go
 request := &extend.ProcessorCreateRequest{
-        Name: "My Processor Name",
-        Type: extend.LegacyProcessorTypeExtract,
-    }
-client.Processor.Create(
-        context.TODO(),
-        request,
-    )
+    Name: "My Processor Name",
+    Type: extend.LegacyProcessorTypeExtract,
 }
+_, err := client.Processor.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8801,7 +8710,7 @@ client.Processor.Create(
 <dl>
 <dd>
 
-**type_:** `*extend.LegacyProcessorType` 
+**type_:** `extend.LegacyProcessorType` 
     
 </dd>
 </dl>
@@ -8861,12 +8770,11 @@ Update an existing processor in Extend
 
 ```go
 request := &extend.ProcessorUpdateRequest{}
-client.Processor.Update(
-        context.TODO(),
-        "processor_id_here",
-        request,
-    )
-}
+_, err := client.Processor.Update(
+    context.TODO(),
+    "processor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -8958,12 +8866,11 @@ The `draft` version is the latest unpublished version of the processor, which ca
 
 ```go
 request := &extend.ProcessorVersionListRequest{}
-client.ProcessorVersion.List(
-        context.TODO(),
-        "processor_id_here",
-        request,
-    )
-}
+_, err := client.ProcessorVersion.List(
+    context.TODO(),
+    "processor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9032,14 +8939,13 @@ Publishing a new version does not automatically update existing workflows using 
 
 ```go
 request := &extend.ProcessorVersionCreateRequest{
-        ReleaseType: extend.ProcessorVersionCreateRequestReleaseTypeMajor,
-    }
-client.ProcessorVersion.Create(
-        context.TODO(),
-        "processor_id_here",
-        request,
-    )
+    ReleaseType: extend.ProcessorVersionCreateRequestReleaseTypeMajor,
 }
+_, err := client.ProcessorVersion.Create(
+    context.TODO(),
+    "processor_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9074,7 +8980,7 @@ Example: `"ex_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**releaseType:** `*extend.ProcessorVersionCreateRequestReleaseType` — The type of release for this version. The two options are "major" and "minor", which will increment the version number accordingly.
+**releaseType:** `extend.ProcessorVersionCreateRequestReleaseType` — The type of release for this version. The two options are "major" and "minor", which will increment the version number accordingly.
     
 </dd>
 </dl>
@@ -9130,13 +9036,12 @@ Retrieve a specific version of a processor in Extend
 
 ```go
 request := &extend.ProcessorVersionGetRequest{}
-client.ProcessorVersion.Get(
-        context.TODO(),
-        "processor_id_here",
-        "processor_version_id_here",
-        request,
-    )
-}
+_, err := client.ProcessorVersion.Get(
+    context.TODO(),
+    "processor_id_here",
+    "processor_version_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9218,12 +9123,11 @@ Retrieve details about a batch processor run, including evaluation runs.
 
 ```go
 request := &extend.BatchProcessorRunGetRequest{}
-client.BatchProcessorRun.Get(
-        context.TODO(),
-        "bpr_id_here",
-        request,
-    )
-}
+_, err := client.BatchProcessorRun.Get(
+    context.TODO(),
+    "bpr_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9306,11 +9210,10 @@ To retrieve individual run results, use the List endpoint for the relevant type 
 <dd>
 
 ```go
-client.BatchRuns.Get(
-        context.TODO(),
-        "bpr_Xj8mK2pL9nR4vT7qY5wZ",
-    )
-}
+_, err := client.BatchRuns.Get(
+    context.TODO(),
+    "bpr_Xj8mK2pL9nR4vT7qY5wZ",
+)
 ```
 </dd>
 </dl>
@@ -9370,18 +9273,17 @@ List evaluation sets in your account.
 
 ```go
 request := &extend.EvaluationSetsListRequest{
-        EntityID: extend.String(
-            "entity_id_here",
-        ),
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.EvaluationSets.List(
-        context.TODO(),
-        request,
-    )
+    EntityID: extend.String(
+        "entity_id_here",
+    ),
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.EvaluationSets.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9482,17 +9384,16 @@ Note: It is not necessary to create an evaluation set via API. You can also crea
 
 ```go
 request := &extend.EvaluationSetsCreateRequest{
-        Name: "Invoice Processing Test Set",
-        Description: extend.String(
-            "Q4 vendor invoices for accuracy testing",
-        ),
-        EntityID: "ex_1234567890",
-    }
-client.EvaluationSets.Create(
-        context.TODO(),
-        request,
-    )
+    Name: "Invoice Processing Test Set",
+    Description: extend.String(
+        "Q4 vendor invoices for accuracy testing",
+    ),
+    EntityID: "ex_1234567890",
 }
+_, err := client.EvaluationSets.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9575,12 +9476,11 @@ Retrieve a specific evaluation set by ID. This returns an evaluation set object,
 
 ```go
 request := &extend.EvaluationSetsRetrieveRequest{}
-client.EvaluationSets.Retrieve(
-        context.TODO(),
-        "evaluation_set_id_here",
-        request,
-    )
-}
+_, err := client.EvaluationSets.Retrieve(
+    context.TODO(),
+    "evaluation_set_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9650,16 +9550,15 @@ Returns a summary of each evaluation set item. Use the [Get Evaluation Set Item]
 
 ```go
 request := &extend.EvaluationSetItemsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.EvaluationSetItems.List(
-        context.TODO(),
-        "evaluation_set_id_here",
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.EvaluationSetItems.List(
+    context.TODO(),
+    "evaluation_set_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9767,29 +9666,28 @@ Learn more about how to create evaluation set items in the [Evaluation Sets](htt
 
 ```go
 request := &extend.EvaluationSetItemsCreateRequest{
-        Items: []*extend.EvaluationSetItemsCreateRequestItemsItem{
-            &extend.EvaluationSetItemsCreateRequestItemsItem{
-                FileID: extend.String(
-                    "file_xK9mLPqRtN3vS8wF5hB2cQ",
-                ),
-                ExpectedOutput: &extend.ProvidedProcessorOutput{
-                    ProvidedExtractOutput: &extend.ProvidedExtractOutput{
-                        Value: &extend.JSONObject{
-                            "invoice_number": "INV-001",
-                            "total_amount": 1500,
-                            "vendor_name": "Acme Corp",
-                        },
+    Items: []*extend.EvaluationSetItemsCreateRequestItemsItem{
+        &extend.EvaluationSetItemsCreateRequestItemsItem{
+            FileID: extend.String(
+                "file_xK9mLPqRtN3vS8wF5hB2cQ",
+            ),
+            ExpectedOutput: &extend.ProvidedProcessorOutput{
+                ProvidedExtractOutput: &extend.ProvidedExtractOutput{
+                    Value: &extend.JSONObject{
+                        "invoice_number": "INV-001",
+                        "total_amount": 1500,
+                        "vendor_name": "Acme Corp",
                     },
                 },
             },
         },
-    }
-client.EvaluationSetItems.Create(
-        context.TODO(),
-        "evaluation_set_id_here",
-        request,
-    )
+    },
 }
+_, err := client.EvaluationSetItems.Create(
+    context.TODO(),
+    "evaluation_set_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9864,13 +9762,12 @@ Get details of an evaluation set item.
 
 ```go
 request := &extend.EvaluationSetItemsRetrieveRequest{}
-client.EvaluationSetItems.Retrieve(
-        context.TODO(),
-        "evaluation_set_id_here",
-        "evaluation_set_item_id_here",
-        request,
-    )
-}
+_, err := client.EvaluationSetItems.Retrieve(
+    context.TODO(),
+    "evaluation_set_id_here",
+    "evaluation_set_item_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -9949,23 +9846,22 @@ If you need to change the expected output for a given evaluation set item, you c
 
 ```go
 request := &extend.EvaluationSetItemsUpdateRequest{
-        ExpectedOutput: &extend.ProvidedProcessorOutput{
-            ProvidedExtractOutput: &extend.ProvidedExtractOutput{
-                Value: &extend.JSONObject{
-                    "invoice_number": "INV-001",
-                    "total_amount": 1750,
-                    "vendor_name": "Acme Corp",
-                },
+    ExpectedOutput: &extend.ProvidedProcessorOutput{
+        ProvidedExtractOutput: &extend.ProvidedExtractOutput{
+            Value: &extend.JSONObject{
+                "invoice_number": "INV-001",
+                "total_amount": 1750,
+                "vendor_name": "Acme Corp",
             },
         },
-    }
-client.EvaluationSetItems.Update(
-        context.TODO(),
-        "evaluation_set_id_here",
-        "evaluation_set_item_id_here",
-        request,
-    )
+    },
 }
+_, err := client.EvaluationSetItems.Update(
+    context.TODO(),
+    "evaluation_set_id_here",
+    "evaluation_set_item_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10052,13 +9948,12 @@ Delete an evaluation set item.
 
 ```go
 request := &extend.EvaluationSetItemsDeleteRequest{}
-client.EvaluationSetItems.Delete(
-        context.TODO(),
-        "evaluation_set_id_here",
-        "evaluation_set_item_id_here",
-        request,
-    )
-}
+_, err := client.EvaluationSetItems.Delete(
+    context.TODO(),
+    "evaluation_set_id_here",
+    "evaluation_set_item_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10140,19 +10035,18 @@ Evaluation set runs are currently supported for document processor evaluation se
 
 ```go
 request := &extend.EvaluationSetRunsCreateRequest{
-        EvaluationSetID: "ev_2LcgeY_mp2T5yPaEuq5Lw",
-        Entity: &extend.EvaluationSetRunsCreateRequestEntity{
-            ID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
-            Version: extend.String(
-                "1.0",
-            ),
-        },
-    }
-client.EvaluationSetRuns.Create(
-        context.TODO(),
-        request,
-    )
+    EvaluationSetID: "ev_2LcgeY_mp2T5yPaEuq5Lw",
+    Entity: &extend.EvaluationSetRunsCreateRequestEntity{
+        ID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
+        Version: extend.String(
+            "1.0",
+        ),
+    },
 }
+_, err := client.EvaluationSetRuns.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10231,12 +10125,11 @@ Get details of an evaluation set run.
 
 ```go
 request := &extend.EvaluationSetRunsRetrieveRequest{}
-client.EvaluationSetRuns.Retrieve(
-        context.TODO(),
-        "bpr_Xj8mK2pL9nR4vT7qY5wZ",
-        request,
-    )
-}
+_, err := client.EvaluationSetRuns.Retrieve(
+    context.TODO(),
+    "bpr_Xj8mK2pL9nR4vT7qY5wZ",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10304,15 +10197,14 @@ List all webhook endpoints.
 
 ```go
 request := &extend.WebhookEndpointsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.WebhookEndpoints.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.WebhookEndpoints.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10403,19 +10295,18 @@ To subscribe to events scoped to a specific resource (e.g., a single extractor o
 
 ```go
 request := &extend.WebhookEndpointsCreateRequest{
-        URL: "https://example.com/webhooks",
-        Name: "Production webhook",
-        EnabledEvents: []extend.WebhookEndpointEventType{
-            extend.WebhookEndpointEventTypeExtractRunProcessed,
-            extend.WebhookEndpointEventTypeWorkflowCreated,
-        },
-        APIVersion: "apiVersion",
-    }
-client.WebhookEndpoints.Create(
-        context.TODO(),
-        request,
-    )
+    URL: "https://example.com/webhooks",
+    Name: "Production webhook",
+    EnabledEvents: []extend.WebhookEndpointEventType{
+        extend.WebhookEndpointEventTypeExtractRunProcessed,
+        extend.WebhookEndpointEventTypeWorkflowCreated,
+    },
+    APIVersion: "apiVersion",
 }
+_, err := client.WebhookEndpoints.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10454,7 +10345,7 @@ client.WebhookEndpoints.Create(
 <dl>
 <dd>
 
-**enabledEvents:** `[]*extend.WebhookEndpointEventType` — The list of global event types to subscribe to. Pass an empty array to create an endpoint with no global events (useful if you only plan to use resource-scoped subscriptions).
+**enabledEvents:** `[]extend.WebhookEndpointEventType` — The list of global event types to subscribe to. Pass an empty array to create an endpoint with no global events (useful if you only plan to use resource-scoped subscriptions).
     
 </dd>
 </dl>
@@ -10510,12 +10401,11 @@ Retrieve a webhook endpoint by ID.
 
 ```go
 request := &extend.WebhookEndpointsRetrieveRequest{}
-client.WebhookEndpoints.Retrieve(
-        context.TODO(),
-        "webhook_endpoint_id_here",
-        request,
-    )
-}
+_, err := client.WebhookEndpoints.Retrieve(
+    context.TODO(),
+    "webhook_endpoint_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10584,12 +10474,11 @@ The `apiVersion` of a webhook endpoint cannot be changed after creation.
 
 ```go
 request := &extend.WebhookEndpointsUpdateRequest{}
-client.WebhookEndpoints.Update(
-        context.TODO(),
-        "webhook_endpoint_id_here",
-        request,
-    )
-}
+_, err := client.WebhookEndpoints.Update(
+    context.TODO(),
+    "webhook_endpoint_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10648,7 +10537,7 @@ Example: `"wh_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**enabledEvents:** `[]*extend.WebhookEndpointEventType` — The list of global event types to subscribe to.
+**enabledEvents:** `[]extend.WebhookEndpointEventType` — The list of global event types to subscribe to.
     
 </dd>
 </dl>
@@ -10696,12 +10585,11 @@ Delete a webhook endpoint and all of its subscriptions. This operation is perman
 
 ```go
 request := &extend.WebhookEndpointsDeleteRequest{}
-client.WebhookEndpoints.Delete(
-        context.TODO(),
-        "webhook_endpoint_id_here",
-        request,
-    )
-}
+_, err := client.WebhookEndpoints.Delete(
+    context.TODO(),
+    "webhook_endpoint_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10769,15 +10657,14 @@ List webhook subscriptions. You can filter by `webhookEndpointId` to see all sub
 
 ```go
 request := &extend.WebhookSubscriptionsListRequest{
-        NextPageToken: extend.String(
-            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
-        ),
-    }
-client.WebhookSubscriptions.List(
-        context.TODO(),
-        request,
-    )
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
 }
+_, err := client.WebhookSubscriptions.List(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10876,19 +10763,18 @@ If a subscription already exists for the same endpoint and resource, it will be 
 
 ```go
 request := &extend.WebhookSubscriptionsCreateRequest{
-        WebhookEndpointID: "wh_Xj8mK2pL9nR4vT7qY5wZ",
-        ResourceType: extend.WebhookSubscriptionResourceTypeExtractor,
-        ResourceID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
-        EnabledEvents: []extend.WebhookSubscriptionEventType{
-            extend.WebhookSubscriptionEventTypeExtractRunProcessed,
-            extend.WebhookSubscriptionEventTypeExtractRunFailed,
-        },
-    }
-client.WebhookSubscriptions.Create(
-        context.TODO(),
-        request,
-    )
+    WebhookEndpointID: "wh_Xj8mK2pL9nR4vT7qY5wZ",
+    ResourceType: extend.WebhookSubscriptionResourceTypeExtractor,
+    ResourceID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
+    EnabledEvents: []extend.WebhookSubscriptionEventType{
+        extend.WebhookSubscriptionEventTypeExtractRunProcessed,
+        extend.WebhookSubscriptionEventTypeExtractRunFailed,
+    },
 }
+_, err := client.WebhookSubscriptions.Create(
+    context.TODO(),
+    request,
+)
 ```
 </dd>
 </dl>
@@ -10911,7 +10797,7 @@ client.WebhookSubscriptions.Create(
 <dl>
 <dd>
 
-**resourceType:** `*extend.WebhookSubscriptionResourceType` 
+**resourceType:** `extend.WebhookSubscriptionResourceType` 
     
 </dd>
 </dl>
@@ -10927,7 +10813,7 @@ client.WebhookSubscriptions.Create(
 <dl>
 <dd>
 
-**enabledEvents:** `[]*extend.WebhookSubscriptionEventType` — The event types to subscribe to. Must be valid for the given `resourceType`.
+**enabledEvents:** `[]extend.WebhookSubscriptionEventType` — The event types to subscribe to. Must be valid for the given `resourceType`.
     
 </dd>
 </dl>
@@ -10967,12 +10853,11 @@ Retrieve a webhook subscription by ID.
 
 ```go
 request := &extend.WebhookSubscriptionsRetrieveRequest{}
-client.WebhookSubscriptions.Retrieve(
-        context.TODO(),
-        "webhook_subscription_id_here",
-        request,
-    )
-}
+_, err := client.WebhookSubscriptions.Retrieve(
+    context.TODO(),
+    "webhook_subscription_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -11039,16 +10924,15 @@ Update the enabled events on a webhook subscription.
 
 ```go
 request := &extend.WebhookSubscriptionsUpdateRequest{
-        EnabledEvents: []extend.WebhookSubscriptionEventType{
-            extend.WebhookSubscriptionEventTypeExtractRunProcessed,
-        },
-    }
-client.WebhookSubscriptions.Update(
-        context.TODO(),
-        "webhook_subscription_id_here",
-        request,
-    )
+    EnabledEvents: []extend.WebhookSubscriptionEventType{
+        extend.WebhookSubscriptionEventTypeExtractRunProcessed,
+    },
 }
+_, err := client.WebhookSubscriptions.Update(
+    context.TODO(),
+    "webhook_subscription_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -11083,7 +10967,7 @@ Example: `"whes_Xj8mK2pL9nR4vT7qY5wZ"`
 <dl>
 <dd>
 
-**enabledEvents:** `[]*extend.WebhookSubscriptionEventType` — The event types to subscribe to. Must be valid for the subscription's resource type.
+**enabledEvents:** `[]extend.WebhookSubscriptionEventType` — The event types to subscribe to. Must be valid for the subscription's resource type.
     
 </dd>
 </dl>
@@ -11123,12 +11007,11 @@ Delete a webhook subscription. This operation is permanent and cannot be undone.
 
 ```go
 request := &extend.WebhookSubscriptionsDeleteRequest{}
-client.WebhookSubscriptions.Delete(
-        context.TODO(),
-        "webhook_subscription_id_here",
-        request,
-    )
-}
+_, err := client.WebhookSubscriptions.Delete(
+    context.TODO(),
+    "webhook_subscription_id_here",
+    request,
+)
 ```
 </dd>
 </dl>
@@ -11156,6 +11039,244 @@ Example: `"whes_Xj8mK2pL9nR4vT7qY5wZ"`
 <dd>
 
 **extendWorkspaceID:** `*string` — The workspace ID to target. **Required** when using an organization-scoped API key; optional for workspace-scoped keys (the key is already tied to a workspace). See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+## Workspaces
+<details><summary><code>client.Workspaces.List() -> *extend.WorkspacesListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List every workspace in your organization.
+
+Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesListRequest{
+    NextPageToken: extend.String(
+        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+    ),
+    ExtendWorkspaceID: "x-extend-workspace-id",
+}
+_, err := client.Workspaces.List(
+    context.TODO(),
+    request,
+)
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sortDir:** `*extend.SortDir` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nextPageToken:** `*extend.NextPageToken` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxPageSize:** `*extend.MaxPageSize` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workspaces.Create(request) -> *extend.Workspace</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a new workspace in your organization. 
+
+**Availability.** Workspace management may be enabled for customers on the Enterprise plan. Contact [support@extend.ai](mailto:support@extend.ai) if you would like to have it enabled for your organization.
+
+**Authentication.** Requires an **organization-scoped** API key. As with every organization-key request, you must still send `x-extend-workspace-id` with an existing workspace.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesCreateRequest{
+    ExtendWorkspaceID: "x-extend-workspace-id",
+    Name: "Workspace A",
+}
+_, err := client.Workspaces.Create(
+    context.TODO(),
+    request,
+)
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `string` — The name of the workspace.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workspaces.Retrieve(ID) -> *extend.Workspace</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Retrieve a workspace by ID.
+
+Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesRetrieveRequest{
+    ExtendWorkspaceID: "x-extend-workspace-id",
+}
+_, err := client.Workspaces.Retrieve(
+    context.TODO(),
+    "workspace_id_here",
+    request,
+)
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The ID of the workspace.
+
+Example: `"ws_GSdEJY2mXL0FaQ3mL4kNY"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
     
 </dd>
 </dl>

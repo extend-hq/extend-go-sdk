@@ -40,6 +40,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List files.
+//
+// Example:
+//
+//	request := &extend.FilesListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.Files.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.FilesListRequest,
@@ -57,6 +69,15 @@ func (c *Client) List(
 }
 
 // Fetch a file by its ID.
+//
+// Example:
+//
+//	request := &extend.FilesRetrieveRequest{}
+//	_, err := client.Files.Retrieve(
+//	    context.TODO(),
+//	    "file_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// ID for the file. It will always start with `"file_"`.
@@ -81,6 +102,15 @@ func (c *Client) Retrieve(
 // Delete a file and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.FilesDeleteRequest{}
+//	_, err := client.Files.Delete(
+//	    context.TODO(),
+//	    "file_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the file to delete.
@@ -111,6 +141,17 @@ func (c *Client) Delete(
 // Supported file types can be found [here](https://docs.extend.ai/2026-02-09/general/supported-file-types).
 //
 // This endpoint requires multipart form encoding. Most HTTP clients will handle this encoding automatically (see the examples).
+//
+// Example:
+//
+//	request := &extend.FilesUploadRequest{}
+//	_, err := client.Files.Upload(
+//	    context.TODO(),
+//	    strings.NewReader(
+//	        "",
+//	    ),
+//	    request,
+//	)
 func (c *Client) Upload(
 	ctx context.Context,
 	// The file contents to upload

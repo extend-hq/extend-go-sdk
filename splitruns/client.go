@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all split runs.
 //
 // Returns a summary of each run. Use `GET /split_runs/{id}` to retrieve the full object including `output` and `config`.
+//
+// Example:
+//
+//	request := &extend.SplitRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.SplitRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.SplitRunsListRequest,
@@ -60,6 +72,23 @@ func (c *Client) List(
 // Split a document into multiple parts using an existing splitter or an inline configuration.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Split Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.SplitRunsCreateRequest{
+//	    Splitter: &extend.SplitRunsCreateRequestSplitter{
+//	        ID: "spl_1234567890",
+//	    },
+//	    File: &extend.SplitRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/multi-document.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.SplitRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.SplitRunsCreateRequest,
@@ -79,6 +108,15 @@ func (c *Client) Create(
 // Retrieve details about a specific split run, including its status and outputs.
 //
 // A common use case for this endpoint is to poll for the status and final output of a split run when using the [Create Split Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/split/create-split-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+//
+// Example:
+//
+//	request := &extend.SplitRunsRetrieveRequest{}
+//	_, err := client.SplitRuns.Retrieve(
+//	    context.TODO(),
+//	    "split_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for this split run.
@@ -103,6 +141,15 @@ func (c *Client) Retrieve(
 // Delete a split run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.SplitRunsDeleteRequest{}
+//	_, err := client.SplitRuns.Delete(
+//	    context.TODO(),
+//	    "id",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the split run.
@@ -125,6 +172,15 @@ func (c *Client) Delete(
 // Cancel an in-progress split run.
 //
 // Note: Only split runs with a status of `"PROCESSING"` can be cancelled. Splitter runs that have already completed, failed, or been cancelled cannot be cancelled again.
+//
+// Example:
+//
+//	request := &extend.SplitRunsCancelRequest{}
+//	_, err := client.SplitRuns.Cancel(
+//	    context.TODO(),
+//	    "split_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the split run to cancel.
@@ -159,6 +215,50 @@ func (c *Client) Cancel(
 // - `inputs` must contain between 1 and 1,000 items.
 // - All inputs in a batch use the same splitter version and override config.
 // - Raw text input (`FileFromText`) is not supported for split runs. Use a URL or file ID.
+//
+// Example:
+//
+//	request := &extend.SplitRunsCreateBatchRequest{
+//	    Splitter: &extend.SplitRunsCreateBatchRequestSplitter{
+//	        ID: "spl_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    },
+//	    Inputs: []*extend.SplitRunsCreateBatchRequestInputsItem{
+//	        &extend.SplitRunsCreateBatchRequestInputsItem{
+//	            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/multi-doc1.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_abc123",
+//	            },
+//	        },
+//	        &extend.SplitRunsCreateBatchRequestInputsItem{
+//	            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/multi-doc2.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_def456",
+//	            },
+//	        },
+//	        &extend.SplitRunsCreateBatchRequestInputsItem{
+//	            File: &extend.SplitRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/multi-doc3.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_ghi789",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.SplitRuns.CreateBatch(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateBatch(
 	ctx context.Context,
 	request *extend.SplitRunsCreateBatchRequest,

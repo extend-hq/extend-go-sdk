@@ -29,10 +29,12 @@ type SplitterVersionsCreateRequest struct {
 }
 
 func (s *SplitterVersionsCreateRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -103,10 +105,12 @@ type SplitterVersionsListRequest struct {
 }
 
 func (s *SplitterVersionsListRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -150,10 +154,12 @@ type SplitterVersionsRetrieveRequest struct {
 }
 
 func (s *SplitterVersionsRetrieveRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -206,10 +212,12 @@ func (s *SplitterVersionsListResponse) GetExtraProperties() map[string]interface
 }
 
 func (s *SplitterVersionsListResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

@@ -41,6 +41,19 @@ func NewClient(options *core.RequestOptions) *Client {
 // This endpoint allows you to fetch all versions of a given extractor, including the current `draft` version.
 //
 // Versions are returned in descending order of creation (newest first) with the `draft` version first. The `draft` version is the latest unpublished version of the extractor, which can be published to create a new version. It might not have any changes from the last published version.
+//
+// Example:
+//
+//	request := &extend.ExtractorVersionsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ExtractorVersions.List(
+//	    context.TODO(),
+//	    "extractor_id_here",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the extractor.
@@ -65,6 +78,20 @@ func (c *Client) List(
 // This endpoint allows you to publish a new version of an existing extractor. Publishing a new version creates a snapshot of the extractor's current configuration and makes it available for use in workflows.
 //
 // Publishing a new version does not automatically update existing workflows using this extractor. You may need to manually update workflows to use the new version if desired.
+//
+// Example:
+//
+//	request := &extend.ExtractorVersionsCreateRequest{
+//	    ReleaseType: extend.ReleaseTypeMinor,
+//	    Description: extend.String(
+//	        "Updated extraction rules for better accuracy",
+//	    ),
+//	}
+//	_, err := client.ExtractorVersions.Create(
+//	    context.TODO(),
+//	    "extractor_id_here",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the extractor.
@@ -87,6 +114,16 @@ func (c *Client) Create(
 }
 
 // Retrieve a specific version of an extractor in Extend
+//
+// Example:
+//
+//	request := &extend.ExtractorVersionsRetrieveRequest{}
+//	_, err := client.ExtractorVersions.Retrieve(
+//	    context.TODO(),
+//	    "extractor_id_here",
+//	    "draft",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the extractor.

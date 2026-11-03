@@ -41,6 +41,15 @@ func NewClient(options *core.RequestOptions) *Client {
 // Retrieve details about a batch processor run, including evaluation runs.
 //
 // **Deprecated:** This endpoint is maintained for backwards compatibility only and will be replaced in a future API version. Use [Get Evaluation Set Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/get-evaluation-set-run) for interacting with evaluation set runs.
+//
+// Example:
+//
+//	request := &extend.BatchProcessorRunGetRequest{}
+//	_, err := client.BatchProcessorRun.Get(
+//	    context.TODO(),
+//	    "bpr_id_here",
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	// The unique identifier of the batch processor run to retrieve.

@@ -1,7 +1,7 @@
 {
-  "cliVersion": "5.41.0",
+  "cliVersion": "5.44.6",
   "generatorName": "fernapi/fern-go-sdk",
-  "generatorVersion": "1.49.5",
+  "generatorVersion": "1.70.16",
   "generatorConfig": {
     "packageName": "extend",
     "module": {
@@ -13,10 +13,9 @@
     "alwaysSendRequiredProperties": true,
     "useReaderForBytesRequest": true
   },
-  "originGitCommit": "38cc7c56f0e2b9d179614d51aaff85697575226d",
+  "originGitCommit": "a541702aa178541b4591c7a43af471b33ff28231",
   "originGitCommitIsDirty": false,
-  "invokedBy": "ci",
-  "requestedVersion": "0.7.0",
-  "ciProvider": "github",
-  "sdkVersion": "v0.7.0"
+  "invokedBy": "manual",
+  "requestedVersion": "0.9.0",
+  "sdkVersion": "v0.9.0"
 }

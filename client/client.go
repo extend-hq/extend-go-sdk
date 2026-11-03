@@ -39,6 +39,7 @@ import (
 	workflowruns "github.com/extend-hq/extend-go-sdk/workflowruns"
 	workflows "github.com/extend-hq/extend-go-sdk/workflows"
 	workflowversions "github.com/extend-hq/extend-go-sdk/workflowversions"
+	workspaces "github.com/extend-hq/extend-go-sdk/workspaces"
 )
 
 type Client struct {
@@ -72,6 +73,7 @@ type Client struct {
 	EvaluationSetRuns    *evaluationsetruns.Client
 	WebhookEndpoints     *webhookendpoints.Client
 	WebhookSubscriptions *webhooksubscriptions.Client
+	Workspaces           *workspaces.Client
 
 	options *core.RequestOptions
 	baseURL string
@@ -113,6 +115,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		EvaluationSetRuns:    evaluationsetruns.NewClient(options),
 		WebhookEndpoints:     webhookendpoints.NewClient(options),
 		WebhookSubscriptions: webhooksubscriptions.NewClient(options),
+		Workspaces:           workspaces.NewClient(options),
 		WithRawResponse:      NewRawClient(options),
 		options:              options,
 		baseURL:              options.BaseURL,
@@ -133,6 +136,23 @@ func NewClient(opts ...option.RequestOption) *Client {
 // The Parse endpoint allows you to convert documents into structured, machine-readable formats with fine-grained control over the parsing process. This endpoint is ideal for extracting cleaned document content to be used as context for downstream processing, e.g. RAG pipelines, custom ingestion pipelines, embeddings classification, etc.
 //
 // For more details, see the [Parse File guide](https://docs.extend.ai/2026-02-09/parsing/overview).
+//
+// Example:
+//
+//	request := &extend.ParseRequest{
+//	    File: &extend.ParseRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/bank_statement.pdf",
+//	            Name: extend.String(
+//	                "bank_statement.pdf",
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.Parse(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Parse(
 	ctx context.Context,
 	request *extend.ParseRequest,
@@ -158,6 +178,33 @@ func (c *Client) Parse(
 // Pass `file` to edit a document directly, or `templateId` to run against a saved [edit template](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/get-edit-template). Exactly one of `file` or `templateId` must be provided.
 //
 // For more details, see the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview). See [Editing Error Handling](https://docs.extend.ai/2026-02-09/editing/error-handling) for HTTP errors and run failure reasons.
+//
+// Example:
+//
+//	request := &extend.EditRequest{
+//	    File: &extend.EditRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/form.pdf",
+//	        },
+//	    },
+//	    Config: &extend.EditConfig{
+//	        EngineVersion: extend.String(
+//	            "1.0.0",
+//	        ),
+//	        Instructions: extend.String(
+//	            "Fill out the form with the provided data",
+//	        ),
+//	        AdvancedOptions: &extend.EditConfigAdvancedOptions{
+//	            FlattenPdf: extend.Bool(
+//	                true,
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.Edit(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Edit(
 	ctx context.Context,
 	request *extend.EditRequest,
@@ -177,6 +224,33 @@ func (c *Client) Edit(
 // Detect fields in a PDF form and wait for the generated edit schema before returning. This endpoint has a 5-minute timeout.
 //
 // For production workloads, use `POST /form_detection_runs` and receive the result by webhook or poll `GET /form_detection_runs/{id}` instead. The response is a completed `form_detection_run`; its `output.schema` can be passed directly to `POST /edit` or `POST /edit_runs`.
+//
+// Example:
+//
+//	request := &extend.DetectFormRequest{
+//	    File: &extend.DetectFormRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/form.pdf",
+//	        },
+//	    },
+//	    Config: &extend.EditSchemaGenerationConfig{
+//	        EngineVersion: extend.String(
+//	            "1.0.0",
+//	        ),
+//	        Instructions: extend.String(
+//	            "Detect the form fields and use human-readable field names.",
+//	        ),
+//	        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+//	            RadioEnumsEnabled: extend.Bool(
+//	                true,
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.DetectForm(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) DetectForm(
 	ctx context.Context,
 	request *extend.DetectFormRequest,
@@ -196,6 +270,20 @@ func (c *Client) DetectForm(
 // Check a single document for evidence of tampering, forgery, or AI generation and wait for the result. This endpoint times out after 5 minutes on both engines. A timed-out request usually fails with `504 Gateway Timeout`; the run keeps processing in the background. Use `POST /verify_runs` for `verify_agentic` and for any document that may take longer.
 //
 // For production workloads, use `POST /verify_runs` and poll `GET /verify_runs/{id}` instead. The response is a completed `verify_run`; read `output.riskLevel`, `output.summary`, and `output.signals`. An empty `signals` array means no Public Signals were detected; it is not a claim that the document is authentic.
+//
+// Example:
+//
+//	request := &extend.VerifyRequest{
+//	    File: &extend.VerifyRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/bank_statement.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.Verify(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Verify(
 	ctx context.Context,
 	request *extend.VerifyRequest,
@@ -221,6 +309,58 @@ func (c *Client) Verify(
 // Pass `file` for a single document, or `package` to extract from multiple files in a single run. Exactly one of `file` or `package` must be provided.
 //
 // For more details, see the [Extract File guide](https://docs.extend.ai/2026-02-09/extraction/overview).
+//
+// Example:
+//
+//	request := &extend.ExtractRequest{
+//	    Config: &extend.ExtractConfigJSON{
+//	        Schema: &extend.JSONObject{
+//	            "properties": map[string]any{
+//	                "invoice_number": map[string]any{
+//	                    "description": "The invoice number",
+//	                    "type": "string",
+//	                },
+//	                "total_amount": map[string]any{
+//	                    "description": "The total amount due",
+//	                    "extend:type": "currency",
+//	                    "properties": map[string]any{
+//	                        "amount": map[string]any{
+//	                            "type": []any{
+//	                                "number",
+//	                                "null",
+//	                            },
+//	                        },
+//	                        "iso_4217_currency_code": map[string]any{
+//	                            "type": []any{
+//	                                "string",
+//	                                "null",
+//	                            },
+//	                        },
+//	                    },
+//	                    "required": []any{
+//	                        "amount",
+//	                        "iso_4217_currency_code",
+//	                    },
+//	                    "type": "object",
+//	                },
+//	                "vendor_name": map[string]any{
+//	                    "description": "The name of the vendor",
+//	                    "type": "string",
+//	                },
+//	            },
+//	            "type": "object",
+//	        },
+//	    },
+//	    File: &extend.ExtractRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/invoice.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.Extract(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Extract(
 	ctx context.Context,
 	request *extend.ExtractRequest,
@@ -244,6 +384,39 @@ func (c *Client) Extract(
 // The Classify endpoint allows you to classify documents using an existing classifier or an inline configuration.
 //
 // For more details, see the [Classify File guide](https://docs.extend.ai/2026-02-09/classification/configuration).
+//
+// Example:
+//
+//	request := &extend.ClassifyRequest{
+//	    Config: &extend.ClassifyConfig{
+//	        Classifications: []*extend.Classification{
+//	            &extend.Classification{
+//	                ID: "invoice",
+//	                Type: "invoice",
+//	                Description: "An invoice or bill for goods or services",
+//	            },
+//	            &extend.Classification{
+//	                ID: "receipt",
+//	                Type: "receipt",
+//	                Description: "A receipt confirming payment",
+//	            },
+//	            &extend.Classification{
+//	                ID: "other",
+//	                Type: "other",
+//	                Description: "Any other document type",
+//	            },
+//	        },
+//	    },
+//	    File: &extend.ClassifyRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/document.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.Classify(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Classify(
 	ctx context.Context,
 	request *extend.ClassifyRequest,
@@ -267,6 +440,45 @@ func (c *Client) Classify(
 // The Split endpoint allows you to split documents into multiple parts using an existing splitter or an inline configuration.
 //
 // For more details, see the [Split File guide](https://docs.extend.ai/2026-02-09/splitting/configuration).
+//
+// Example:
+//
+//	request := &extend.SplitRequest{
+//	    Config: &extend.SplitConfig{
+//	        SplitClassifications: []*extend.SplitClassification{
+//	            &extend.SplitClassification{
+//	                ID: "invoice",
+//	                Type: "invoice",
+//	                Description: "An invoice or bill for goods or services",
+//	                IdentifierKey: extend.String(
+//	                    "invoice number from the document header",
+//	                ),
+//	            },
+//	            &extend.SplitClassification{
+//	                ID: "receipt",
+//	                Type: "receipt",
+//	                Description: "A receipt confirming payment",
+//	                IdentifierKey: extend.String(
+//	                    "receipt number",
+//	                ),
+//	            },
+//	            &extend.SplitClassification{
+//	                ID: "other",
+//	                Type: "other",
+//	                Description: "Any other document type",
+//	            },
+//	        },
+//	    },
+//	    File: &extend.SplitRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/multi-document.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.Split(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Split(
 	ctx context.Context,
 	request *extend.SplitRequest,

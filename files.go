@@ -22,10 +22,12 @@ type FilesDeleteRequest struct {
 }
 
 func (f *FilesDeleteRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -59,10 +61,12 @@ type FilesListRequest struct {
 }
 
 func (f *FilesListRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -132,10 +136,12 @@ type FilesRetrieveRequest struct {
 }
 
 func (f *FilesRetrieveRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -196,10 +202,12 @@ func (f *FilesDeleteResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FilesDeleteResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -294,10 +302,12 @@ func (f *FilesListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FilesListResponse) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;
@@ -385,10 +395,12 @@ type FilesUploadRequest struct {
 }
 
 func (f *FilesUploadRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;

@@ -24,10 +24,12 @@ type FormDetectionRunsCreateRequest struct {
 }
 
 func (f *FormDetectionRunsCreateRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -78,10 +80,12 @@ type FormDetectionRunsRetrieveRequest struct {
 }
 
 func (f *FormDetectionRunsRetrieveRequest) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -114,6 +118,38 @@ func (f *FormDetectionRunsCreateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (f *FormDetectionRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			f.typ = "FileFromURL"
+			f.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			f.typ = "FileFromID"
+			f.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			f.typ = "FileFromURL"
+			f.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			f.typ = "FileFromID"
+			f.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		f.typ = "FileFromURL"

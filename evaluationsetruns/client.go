@@ -41,6 +41,22 @@ func NewClient(options *core.RequestOptions) *Client {
 // Create and start an async evaluation set run. The response returns the evaluation set run object with its initial status; use `GET /evaluation_set_runs/{id}` to poll for completion.
 //
 // Evaluation set runs are currently supported for document processor evaluation sets.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetRunsCreateRequest{
+//	    EvaluationSetID: "ev_2LcgeY_mp2T5yPaEuq5Lw",
+//	    Entity: &extend.EvaluationSetRunsCreateRequestEntity{
+//	        ID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
+//	        Version: extend.String(
+//	            "1.0",
+//	        ),
+//	    },
+//	}
+//	_, err := client.EvaluationSetRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.EvaluationSetRunsCreateRequest,
@@ -58,6 +74,15 @@ func (c *Client) Create(
 }
 
 // Get details of an evaluation set run.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetRunsRetrieveRequest{}
+//	_, err := client.EvaluationSetRuns.Retrieve(
+//	    context.TODO(),
+//	    "bpr_Xj8mK2pL9nR4vT7qY5wZ",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set run.

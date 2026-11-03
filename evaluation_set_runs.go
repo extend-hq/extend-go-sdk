@@ -32,10 +32,12 @@ type EvaluationSetRunsCreateRequest struct {
 }
 
 func (e *EvaluationSetRunsCreateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -100,10 +102,12 @@ type EvaluationSetRunsRetrieveRequest struct {
 }
 
 func (e *EvaluationSetRunsRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -113,7 +117,6 @@ func (e *EvaluationSetRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceI
 	e.require(evaluationSetRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// Per-class precision, recall, and F1 for a classify evaluation run.
 var (
 	classificationMetricFieldCountExpected  = big.NewInt(1 << 0)
 	classificationMetricFieldCountPredicted = big.NewInt(1 << 1)
@@ -123,6 +126,7 @@ var (
 	classificationMetricFieldF1             = big.NewInt(1 << 5)
 )
 
+// Per-class precision, recall, and F1 for a classify evaluation run.
 type ClassificationMetric struct {
 	// The number of files whose expected classification was this class.
 	CountExpected *float64 `json:"countExpected,omitempty" url:"countExpected,omitempty"`
@@ -194,10 +198,12 @@ func (c *ClassificationMetric) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassificationMetric) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetCountExpected sets the CountExpected field and marks it as non-optional;
@@ -284,7 +290,6 @@ func (c *ClassificationMetric) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Metrics for an evaluation set run against a classifier.
 var (
 	classifyEvaluationSetRunMetricsFieldNumFilesTotal         = big.NewInt(1 << 0)
 	classifyEvaluationSetRunMetricsFieldNumFilesProcessed     = big.NewInt(1 << 1)
@@ -299,6 +304,7 @@ var (
 	classifyEvaluationSetRunMetricsFieldClassificationMetrics = big.NewInt(1 << 10)
 )
 
+// Metrics for an evaluation set run against a classifier.
 type ClassifyEvaluationSetRunMetrics struct {
 	// The total number of files that will be processed in this evaluation set run.
 	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
@@ -415,10 +421,12 @@ func (c *ClassifyEvaluationSetRunMetrics) GetExtraProperties() map[string]interf
 }
 
 func (c *ClassifyEvaluationSetRunMetrics) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
@@ -548,9 +556,15 @@ var (
 	evaluationSetRunFieldMetrics         = big.NewInt(1 << 4)
 	evaluationSetRunFieldStatus          = big.NewInt(1 << 5)
 	evaluationSetRunFieldOptions         = big.NewInt(1 << 6)
-	evaluationSetRunFieldCreatedAt       = big.NewInt(1 << 7)
-	evaluationSetRunFieldUpdatedAt       = big.NewInt(1 << 8)
+	evaluationSetRunFieldUsage           = big.NewInt(1 << 7)
+	evaluationSetRunFieldCreatedAt       = big.NewInt(1 << 8)
+	evaluationSetRunFieldUpdatedAt       = big.NewInt(1 << 9)
 )
+
+// evaluationSetRunNullableFields maps the wire names of EvaluationSetRun's nullable fields (required or optional) to their field bits.
+var evaluationSetRunNullableFields = map[string]*big.Int{
+	"usage": evaluationSetRunFieldUsage,
+}
 
 type EvaluationSetRun struct {
 	// The unique identifier for this evaluation set run.
@@ -569,9 +583,11 @@ type EvaluationSetRun struct {
 	Metrics *EvaluationSetRunMetrics `json:"metrics" url:"metrics"`
 	Status  BatchRunStatus           `json:"status" url:"status"`
 	// The options for the evaluation set run.
-	Options   *EvaluationSetRunOptions `json:"options" url:"options"`
-	CreatedAt CreatedAt                `json:"createdAt" url:"createdAt"`
-	UpdatedAt UpdatedAt                `json:"updatedAt" url:"updatedAt"`
+	Options *EvaluationSetRunOptions `json:"options" url:"options"`
+	// Usage credits consumed by this evaluation set run, aggregated across the processor runs it executed.
+	Usage     *EvaluationSetRunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+	CreatedAt CreatedAt              `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt              `json:"updatedAt" url:"updatedAt"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -630,6 +646,13 @@ func (e *EvaluationSetRun) GetOptions() *EvaluationSetRunOptions {
 	return e.Options
 }
 
+func (e *EvaluationSetRun) GetUsage() *EvaluationSetRunUsage {
+	if e == nil {
+		return nil
+	}
+	return e.Usage
+}
+
 func (e *EvaluationSetRun) GetCreatedAt() CreatedAt {
 	if e == nil {
 		return time.Time{}
@@ -656,10 +679,12 @@ func (e *EvaluationSetRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EvaluationSetRun) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -711,6 +736,13 @@ func (e *EvaluationSetRun) SetOptions(options *EvaluationSetRunOptions) {
 	e.require(evaluationSetRunFieldOptions)
 }
 
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRun) SetUsage(usage *EvaluationSetRunUsage) {
+	e.Usage = usage
+	e.require(evaluationSetRunFieldUsage)
+}
+
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (e *EvaluationSetRun) SetCreatedAt(createdAt CreatedAt) {
@@ -750,6 +782,13 @@ func (e *EvaluationSetRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, evaluationSetRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1088,7 +1127,6 @@ func (e *EvaluationSetRunEntityVersion) validate() error {
 	return nil
 }
 
-// Per-field accuracy statistics for an extract evaluation run.
 var (
 	evaluationSetRunFieldMetricFieldCountTotal    = big.NewInt(1 << 0)
 	evaluationSetRunFieldMetricFieldCountPresent  = big.NewInt(1 << 1)
@@ -1097,6 +1135,7 @@ var (
 	evaluationSetRunFieldMetricFieldAccuracy      = big.NewInt(1 << 4)
 )
 
+// Per-field accuracy statistics for an extract evaluation run.
 type EvaluationSetRunFieldMetric struct {
 	// The number of runs that included this field in the schema.
 	CountTotal *float64 `json:"countTotal,omitempty" url:"countTotal,omitempty"`
@@ -1159,10 +1198,12 @@ func (e *EvaluationSetRunFieldMetric) GetExtraProperties() map[string]interface{
 }
 
 func (e *EvaluationSetRunFieldMetric) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetCountTotal sets the CountTotal field and marks it as non-optional;
@@ -1393,7 +1434,6 @@ func (e *EvaluationSetRunMetrics) validate() error {
 	return nil
 }
 
-// Fields common to every evaluation set run metrics variant.
 var (
 	evaluationSetRunMetricsBaseFieldNumFilesTotal     = big.NewInt(1 << 0)
 	evaluationSetRunMetricsBaseFieldNumFilesProcessed = big.NewInt(1 << 1)
@@ -1406,6 +1446,7 @@ var (
 	evaluationSetRunMetricsBaseFieldP99LatencyMs      = big.NewInt(1 << 8)
 )
 
+// Fields common to every evaluation set run metrics variant.
 type EvaluationSetRunMetricsBase struct {
 	// The total number of files that will be processed in this evaluation set run.
 	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
@@ -1504,10 +1545,12 @@ func (e *EvaluationSetRunMetricsBase) GetExtraProperties() map[string]interface{
 }
 
 func (e *EvaluationSetRunMetricsBase) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
@@ -1615,12 +1658,12 @@ func (e *EvaluationSetRunMetricsBase) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The options for the evaluation set run.
 var (
 	evaluationSetRunOptionsFieldFuzzyMatchFields = big.NewInt(1 << 0)
 	evaluationSetRunOptionsFieldExcludeFields    = big.NewInt(1 << 1)
 )
 
+// The options for the evaluation set run.
 type EvaluationSetRunOptions struct {
 	// The fields that were fuzzy matched.
 	FuzzyMatchFields []string `json:"fuzzyMatchFields,omitempty" url:"fuzzyMatchFields,omitempty"`
@@ -1656,10 +1699,12 @@ func (e *EvaluationSetRunOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EvaluationSetRunOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFuzzyMatchFields sets the FuzzyMatchFields field and marks it as non-optional;
@@ -1718,7 +1763,111 @@ func (e *EvaluationSetRunOptions) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Metrics for an evaluation set run against an extractor.
+var (
+	evaluationSetRunUsageFieldCredits      = big.NewInt(1 << 0)
+	evaluationSetRunUsageFieldTotalCredits = big.NewInt(1 << 1)
+)
+
+// Usage credits consumed by an evaluation set run. For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
+type EvaluationSetRunUsage struct {
+	// The credits consumed by this evaluation set run.
+	Credits float64 `json:"credits" url:"credits"`
+	// The total credits accounted for under this evaluation set run. Because the aggregate in `credits` already includes every run the evaluation set run was responsible for creating, `totalCredits` equals `credits`. It is returned for consistency with the other run types.
+	TotalCredits *float64 `json:"totalCredits,omitempty" url:"totalCredits,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EvaluationSetRunUsage) GetCredits() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.Credits
+}
+
+func (e *EvaluationSetRunUsage) GetTotalCredits() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.TotalCredits
+}
+
+func (e *EvaluationSetRunUsage) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EvaluationSetRunUsage) require(field *big.Int) {
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
+	}
+	next.Or(next, field)
+	e.explicitFields = next
+}
+
+// SetCredits sets the Credits field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunUsage) SetCredits(credits float64) {
+	e.Credits = credits
+	e.require(evaluationSetRunUsageFieldCredits)
+}
+
+// SetTotalCredits sets the TotalCredits field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunUsage) SetTotalCredits(totalCredits *float64) {
+	e.TotalCredits = totalCredits
+	e.require(evaluationSetRunUsageFieldTotalCredits)
+}
+
+func (e *EvaluationSetRunUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler EvaluationSetRunUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EvaluationSetRunUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EvaluationSetRunUsage) MarshalJSON() ([]byte, error) {
+	type embed EvaluationSetRunUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EvaluationSetRunUsage) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
 var (
 	extractEvaluationSetRunMetricsFieldNumFilesTotal     = big.NewInt(1 << 0)
 	extractEvaluationSetRunMetricsFieldNumFilesProcessed = big.NewInt(1 << 1)
@@ -1733,6 +1882,7 @@ var (
 	extractEvaluationSetRunMetricsFieldFieldMetrics      = big.NewInt(1 << 10)
 )
 
+// Metrics for an evaluation set run against an extractor.
 type ExtractEvaluationSetRunMetrics struct {
 	// The total number of files that will be processed in this evaluation set run.
 	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
@@ -1849,10 +1999,12 @@ func (e *ExtractEvaluationSetRunMetrics) GetExtraProperties() map[string]interfa
 }
 
 func (e *ExtractEvaluationSetRunMetrics) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
@@ -1974,7 +2126,6 @@ func (e *ExtractEvaluationSetRunMetrics) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Metrics for an evaluation set run against a splitter.
 var (
 	splitterEvaluationSetRunMetricsFieldNumFilesTotal      = big.NewInt(1 << 0)
 	splitterEvaluationSetRunMetricsFieldNumFilesProcessed  = big.NewInt(1 << 1)
@@ -1993,6 +2144,7 @@ var (
 	splitterEvaluationSetRunMetricsFieldNumSplitsCorrect   = big.NewInt(1 << 14)
 )
 
+// Metrics for an evaluation set run against a splitter.
 type SplitterEvaluationSetRunMetrics struct {
 	// The total number of files that will be processed in this evaluation set run.
 	NumFilesTotal *float64 `json:"numFilesTotal,omitempty" url:"numFilesTotal,omitempty"`
@@ -2145,10 +2297,12 @@ func (s *SplitterEvaluationSetRunMetrics) GetExtraProperties() map[string]interf
 }
 
 func (s *SplitterEvaluationSetRunMetrics) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetNumFilesTotal sets the NumFilesTotal field and marks it as non-optional;
@@ -2298,12 +2452,12 @@ func (s *SplitterEvaluationSetRunMetrics) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Optional processor and version to run against the evaluation set. If omitted, the evaluation set's processor is run at its draft version.
 var (
 	evaluationSetRunsCreateRequestEntityFieldID      = big.NewInt(1 << 0)
 	evaluationSetRunsCreateRequestEntityFieldVersion = big.NewInt(1 << 1)
 )
 
+// Optional processor and version to run against the evaluation set. If omitted, the evaluation set's processor is run at its draft version.
 type EvaluationSetRunsCreateRequestEntity struct {
 	// The ID of the extractor, classifier, or splitter to evaluate.
 	ID      string                  `json:"id" url:"id"`
@@ -2338,10 +2492,12 @@ func (e *EvaluationSetRunsCreateRequestEntity) GetExtraProperties() map[string]i
 }
 
 func (e *EvaluationSetRunsCreateRequestEntity) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;

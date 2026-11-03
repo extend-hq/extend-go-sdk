@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List verify runs, with optional filters for status, source, risk level, and file name.
 //
 // Returns a paginated list of run summaries, each carrying the run's `riskLevel` but not its `output`. Use `GET /verify_runs/{id}` to retrieve the signals and evidence for a specific run.
+//
+// Example:
+//
+//	request := &extend.VerifyRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.VerifyRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.VerifyRunsListRequest,
@@ -60,6 +72,20 @@ func (c *Client) List(
 // Start checking a single document for evidence of tampering, forgery, or AI generation and return immediately with a `verify_run` resource in the `PROCESSING` state.
 //
 // Poll `GET /verify_runs/{id}` until the status is `PROCESSED`, `FAILED`, or `CANCELLED`. When processing succeeds, `output` contains the document-level `riskLevel`, a `summary`, and the detected `signals` with their evidence.
+//
+// Example:
+//
+//	request := &extend.VerifyRunsCreateRequest{
+//	    File: &extend.VerifyRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/bank_statement.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.VerifyRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.VerifyRunsCreateRequest,
@@ -81,6 +107,15 @@ func (c *Client) Create(
 // Use this endpoint to poll a run created with `POST /verify_runs`. When `status` is `PROCESSED`, `output` contains the document-level `riskLevel`, `summary`, and detected `signals`. When `status` is `FAILED`, read `failureReason` and `failureMessage`.
 //
 // For a zero-retention run, the first `GET` that returns the result also schedules its purge, so store what you need from that response.
+//
+// Example:
+//
+//	request := &extend.VerifyRunsRetrieveRequest{}
+//	_, err := client.VerifyRuns.Retrieve(
+//	    context.TODO(),
+//	    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the verify run.
@@ -105,6 +140,15 @@ func (c *Client) Retrieve(
 // Delete a verify run and all data derived from its document: the result, the evidence artifacts, and the embedded parse. This operation is permanent and cannot be undone. The input file itself is not deleted.
 //
 // A run that is still `PROCESSING` is cancelled first. After deletion the run returns `404` from every read and no longer appears in `GET /verify_runs`.
+//
+// Example:
+//
+//	request := &extend.VerifyRunsDeleteRequest{}
+//	_, err := client.VerifyRuns.Delete(
+//	    context.TODO(),
+//	    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the verify run to delete.
@@ -129,6 +173,15 @@ func (c *Client) Delete(
 // Cancel an in-progress verify run.
 //
 // Only runs with a status of `"PROCESSING"` are cancelled. Cancelling a run that has already completed, failed, or been cancelled is a no-op that returns the run unchanged. A cancelled run never produces `output`.
+//
+// Example:
+//
+//	request := &extend.VerifyRunsCancelRequest{}
+//	_, err := client.VerifyRuns.Cancel(
+//	    context.TODO(),
+//	    "vr_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the verify run to cancel.
