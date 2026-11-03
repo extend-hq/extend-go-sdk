@@ -9661,9 +9661,13 @@ var (
 type EditConfigAdvancedOptions struct {
 	// Whether to parse table regions as arrays of objects. Defaults to `false`.
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
-	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`.
+	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`. When `preserveSignatureValidity` is enabled, defaults to `false` if omitted. Flattening signed or append-only PDFs is not supported in preservation mode.
 	FlattenPdf *bool `json:"flattenPdf,omitempty" url:"flattenPdf,omitempty"`
-	// When enabled, attempts to preserve existing digital signature validity on signed or append-only PDFs. Form filling is limited to existing compatible fields; set `extend_edit:source_acroform.fieldName` on each schema property to identify its existing PDF field. Matching schema field names are also supported. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails if all requested fields are blocked. New signatures may still be added where permitted. Enabling this option defaults `flattenPdf` to `false`; flattening signed or append-only PDFs is not supported in this mode. Requires Edit `1.0.0-beta` or later. Defaults to `false`, allowing edits that may invalidate existing signatures.
+	// When enabled, attempts to preserve existing digital signature validity on signed or append-only PDFs. Requires Edit engine `1.0.0-beta` or later. Defaults to `false`, allowing edits that may invalidate existing signatures.
+	//
+	// Form filling is limited to existing compatible fields: set `extend_edit:source_acroform.fieldName` on each schema property to identify its existing PDF field. Matching schema field names are also supported. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails with `INVALID_OPTIONS` if all requested fields are blocked. New signatures may still be added where permitted.
+	//
+	// Defaults `flattenPdf` to `false` when omitted. On signed or append-only PDFs, explicitly setting `flattenPdf: true` fails with `INVALID_OPTIONS`. PDFs certified to permit no changes, or PDFs that cannot be saved incrementally, also fail in this mode.
 	PreserveSignatureValidity *bool `json:"preserveSignatureValidity,omitempty" url:"preserveSignatureValidity,omitempty"`
 	// Whether to represent radio groups as enums so only one option can be selected. Defaults to `true` for Edit `1.0.0` and `1.0.0-beta`, and `false` for `0.0.1`.
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
