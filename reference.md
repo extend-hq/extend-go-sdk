@@ -11167,3 +11167,244 @@ Example: `"whes_Xj8mK2pL9nR4vT7qY5wZ"`
 </dl>
 </details>
 
+## Workspaces
+<details><summary><code>client.Workspaces.List() -> *extend.WorkspacesListResponse</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+List every workspace in your organization.
+
+Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesListRequest{
+        NextPageToken: extend.String(
+            "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+        ),
+        ExtendWorkspaceID: "x-extend-workspace-id",
+    }
+client.Workspaces.List(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**sortDir:** `*extend.SortDir` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**nextPageToken:** `*extend.NextPageToken` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**maxPageSize:** `*extend.MaxPageSize` 
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workspaces.Create(request) -> *extend.Workspace</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Create a new workspace in your organization. 
+
+**Availability.** Workspace management may be enabled for customers on the Enterprise plan. Contact [support@extend.ai](mailto:support@extend.ai) if you would like to have it enabled for your organization.
+
+**Authentication.** Requires an **organization-scoped** API key. As with every organization-key request, you must still send `x-extend-workspace-id` with an existing workspace.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesCreateRequest{
+        ExtendWorkspaceID: "x-extend-workspace-id",
+        Name: "Workspace A",
+    }
+client.Workspaces.Create(
+        context.TODO(),
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**name:** `string` — The name of the workspace.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+
+<details><summary><code>client.Workspaces.Retrieve(ID) -> *extend.Workspace</code></summary>
+<dl>
+<dd>
+
+#### 📝 Description
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+Retrieve a workspace by ID.
+
+Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### 🔌 Usage
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+```go
+request := &extend.WorkspacesRetrieveRequest{
+        ExtendWorkspaceID: "x-extend-workspace-id",
+    }
+client.Workspaces.Retrieve(
+        context.TODO(),
+        "workspace_id_here",
+        request,
+    )
+}
+```
+</dd>
+</dl>
+</dd>
+</dl>
+
+#### ⚙️ Parameters
+
+<dl>
+<dd>
+
+<dl>
+<dd>
+
+**id:** `string` 
+
+The ID of the workspace.
+
+Example: `"ws_GSdEJY2mXL0FaQ3mL4kNY"`
+    
+</dd>
+</dl>
+
+<dl>
+<dd>
+
+**extendWorkspaceID:** `string` — **Required** on this endpoint: it accepts only organization-scoped API keys. Pass any existing workspace ID in your organization — on `POST /workspaces` it identifies the workspace you are calling from, not the one being created. See [Authentication](https://docs.extend.ai/2026-02-09/api-reference/authentication) for details on API key scopes.
+    
+</dd>
+</dl>
+</dd>
+</dl>
+
+
+</dd>
+</dl>
+</details>
+

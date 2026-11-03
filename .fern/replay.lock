@@ -36,14 +36,20 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-go-sdk: 1.49.5
-current_generation: 36119b78dcb1dea653490e73c5819e082ed82a88
+  - commit_sha: 87c72b0335f3ddd1e7e105459287dca143816a25
+    tree_hash: 133cfa76f7537abc55bfb5237185e36c64cef28b
+    timestamp: 2026-11-03T20:00:55.442Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-go-sdk: 1.49.5
+current_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
 patches:
   - id: patch-78027956
     content_hash: sha256:dfe003b3de81d479ab5ef9c0ec0b23f8e5667b8357a19b3004496b97baa492ee
     original_commit: 780279565555a9b62c4f2298b6580cf64e30abee
     original_message: Add plain-English SDK blurb before README badges.
     original_author: jordan-extend <jordan@extend.app>
-    base_generation: 36119b78dcb1dea653490e73c5819e082ed82a88
+    base_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
     files:
       - README.md
     patch_content: |
@@ -283,7 +289,7 @@ patches:
     original_commit: af7588b96daec368808177a677af502afe4ffad1
     original_message: Bump supported file types claim to 35+.
     original_author: jordan-extend <jordan@extend.app>
-    base_generation: 36119b78dcb1dea653490e73c5819e082ed82a88
+    base_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
     files:
       - README.md
     patch_content: |
