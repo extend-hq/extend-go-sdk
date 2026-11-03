@@ -13,10 +13,10 @@
     "alwaysSendRequiredProperties": true,
     "useReaderForBytesRequest": true
   },
-  "originGitCommit": "38cc7c56f0e2b9d179614d51aaff85697575226d",
+  "originGitCommit": "11470b89de905a0bf820829832659273a9845e5b",
   "originGitCommitIsDirty": false,
   "invokedBy": "ci",
-  "requestedVersion": "0.7.0",
+  "requestedVersion": "0.9.0",
   "ciProvider": "github",
-  "sdkVersion": "v0.7.0"
+  "sdkVersion": "v0.9.0"
 }

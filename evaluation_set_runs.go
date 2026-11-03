@@ -548,8 +548,9 @@ var (
 	evaluationSetRunFieldMetrics         = big.NewInt(1 << 4)
 	evaluationSetRunFieldStatus          = big.NewInt(1 << 5)
 	evaluationSetRunFieldOptions         = big.NewInt(1 << 6)
-	evaluationSetRunFieldCreatedAt       = big.NewInt(1 << 7)
-	evaluationSetRunFieldUpdatedAt       = big.NewInt(1 << 8)
+	evaluationSetRunFieldUsage           = big.NewInt(1 << 7)
+	evaluationSetRunFieldCreatedAt       = big.NewInt(1 << 8)
+	evaluationSetRunFieldUpdatedAt       = big.NewInt(1 << 9)
 )
 
 type EvaluationSetRun struct {
@@ -569,9 +570,11 @@ type EvaluationSetRun struct {
 	Metrics *EvaluationSetRunMetrics `json:"metrics" url:"metrics"`
 	Status  BatchRunStatus           `json:"status" url:"status"`
 	// The options for the evaluation set run.
-	Options   *EvaluationSetRunOptions `json:"options" url:"options"`
-	CreatedAt CreatedAt                `json:"createdAt" url:"createdAt"`
-	UpdatedAt UpdatedAt                `json:"updatedAt" url:"updatedAt"`
+	Options *EvaluationSetRunOptions `json:"options" url:"options"`
+	// Usage credits consumed by this evaluation set run, aggregated across the processor runs it executed.
+	Usage     *EvaluationSetRunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+	CreatedAt CreatedAt              `json:"createdAt" url:"createdAt"`
+	UpdatedAt UpdatedAt              `json:"updatedAt" url:"updatedAt"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -628,6 +631,13 @@ func (e *EvaluationSetRun) GetOptions() *EvaluationSetRunOptions {
 		return nil
 	}
 	return e.Options
+}
+
+func (e *EvaluationSetRun) GetUsage() *EvaluationSetRunUsage {
+	if e == nil {
+		return nil
+	}
+	return e.Usage
 }
 
 func (e *EvaluationSetRun) GetCreatedAt() CreatedAt {
@@ -709,6 +719,13 @@ func (e *EvaluationSetRun) SetStatus(status BatchRunStatus) {
 func (e *EvaluationSetRun) SetOptions(options *EvaluationSetRunOptions) {
 	e.Options = options
 	e.require(evaluationSetRunFieldOptions)
+}
+
+// SetUsage sets the Usage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRun) SetUsage(usage *EvaluationSetRunUsage) {
+	e.Usage = usage
+	e.require(evaluationSetRunFieldUsage)
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
@@ -1704,6 +1721,109 @@ func (e *EvaluationSetRunOptions) MarshalJSON() ([]byte, error) {
 }
 
 func (e *EvaluationSetRunOptions) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	if len(e.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(e.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(e); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", e)
+}
+
+// Usage credits consumed by an evaluation set run. For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
+var (
+	evaluationSetRunUsageFieldCredits      = big.NewInt(1 << 0)
+	evaluationSetRunUsageFieldTotalCredits = big.NewInt(1 << 1)
+)
+
+type EvaluationSetRunUsage struct {
+	// The credits consumed by this evaluation set run.
+	Credits float64 `json:"credits" url:"credits"`
+	// The total credits accounted for under this evaluation set run. Because the aggregate in `credits` already includes every run the evaluation set run was responsible for creating, `totalCredits` equals `credits`. It is returned for consistency with the other run types.
+	TotalCredits *float64 `json:"totalCredits,omitempty" url:"totalCredits,omitempty"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (e *EvaluationSetRunUsage) GetCredits() float64 {
+	if e == nil {
+		return 0
+	}
+	return e.Credits
+}
+
+func (e *EvaluationSetRunUsage) GetTotalCredits() *float64 {
+	if e == nil {
+		return nil
+	}
+	return e.TotalCredits
+}
+
+func (e *EvaluationSetRunUsage) GetExtraProperties() map[string]interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.extraProperties
+}
+
+func (e *EvaluationSetRunUsage) require(field *big.Int) {
+	if e.explicitFields == nil {
+		e.explicitFields = big.NewInt(0)
+	}
+	e.explicitFields.Or(e.explicitFields, field)
+}
+
+// SetCredits sets the Credits field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunUsage) SetCredits(credits float64) {
+	e.Credits = credits
+	e.require(evaluationSetRunUsageFieldCredits)
+}
+
+// SetTotalCredits sets the TotalCredits field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EvaluationSetRunUsage) SetTotalCredits(totalCredits *float64) {
+	e.TotalCredits = totalCredits
+	e.require(evaluationSetRunUsageFieldTotalCredits)
+}
+
+func (e *EvaluationSetRunUsage) UnmarshalJSON(data []byte) error {
+	type unmarshaler EvaluationSetRunUsage
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*e = EvaluationSetRunUsage(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *e)
+	if err != nil {
+		return err
+	}
+	e.extraProperties = extraProperties
+	e.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (e *EvaluationSetRunUsage) MarshalJSON() ([]byte, error) {
+	type embed EvaluationSetRunUsage
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*e),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, e.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (e *EvaluationSetRunUsage) String() string {
 	if e == nil {
 		return "<nil>"
 	}

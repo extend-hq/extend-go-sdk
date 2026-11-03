@@ -39,6 +39,7 @@ import (
 	workflowruns "github.com/extend-hq/extend-go-sdk/workflowruns"
 	workflows "github.com/extend-hq/extend-go-sdk/workflows"
 	workflowversions "github.com/extend-hq/extend-go-sdk/workflowversions"
+	workspaces "github.com/extend-hq/extend-go-sdk/workspaces"
 )
 
 type Client struct {
@@ -72,6 +73,7 @@ type Client struct {
 	EvaluationSetRuns    *evaluationsetruns.Client
 	WebhookEndpoints     *webhookendpoints.Client
 	WebhookSubscriptions *webhooksubscriptions.Client
+	Workspaces           *workspaces.Client
 
 	options *core.RequestOptions
 	baseURL string
@@ -113,6 +115,7 @@ func NewClient(opts ...option.RequestOption) *Client {
 		EvaluationSetRuns:    evaluationsetruns.NewClient(options),
 		WebhookEndpoints:     webhookendpoints.NewClient(options),
 		WebhookSubscriptions: webhooksubscriptions.NewClient(options),
+		Workspaces:           workspaces.NewClient(options),
 		WithRawResponse:      NewRawClient(options),
 		options:              options,
 		baseURL:              options.BaseURL,

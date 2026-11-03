@@ -1532,7 +1532,8 @@ var (
 	blockFieldMetadata      = big.NewInt(1 << 5)
 	blockFieldPolygon       = big.NewInt(1 << 6)
 	blockFieldBoundingBox   = big.NewInt(1 << 7)
-	blockFieldChildren      = big.NewInt(1 << 8)
+	blockFieldSource        = big.NewInt(1 << 8)
+	blockFieldChildren      = big.NewInt(1 << 9)
 )
 
 type Block struct {
@@ -1561,11 +1562,13 @@ type Block struct {
 	Details *BlockDetails `json:"details" url:"details"`
 	// Metadata about the block.
 	Metadata *BlockMetadata `json:"metadata" url:"metadata"`
-	// An array of points defining the polygon that bounds the block.
-	Polygon []*BlockPolygonItem `json:"polygon" url:"polygon"`
-	// A simplified bounding box for the block.
-	BoundingBox *BoundingBox `json:"boundingBox" url:"boundingBox"`
-	// An array of child blocks. For example, a table block may contain table cell blocks as children when `cellBlocksEnabled` is set to true.
+	// An array of points defining the polygon that bounds the block. Omitted on blocks that carry a `source` anchor.
+	Polygon []*BlockPolygonItem `json:"polygon,omitempty" url:"polygon,omitempty"`
+	// A simplified bounding box for the block. Omitted on blocks that carry a `source` anchor.
+	BoundingBox *BoundingBox `json:"boundingBox,omitempty" url:"boundingBox,omitempty"`
+	// The byte range this block came from in the uploaded file, measured in the encoding reported by `output.metadata.sourceEncoding`. Replaces `polygon`/`boundingBox`. Only set for HTML input when `advancedOptions.htmlSourceAnchors` is enabled.
+	Source *BlockSource `json:"source,omitempty" url:"source,omitempty"`
+	// An array of child blocks. For example, a table block may contain table cell blocks as children when `blockOptions.tables.cellBlocksEnabled` is set to true.
 	Children []*Block `json:"children,omitempty" url:"children,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -1630,6 +1633,13 @@ func (b *Block) GetBoundingBox() *BoundingBox {
 		return nil
 	}
 	return b.BoundingBox
+}
+
+func (b *Block) GetSource() *BlockSource {
+	if b == nil {
+		return nil
+	}
+	return b.Source
 }
 
 func (b *Block) GetChildren() []*Block {
@@ -1711,6 +1721,13 @@ func (b *Block) SetPolygon(polygon []*BlockPolygonItem) {
 func (b *Block) SetBoundingBox(boundingBox *BoundingBox) {
 	b.BoundingBox = boundingBox
 	b.require(blockFieldBoundingBox)
+}
+
+// SetSource sets the Source field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *Block) SetSource(source *BlockSource) {
+	b.Source = source
+	b.require(blockFieldSource)
 }
 
 // SetChildren sets the Children field and marks it as non-optional;
@@ -2408,6 +2425,125 @@ func (b *BlockPolygonItem) MarshalJSON() ([]byte, error) {
 }
 
 func (b *BlockPolygonItem) String() string {
+	if b == nil {
+		return "<nil>"
+	}
+	if len(b.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(b.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(b); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", b)
+}
+
+// The byte range this block came from in the uploaded file, measured in the encoding reported by `output.metadata.sourceEncoding`. Replaces `polygon`/`boundingBox`. Only set for HTML input when `advancedOptions.htmlSourceAnchors` is enabled.
+var (
+	blockSourceFieldByteOffset = big.NewInt(1 << 0)
+	blockSourceFieldByteLength = big.NewInt(1 << 1)
+)
+
+type BlockSource struct {
+	// Zero-based byte offset into the uploaded file where this block starts.
+	ByteOffset int `json:"byteOffset" url:"byteOffset"`
+	// Length of this block, in bytes, starting at `byteOffset`.
+	ByteLength int `json:"byteLength" url:"byteLength"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+	type_          string
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (b *BlockSource) GetByteOffset() int {
+	if b == nil {
+		return 0
+	}
+	return b.ByteOffset
+}
+
+func (b *BlockSource) GetByteLength() int {
+	if b == nil {
+		return 0
+	}
+	return b.ByteLength
+}
+
+func (b *BlockSource) Type() string {
+	return b.type_
+}
+
+func (b *BlockSource) GetExtraProperties() map[string]interface{} {
+	if b == nil {
+		return nil
+	}
+	return b.extraProperties
+}
+
+func (b *BlockSource) require(field *big.Int) {
+	if b.explicitFields == nil {
+		b.explicitFields = big.NewInt(0)
+	}
+	b.explicitFields.Or(b.explicitFields, field)
+}
+
+// SetByteOffset sets the ByteOffset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockSource) SetByteOffset(byteOffset int) {
+	b.ByteOffset = byteOffset
+	b.require(blockSourceFieldByteOffset)
+}
+
+// SetByteLength sets the ByteLength field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (b *BlockSource) SetByteLength(byteLength int) {
+	b.ByteLength = byteLength
+	b.require(blockSourceFieldByteLength)
+}
+
+func (b *BlockSource) UnmarshalJSON(data []byte) error {
+	type embed BlockSource
+	var unmarshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*b),
+	}
+	if err := json.Unmarshal(data, &unmarshaler); err != nil {
+		return err
+	}
+	*b = BlockSource(unmarshaler.embed)
+	if unmarshaler.Type != "html" {
+		return fmt.Errorf("unexpected value for literal on type %T; expected %v got %v", b, "html", unmarshaler.Type)
+	}
+	b.type_ = unmarshaler.Type
+	extraProperties, err := internal.ExtractExtraProperties(data, *b, "type")
+	if err != nil {
+		return err
+	}
+	b.extraProperties = extraProperties
+	b.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (b *BlockSource) MarshalJSON() ([]byte, error) {
+	type embed BlockSource
+	var marshaler = struct {
+		embed
+		Type string `json:"type"`
+	}{
+		embed: embed(*b),
+		Type:  "html",
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, b.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (b *BlockSource) String() string {
 	if b == nil {
 		return "<nil>"
 	}
@@ -20799,7 +20935,13 @@ func (i *Insight) String() string {
 type JSONObject = map[string]any
 
 // Details for key-value pair blocks
+var (
+	keyValueDetailsFieldForm = big.NewInt(1 << 0)
+)
+
 type KeyValueDetails struct {
+	// The form region as a tree of nodes in reading order. Only set when `blockOptions.keyValue.structuredOutputEnabled` is `true`.
+	Form []*KeyValueFormNode `json:"form,omitempty" url:"form,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -20807,6 +20949,13 @@ type KeyValueDetails struct {
 
 	extraProperties map[string]interface{}
 	rawJSON         json.RawMessage
+}
+
+func (k *KeyValueDetails) GetForm() []*KeyValueFormNode {
+	if k == nil {
+		return nil
+	}
+	return k.Form
 }
 
 func (k *KeyValueDetails) Type() string {
@@ -20825,6 +20974,13 @@ func (k *KeyValueDetails) require(field *big.Int) {
 		k.explicitFields = big.NewInt(0)
 	}
 	k.explicitFields.Or(k.explicitFields, field)
+}
+
+// SetForm sets the Form field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueDetails) SetForm(form []*KeyValueFormNode) {
+	k.Form = form
+	k.require(keyValueDetailsFieldForm)
 }
 
 func (k *KeyValueDetails) UnmarshalJSON(data []byte) error {
@@ -20878,6 +21034,229 @@ func (k *KeyValueDetails) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", k)
+}
+
+// One node of a structured form. A node's answers and sub-labels are its `children`: a filled value is a `text_field` child of its `key`, and a printed checkbox option is a `key` whose first child is its `selection`.
+var (
+	keyValueFormNodeFieldID          = big.NewInt(1 << 0)
+	keyValueFormNodeFieldType        = big.NewInt(1 << 1)
+	keyValueFormNodeFieldContent     = big.NewInt(1 << 2)
+	keyValueFormNodeFieldBoundingBox = big.NewInt(1 << 3)
+	keyValueFormNodeFieldSelected    = big.NewInt(1 << 4)
+	keyValueFormNodeFieldChildren    = big.NewInt(1 << 5)
+)
+
+type KeyValueFormNode struct {
+	// Identifier for the node, stable for a given block and position in the form.
+	ID string `json:"id" url:"id"`
+	// The kind of node:
+	// * `"key"` - Printed text such as a label, heading, instruction, or option label
+	// * `"text_field"` - A filled-in answer
+	// * `"empty_field"` - An answer slot left empty
+	// * `"signature_field"` - A signature
+	// * `"selection_group"` - The options that answer a key
+	// * `"selection"` - A checkbox, radio button, or circled-option mark
+	// * `"table"` - A grid inside the form; its cells are `children`
+	Type KeyValueFormNodeType `json:"type" url:"type"`
+	// The node's text. For `empty_field`, `"<blank />"` plus any printed symbol or unit (for example `"$ <blank />"`). For `signature_field`, the signer's name if printed, otherwise `""`. For `selection` and `selection_group`, `""`. For `table`, the grid as HTML.
+	Content string `json:"content" url:"content"`
+	// The node's location in the same coordinate space as the block's `boundingBox`. For `selection`, the mark itself; for `selection_group`, the area around its options. `null` when the node could not be located on the page.
+	BoundingBox *BoundingBox `json:"boundingBox,omitempty" url:"boundingBox,omitempty"`
+	// Whether the mark is checked. Only set on `selection` nodes; `null` for every other type.
+	Selected *bool `json:"selected,omitempty" url:"selected,omitempty"`
+	// Child nodes. Always present; empty for leaf nodes.
+	Children []*KeyValueFormNode `json:"children" url:"children"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (k *KeyValueFormNode) GetID() string {
+	if k == nil {
+		return ""
+	}
+	return k.ID
+}
+
+func (k *KeyValueFormNode) GetType() KeyValueFormNodeType {
+	if k == nil {
+		return ""
+	}
+	return k.Type
+}
+
+func (k *KeyValueFormNode) GetContent() string {
+	if k == nil {
+		return ""
+	}
+	return k.Content
+}
+
+func (k *KeyValueFormNode) GetBoundingBox() *BoundingBox {
+	if k == nil {
+		return nil
+	}
+	return k.BoundingBox
+}
+
+func (k *KeyValueFormNode) GetSelected() *bool {
+	if k == nil {
+		return nil
+	}
+	return k.Selected
+}
+
+func (k *KeyValueFormNode) GetChildren() []*KeyValueFormNode {
+	if k == nil {
+		return nil
+	}
+	return k.Children
+}
+
+func (k *KeyValueFormNode) GetExtraProperties() map[string]interface{} {
+	if k == nil {
+		return nil
+	}
+	return k.extraProperties
+}
+
+func (k *KeyValueFormNode) require(field *big.Int) {
+	if k.explicitFields == nil {
+		k.explicitFields = big.NewInt(0)
+	}
+	k.explicitFields.Or(k.explicitFields, field)
+}
+
+// SetID sets the ID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetID(id string) {
+	k.ID = id
+	k.require(keyValueFormNodeFieldID)
+}
+
+// SetType sets the Type field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetType(type_ KeyValueFormNodeType) {
+	k.Type = type_
+	k.require(keyValueFormNodeFieldType)
+}
+
+// SetContent sets the Content field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetContent(content string) {
+	k.Content = content
+	k.require(keyValueFormNodeFieldContent)
+}
+
+// SetBoundingBox sets the BoundingBox field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetBoundingBox(boundingBox *BoundingBox) {
+	k.BoundingBox = boundingBox
+	k.require(keyValueFormNodeFieldBoundingBox)
+}
+
+// SetSelected sets the Selected field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetSelected(selected *bool) {
+	k.Selected = selected
+	k.require(keyValueFormNodeFieldSelected)
+}
+
+// SetChildren sets the Children field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (k *KeyValueFormNode) SetChildren(children []*KeyValueFormNode) {
+	k.Children = children
+	k.require(keyValueFormNodeFieldChildren)
+}
+
+func (k *KeyValueFormNode) UnmarshalJSON(data []byte) error {
+	type unmarshaler KeyValueFormNode
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*k = KeyValueFormNode(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *k)
+	if err != nil {
+		return err
+	}
+	k.extraProperties = extraProperties
+	k.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (k *KeyValueFormNode) MarshalJSON() ([]byte, error) {
+	type embed KeyValueFormNode
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*k),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, k.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (k *KeyValueFormNode) String() string {
+	if k == nil {
+		return "<nil>"
+	}
+	if len(k.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(k.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(k); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", k)
+}
+
+// The kind of node:
+// * `"key"` - Printed text such as a label, heading, instruction, or option label
+// * `"text_field"` - A filled-in answer
+// * `"empty_field"` - An answer slot left empty
+// * `"signature_field"` - A signature
+// * `"selection_group"` - The options that answer a key
+// * `"selection"` - A checkbox, radio button, or circled-option mark
+// * `"table"` - A grid inside the form; its cells are `children`
+type KeyValueFormNodeType string
+
+const (
+	KeyValueFormNodeTypeKey            KeyValueFormNodeType = "key"
+	KeyValueFormNodeTypeTextField      KeyValueFormNodeType = "text_field"
+	KeyValueFormNodeTypeEmptyField     KeyValueFormNodeType = "empty_field"
+	KeyValueFormNodeTypeSignatureField KeyValueFormNodeType = "signature_field"
+	KeyValueFormNodeTypeSelectionGroup KeyValueFormNodeType = "selection_group"
+	KeyValueFormNodeTypeSelection      KeyValueFormNodeType = "selection"
+	KeyValueFormNodeTypeTable          KeyValueFormNodeType = "table"
+)
+
+func NewKeyValueFormNodeTypeFromString(s string) (KeyValueFormNodeType, error) {
+	switch s {
+	case "key":
+		return KeyValueFormNodeTypeKey, nil
+	case "text_field":
+		return KeyValueFormNodeTypeTextField, nil
+	case "empty_field":
+		return KeyValueFormNodeTypeEmptyField, nil
+	case "signature_field":
+		return KeyValueFormNodeTypeSignatureField, nil
+	case "selection_group":
+		return KeyValueFormNodeTypeSelectionGroup, nil
+	case "selection":
+		return KeyValueFormNodeTypeSelection, nil
+	case "table":
+		return KeyValueFormNodeTypeTable, nil
+	}
+	var t KeyValueFormNodeType
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (k KeyValueFormNodeType) Ptr() *KeyValueFormNodeType {
+	return &k
 }
 
 var (
@@ -25144,24 +25523,35 @@ func (p *ParseConfig) String() string {
 var (
 	parseConfigAdvancedOptionsFieldPageRotationEnabled        = big.NewInt(1 << 0)
 	parseConfigAdvancedOptionsFieldPageRanges                 = big.NewInt(1 << 1)
-	parseConfigAdvancedOptionsFieldExcelParsingMode           = big.NewInt(1 << 2)
-	parseConfigAdvancedOptionsFieldExcelSkipHiddenContent     = big.NewInt(1 << 3)
-	parseConfigAdvancedOptionsFieldExcelUseRawCellValues      = big.NewInt(1 << 4)
-	parseConfigAdvancedOptionsFieldExcelSkipCalculation       = big.NewInt(1 << 5)
-	parseConfigAdvancedOptionsFieldExcelIncludeCellMetadata   = big.NewInt(1 << 6)
-	parseConfigAdvancedOptionsFieldExcelIncludeCellFormatting = big.NewInt(1 << 7)
-	parseConfigAdvancedOptionsFieldVerticalGroupingThreshold  = big.NewInt(1 << 8)
-	parseConfigAdvancedOptionsFieldReturnOcr                  = big.NewInt(1 << 9)
-	parseConfigAdvancedOptionsFieldAlwaysConvertToPdf         = big.NewInt(1 << 10)
-	parseConfigAdvancedOptionsFieldEnrichmentFormat           = big.NewInt(1 << 11)
-	parseConfigAdvancedOptionsFieldImageConversionQuality     = big.NewInt(1 << 12)
-	parseConfigAdvancedOptionsFieldFormattingDetection        = big.NewInt(1 << 13)
+	parseConfigAdvancedOptionsFieldTextExtractionMethod       = big.NewInt(1 << 2)
+	parseConfigAdvancedOptionsFieldExcelParsingMode           = big.NewInt(1 << 3)
+	parseConfigAdvancedOptionsFieldExcelSkipHiddenContent     = big.NewInt(1 << 4)
+	parseConfigAdvancedOptionsFieldExcelUseRawCellValues      = big.NewInt(1 << 5)
+	parseConfigAdvancedOptionsFieldExcelSkipCalculation       = big.NewInt(1 << 6)
+	parseConfigAdvancedOptionsFieldExcelIncludeCellMetadata   = big.NewInt(1 << 7)
+	parseConfigAdvancedOptionsFieldExcelIncludeCellFormatting = big.NewInt(1 << 8)
+	parseConfigAdvancedOptionsFieldVerticalGroupingThreshold  = big.NewInt(1 << 9)
+	parseConfigAdvancedOptionsFieldEmbedOcrInPdf              = big.NewInt(1 << 10)
+	parseConfigAdvancedOptionsFieldReturnOcr                  = big.NewInt(1 << 11)
+	parseConfigAdvancedOptionsFieldAlwaysConvertToPdf         = big.NewInt(1 << 12)
+	parseConfigAdvancedOptionsFieldHTMLSourceAnchors          = big.NewInt(1 << 13)
+	parseConfigAdvancedOptionsFieldReturnSourceNodes          = big.NewInt(1 << 14)
+	parseConfigAdvancedOptionsFieldEnrichmentFormat           = big.NewInt(1 << 15)
+	parseConfigAdvancedOptionsFieldImageConversionQuality     = big.NewInt(1 << 16)
+	parseConfigAdvancedOptionsFieldFormattingDetection        = big.NewInt(1 << 17)
 )
 
 type ParseConfigAdvancedOptions struct {
 	// Whether to automatically detect and correct page rotation.
 	PageRotationEnabled *bool       `json:"pageRotationEnabled,omitempty" url:"pageRotationEnabled,omitempty"`
 	PageRanges          *PageRanges `json:"pageRanges,omitempty" url:"pageRanges,omitempty"`
+	// Controls how page text is obtained for PDFs, including documents converted to PDF.
+	//
+	// * `auto`: Use the PDF's own embedded text on pages where it is reliable, and OCR the rest.
+	// * `ocr_only`: Read every page with OCR and ignore embedded text.
+	//
+	// Available on `parse_auto` and `parse_light` >= `1.0.0`, which both default to `auto`. Other engines, including `parse_performance`, always use OCR.
+	TextExtractionMethod *ParseConfigAdvancedOptionsTextExtractionMethod `json:"textExtractionMethod,omitempty" url:"textExtractionMethod,omitempty"`
 	// Controls how Excel files are parsed.
 	//
 	// * `basic`: Fast, deterministic parsing.
@@ -25181,10 +25571,20 @@ type ParseConfigAdvancedOptions struct {
 	ExcelIncludeCellFormatting *bool `json:"excelIncludeCellFormatting,omitempty" url:"excelIncludeCellFormatting,omitempty"`
 	// Multiplier for the Y-axis threshold used to determine if text blocks should be placed on the same line or not (0.1-5.0, default 1.0). Higher values group elements that are further apart vertically. Only applies when the spatial target is set.
 	VerticalGroupingThreshold *float64 `json:"verticalGroupingThreshold,omitempty" url:"verticalGroupingThreshold,omitempty"`
+	// Embed recognized OCR words as an invisible text layer in the processed PDF, enabling search, selection, and copying while preserving page appearance. Pages that already contain text are skipped entirely; existing text layers are not replaced or corrected. Only processed pages with usable OCR words are candidates for embedding.
+	//
+	// Applies to PDFs, including supported inputs converted to PDF with `alwaysConvertToPdf`. Independent of `returnOcr.words` and `returnOcr.lines`; enabling embedding does not include OCR arrays in the JSON response.
+	//
+	// After the run is processed, retrieve its `file.id` with Get File and use `presignedUrl` to download the PDF. The parse run's `outputUrl` downloads parsed JSON. See [Embed OCR in PDF](https://docs.extend.ai/parsing/embed-ocr-in-pdf).
+	EmbedOcrInPdf *bool `json:"embedOcrInPdf,omitempty" url:"embedOcrInPdf,omitempty"`
 	// Options for returning raw OCR data in the response. Words and lines are independent opt-ins and both default to false.
 	ReturnOcr *ParseConfigAdvancedOptionsReturnOcr `json:"returnOcr,omitempty" url:"returnOcr,omitempty"`
-	// Whether to convert supported file types (images, Word documents, PowerPoint, Excel, HTML) to PDF before parsing. This can improve parsing quality for some file types and ensures spatial output with bounding boxes.
+	// Whether to convert supported file types (images, Word documents, PowerPoint, Excel, HTML) to PDF before parsing. This can improve parsing quality for some file types and ensures spatial output with bounding boxes. Cannot be combined with `htmlSourceAnchors`.
 	AlwaysConvertToPdf *bool `json:"alwaysConvertToPdf,omitempty" url:"alwaysConvertToPdf,omitempty"`
+	// HTML only. Whether to anchor each block to the byte range it came from in the uploaded file, returned as `source` on the block in place of `polygon`/`boundingBox`. Files must be UTF-8 or Windows-1252 encoded. Cannot be combined with `alwaysConvertToPdf`.
+	HTMLSourceAnchors *bool `json:"htmlSourceAnchors,omitempty" url:"htmlSourceAnchors,omitempty"`
+	// HTML only. Whether to include word-level source anchors under `output.source.nodes`, the text-format counterpart to `returnOcr.words`. Requires `htmlSourceAnchors`.
+	ReturnSourceNodes *bool `json:"returnSourceNodes,omitempty" url:"returnSourceNodes,omitempty"`
 	// The format used for enrichment annotations in the output.
 	//
 	// * `xml`: Use XML-style tags for enrichment annotations, e.g. <page_number>1</page_number> or <barcode>1234567890</barcode>
@@ -25224,6 +25624,13 @@ func (p *ParseConfigAdvancedOptions) GetPageRanges() *PageRanges {
 		return nil
 	}
 	return p.PageRanges
+}
+
+func (p *ParseConfigAdvancedOptions) GetTextExtractionMethod() *ParseConfigAdvancedOptionsTextExtractionMethod {
+	if p == nil {
+		return nil
+	}
+	return p.TextExtractionMethod
 }
 
 func (p *ParseConfigAdvancedOptions) GetExcelParsingMode() *ParseConfigAdvancedOptionsExcelParsingMode {
@@ -25275,6 +25682,13 @@ func (p *ParseConfigAdvancedOptions) GetVerticalGroupingThreshold() *float64 {
 	return p.VerticalGroupingThreshold
 }
 
+func (p *ParseConfigAdvancedOptions) GetEmbedOcrInPdf() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.EmbedOcrInPdf
+}
+
 func (p *ParseConfigAdvancedOptions) GetReturnOcr() *ParseConfigAdvancedOptionsReturnOcr {
 	if p == nil {
 		return nil
@@ -25287,6 +25701,20 @@ func (p *ParseConfigAdvancedOptions) GetAlwaysConvertToPdf() *bool {
 		return nil
 	}
 	return p.AlwaysConvertToPdf
+}
+
+func (p *ParseConfigAdvancedOptions) GetHTMLSourceAnchors() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.HTMLSourceAnchors
+}
+
+func (p *ParseConfigAdvancedOptions) GetReturnSourceNodes() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.ReturnSourceNodes
 }
 
 func (p *ParseConfigAdvancedOptions) GetEnrichmentFormat() *ParseConfigAdvancedOptionsEnrichmentFormat {
@@ -25338,6 +25766,13 @@ func (p *ParseConfigAdvancedOptions) SetPageRanges(pageRanges *PageRanges) {
 	p.require(parseConfigAdvancedOptionsFieldPageRanges)
 }
 
+// SetTextExtractionMethod sets the TextExtractionMethod field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetTextExtractionMethod(textExtractionMethod *ParseConfigAdvancedOptionsTextExtractionMethod) {
+	p.TextExtractionMethod = textExtractionMethod
+	p.require(parseConfigAdvancedOptionsFieldTextExtractionMethod)
+}
+
 // SetExcelParsingMode sets the ExcelParsingMode field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *ParseConfigAdvancedOptions) SetExcelParsingMode(excelParsingMode *ParseConfigAdvancedOptionsExcelParsingMode) {
@@ -25387,6 +25822,13 @@ func (p *ParseConfigAdvancedOptions) SetVerticalGroupingThreshold(verticalGroupi
 	p.require(parseConfigAdvancedOptionsFieldVerticalGroupingThreshold)
 }
 
+// SetEmbedOcrInPdf sets the EmbedOcrInPdf field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetEmbedOcrInPdf(embedOcrInPdf *bool) {
+	p.EmbedOcrInPdf = embedOcrInPdf
+	p.require(parseConfigAdvancedOptionsFieldEmbedOcrInPdf)
+}
+
 // SetReturnOcr sets the ReturnOcr field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *ParseConfigAdvancedOptions) SetReturnOcr(returnOcr *ParseConfigAdvancedOptionsReturnOcr) {
@@ -25399,6 +25841,20 @@ func (p *ParseConfigAdvancedOptions) SetReturnOcr(returnOcr *ParseConfigAdvanced
 func (p *ParseConfigAdvancedOptions) SetAlwaysConvertToPdf(alwaysConvertToPdf *bool) {
 	p.AlwaysConvertToPdf = alwaysConvertToPdf
 	p.require(parseConfigAdvancedOptionsFieldAlwaysConvertToPdf)
+}
+
+// SetHTMLSourceAnchors sets the HTMLSourceAnchors field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetHTMLSourceAnchors(htmlSourceAnchors *bool) {
+	p.HTMLSourceAnchors = htmlSourceAnchors
+	p.require(parseConfigAdvancedOptionsFieldHTMLSourceAnchors)
+}
+
+// SetReturnSourceNodes sets the ReturnSourceNodes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigAdvancedOptions) SetReturnSourceNodes(returnSourceNodes *bool) {
+	p.ReturnSourceNodes = returnSourceNodes
+	p.require(parseConfigAdvancedOptionsFieldReturnSourceNodes)
 }
 
 // SetEnrichmentFormat sets the EnrichmentFormat field and marks it as non-optional;
@@ -25730,6 +26186,34 @@ func (p *ParseConfigAdvancedOptionsReturnOcr) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+// Controls how page text is obtained for PDFs, including documents converted to PDF.
+//
+// * `auto`: Use the PDF's own embedded text on pages where it is reliable, and OCR the rest.
+// * `ocr_only`: Read every page with OCR and ignore embedded text.
+//
+// Available on `parse_auto` and `parse_light` >= `1.0.0`, which both default to `auto`. Other engines, including `parse_performance`, always use OCR.
+type ParseConfigAdvancedOptionsTextExtractionMethod string
+
+const (
+	ParseConfigAdvancedOptionsTextExtractionMethodAuto    ParseConfigAdvancedOptionsTextExtractionMethod = "auto"
+	ParseConfigAdvancedOptionsTextExtractionMethodOcrOnly ParseConfigAdvancedOptionsTextExtractionMethod = "ocr_only"
+)
+
+func NewParseConfigAdvancedOptionsTextExtractionMethodFromString(s string) (ParseConfigAdvancedOptionsTextExtractionMethod, error) {
+	switch s {
+	case "auto":
+		return ParseConfigAdvancedOptionsTextExtractionMethodAuto, nil
+	case "ocr_only":
+		return ParseConfigAdvancedOptionsTextExtractionMethodOcrOnly, nil
+	}
+	var t ParseConfigAdvancedOptionsTextExtractionMethod
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ParseConfigAdvancedOptionsTextExtractionMethod) Ptr() *ParseConfigAdvancedOptionsTextExtractionMethod {
+	return &p
 }
 
 // Options for controlling how different block types are processed.
@@ -26232,11 +26716,14 @@ func (p *ParseConfigBlockOptionsFormulas) String() string {
 // Options for key-value pair blocks.
 var (
 	parseConfigBlockOptionsKeyValueFieldBlankFieldFormattingEnabled = big.NewInt(1 << 0)
+	parseConfigBlockOptionsKeyValueFieldStructuredOutputEnabled     = big.NewInt(1 << 1)
 )
 
 type ParseConfigBlockOptionsKeyValue struct {
 	// Whether to preserve blank field formatting for key-value pairs with empty values.
 	BlankFieldFormattingEnabled *bool `json:"blankFieldFormattingEnabled,omitempty" url:"blankFieldFormattingEnabled,omitempty"`
+	// Whether to return each form region as a typed tree of keys, filled values, empty fields, signatures, checkboxes, and tables, with a bounding box per node. When enabled, every `key_value` block includes `details.form`. Requires `parse_performance` >= `2.0.0`, `parse_light` >= `1.0.0`, or `parse_auto`.
+	StructuredOutputEnabled *bool `json:"structuredOutputEnabled,omitempty" url:"structuredOutputEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -26250,6 +26737,13 @@ func (p *ParseConfigBlockOptionsKeyValue) GetBlankFieldFormattingEnabled() *bool
 		return nil
 	}
 	return p.BlankFieldFormattingEnabled
+}
+
+func (p *ParseConfigBlockOptionsKeyValue) GetStructuredOutputEnabled() *bool {
+	if p == nil {
+		return nil
+	}
+	return p.StructuredOutputEnabled
 }
 
 func (p *ParseConfigBlockOptionsKeyValue) GetExtraProperties() map[string]interface{} {
@@ -26271,6 +26765,13 @@ func (p *ParseConfigBlockOptionsKeyValue) require(field *big.Int) {
 func (p *ParseConfigBlockOptionsKeyValue) SetBlankFieldFormattingEnabled(blankFieldFormattingEnabled *bool) {
 	p.BlankFieldFormattingEnabled = blankFieldFormattingEnabled
 	p.require(parseConfigBlockOptionsKeyValueFieldBlankFieldFormattingEnabled)
+}
+
+// SetStructuredOutputEnabled sets the StructuredOutputEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseConfigBlockOptionsKeyValue) SetStructuredOutputEnabled(structuredOutputEnabled *bool) {
+	p.StructuredOutputEnabled = structuredOutputEnabled
+	p.require(parseConfigBlockOptionsKeyValueFieldStructuredOutputEnabled)
 }
 
 func (p *ParseConfigBlockOptionsKeyValue) UnmarshalJSON(data []byte) error {
@@ -27246,6 +27747,7 @@ type ParseRun struct {
 	// * `CHUNKING_ERROR` - An error occurred while chunking the document
 	// * `INTERNAL_ERROR` - An unexpected internal error occurred
 	// * `INVALID_CONFIG_OPTIONS` - The provided configuration options are invalid
+	// * `UNSUPPORTED_FILE_ENCODING` - The file could not be decoded as UTF-8 or Windows-1252, which `advancedOptions.htmlSourceAnchors` requires
 	// * `OUT_OF_CREDITS` - Insufficient credits to process the file
 	//
 	// **Note:** Additional failure reasons may be added in the future. Your integration should handle unknown values gracefully.
@@ -27736,7 +28238,8 @@ func (p *ParseRunMetrics) String() string {
 var (
 	parseRunOutputFieldChunks   = big.NewInt(1 << 0)
 	parseRunOutputFieldOcr      = big.NewInt(1 << 1)
-	parseRunOutputFieldMetadata = big.NewInt(1 << 2)
+	parseRunOutputFieldSource   = big.NewInt(1 << 2)
+	parseRunOutputFieldMetadata = big.NewInt(1 << 3)
 )
 
 type ParseRunOutput struct {
@@ -27744,7 +28247,9 @@ type ParseRunOutput struct {
 	Chunks []*Chunk `json:"chunks" url:"chunks"`
 	// Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
 	Ocr *ParseRunOutputOcr `json:"ocr,omitempty" url:"ocr,omitempty"`
-	// Rotation, dimension, and file-type metadata about the parse output. `null` for parse runs that completed before this field was introduced.
+	// Word-level source anchors for text formats, the counterpart to `ocr` for documents parsed from markup rather than pixels. Only included when `advancedOptions.returnSourceNodes` is enabled and the file contains text.
+	Source *ParseRunOutputSource `json:"source,omitempty" url:"source,omitempty"`
+	// Rotation, dimension, file-type, and detected-language metadata about the parse output. `null` for parse runs that completed before this field was introduced.
 	Metadata *ParseRunOutputMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -27766,6 +28271,13 @@ func (p *ParseRunOutput) GetOcr() *ParseRunOutputOcr {
 		return nil
 	}
 	return p.Ocr
+}
+
+func (p *ParseRunOutput) GetSource() *ParseRunOutputSource {
+	if p == nil {
+		return nil
+	}
+	return p.Source
 }
 
 func (p *ParseRunOutput) GetMetadata() *ParseRunOutputMetadata {
@@ -27801,6 +28313,13 @@ func (p *ParseRunOutput) SetChunks(chunks []*Chunk) {
 func (p *ParseRunOutput) SetOcr(ocr *ParseRunOutputOcr) {
 	p.Ocr = ocr
 	p.require(parseRunOutputFieldOcr)
+}
+
+// SetSource sets the Source field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutput) SetSource(source *ParseRunOutputSource) {
+	p.Source = source
+	p.require(parseRunOutputFieldSource)
 }
 
 // SetMetadata sets the Metadata field and marks it as non-optional;
@@ -27852,11 +28371,13 @@ func (p *ParseRunOutput) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Rotation, dimension, and file-type metadata about the parse output. `null` for parse runs that completed before this field was introduced.
+// Rotation, dimension, file-type, and detected-language metadata about the parse output. `null` for parse runs that completed before this field was introduced.
 var (
 	parseRunOutputMetadataFieldOriginalMimeType = big.NewInt(1 << 0)
 	parseRunOutputMetadataFieldFinalMimeType    = big.NewInt(1 << 1)
-	parseRunOutputMetadataFieldPages            = big.NewInt(1 << 2)
+	parseRunOutputMetadataFieldSourceEncoding   = big.NewInt(1 << 2)
+	parseRunOutputMetadataFieldPages            = big.NewInt(1 << 3)
+	parseRunOutputMetadataFieldLanguageDetected = big.NewInt(1 << 4)
 )
 
 type ParseRunOutputMetadata struct {
@@ -27864,8 +28385,14 @@ type ParseRunOutputMetadata struct {
 	OriginalMimeType *string `json:"originalMimeType,omitempty" url:"originalMimeType,omitempty"`
 	// The file's media type after any format conversion.
 	FinalMimeType *string `json:"finalMimeType,omitempty" url:"finalMimeType,omitempty"`
-	// Per-page rotation and original-dimension info. Set when file is a PDF or was converted to PDF.
+	// The encoding that `source.byteOffset`/`byteLength` values are measured against. Only set when `advancedOptions.htmlSourceAnchors` is enabled.
+	SourceEncoding *ParseRunOutputMetadataSourceEncoding `json:"sourceEncoding,omitempty" url:"sourceEncoding,omitempty"`
+	// Per-page rotation and original-dimension info. Set when file is a PDF or was converted to PDF, otherwise is null.
 	Pages []*ParseRunOutputMetadataPagesItem `json:"pages,omitempty" url:"pages,omitempty"`
+	// The languages detected in the document. Set for every supported file type, regardless of how the file was parsed.
+	//
+	// `null` when no reliable detection was possible because the document did not contain enough characters for the detector to reach a conclusion. This can happen on numeric-only documents such as ledgers or forms of bare amounts and dates. Omitted when the parse run completed before language detection was introduced.
+	LanguageDetected *ParseRunOutputMetadataLanguageDetected `json:"languageDetected,omitempty" url:"languageDetected,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27888,11 +28415,25 @@ func (p *ParseRunOutputMetadata) GetFinalMimeType() *string {
 	return p.FinalMimeType
 }
 
+func (p *ParseRunOutputMetadata) GetSourceEncoding() *ParseRunOutputMetadataSourceEncoding {
+	if p == nil {
+		return nil
+	}
+	return p.SourceEncoding
+}
+
 func (p *ParseRunOutputMetadata) GetPages() []*ParseRunOutputMetadataPagesItem {
 	if p == nil {
 		return nil
 	}
 	return p.Pages
+}
+
+func (p *ParseRunOutputMetadata) GetLanguageDetected() *ParseRunOutputMetadataLanguageDetected {
+	if p == nil {
+		return nil
+	}
+	return p.LanguageDetected
 }
 
 func (p *ParseRunOutputMetadata) GetExtraProperties() map[string]interface{} {
@@ -27923,11 +28464,25 @@ func (p *ParseRunOutputMetadata) SetFinalMimeType(finalMimeType *string) {
 	p.require(parseRunOutputMetadataFieldFinalMimeType)
 }
 
+// SetSourceEncoding sets the SourceEncoding field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadata) SetSourceEncoding(sourceEncoding *ParseRunOutputMetadataSourceEncoding) {
+	p.SourceEncoding = sourceEncoding
+	p.require(parseRunOutputMetadataFieldSourceEncoding)
+}
+
 // SetPages sets the Pages field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *ParseRunOutputMetadata) SetPages(pages []*ParseRunOutputMetadataPagesItem) {
 	p.Pages = pages
 	p.require(parseRunOutputMetadataFieldPages)
+}
+
+// SetLanguageDetected sets the LanguageDetected field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadata) SetLanguageDetected(languageDetected *ParseRunOutputMetadataLanguageDetected) {
+	p.LanguageDetected = languageDetected
+	p.require(parseRunOutputMetadataFieldLanguageDetected)
 }
 
 func (p *ParseRunOutputMetadata) UnmarshalJSON(data []byte) error {
@@ -27958,6 +28513,268 @@ func (p *ParseRunOutputMetadata) MarshalJSON() ([]byte, error) {
 }
 
 func (p *ParseRunOutputMetadata) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// The languages detected in the document. Set for every supported file type, regardless of how the file was parsed.
+//
+// `null` when no reliable detection was possible because the document did not contain enough characters for the detector to reach a conclusion. This can happen on numeric-only documents such as ledgers or forms of bare amounts and dates. Omitted when the parse run completed before language detection was introduced.
+var (
+	parseRunOutputMetadataLanguageDetectedFieldLanguageCode         = big.NewInt(1 << 0)
+	parseRunOutputMetadataLanguageDetectedFieldConfidence           = big.NewInt(1 << 1)
+	parseRunOutputMetadataLanguageDetectedFieldLanguages            = big.NewInt(1 << 2)
+	parseRunOutputMetadataLanguageDetectedFieldUndeterminedCoverage = big.NewInt(1 << 3)
+)
+
+type ParseRunOutputMetadataLanguageDetected struct {
+	// The language the majority of the document is written in. The `languageCode` of the entry in `languages` with the highest coverage.
+	//
+	// A BCP-47 code. Almost always a two-letter ISO 639-1 code, but it can carry a script subtag when a language is written in a non-native script, such as `hi-Latn` for romanized Hindi.
+	LanguageCode string `json:"languageCode" url:"languageCode"`
+	// How sure the detector was about `languageCode`, between 0 and 1. This is distinct from how much of the document is written in that language, which is reported as `coverage`.
+	Confidence float64 `json:"confidence" url:"confidence"`
+	// Each language covering at least 10% of the document, ordered by `coverage` descending. Languages below that threshold are counted in `undeterminedCoverage` instead of listed here, so this is not an exhaustive inventory of every language present.
+	Languages []*ParseRunOutputMetadataLanguageDetectedLanguagesItem `json:"languages" url:"languages"`
+	// How much of the document was not attributed to any language in `languages`, between 0 and 1. Text lands here when it is numeric-only content such as amounts, dates and identifiers, when it is too short for the detector to reach a conclusion, or when it is in a language covering less than 10% of the document.
+	//
+	// The `coverage` values in `languages` sum to 1 only when this is `0`.
+	UndeterminedCoverage float64 `json:"undeterminedCoverage" url:"undeterminedCoverage"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) GetLanguageCode() string {
+	if p == nil {
+		return ""
+	}
+	return p.LanguageCode
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) GetConfidence() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Confidence
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) GetLanguages() []*ParseRunOutputMetadataLanguageDetectedLanguagesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Languages
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) GetUndeterminedCoverage() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.UndeterminedCoverage
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetLanguageCode sets the LanguageCode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetected) SetLanguageCode(languageCode string) {
+	p.LanguageCode = languageCode
+	p.require(parseRunOutputMetadataLanguageDetectedFieldLanguageCode)
+}
+
+// SetConfidence sets the Confidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetected) SetConfidence(confidence float64) {
+	p.Confidence = confidence
+	p.require(parseRunOutputMetadataLanguageDetectedFieldConfidence)
+}
+
+// SetLanguages sets the Languages field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetected) SetLanguages(languages []*ParseRunOutputMetadataLanguageDetectedLanguagesItem) {
+	p.Languages = languages
+	p.require(parseRunOutputMetadataLanguageDetectedFieldLanguages)
+}
+
+// SetUndeterminedCoverage sets the UndeterminedCoverage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetected) SetUndeterminedCoverage(undeterminedCoverage float64) {
+	p.UndeterminedCoverage = undeterminedCoverage
+	p.require(parseRunOutputMetadataLanguageDetectedFieldUndeterminedCoverage)
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputMetadataLanguageDetected
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputMetadataLanguageDetected(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputMetadataLanguageDetected
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputMetadataLanguageDetected) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+var (
+	parseRunOutputMetadataLanguageDetectedLanguagesItemFieldLanguageCode = big.NewInt(1 << 0)
+	parseRunOutputMetadataLanguageDetectedLanguagesItemFieldConfidence   = big.NewInt(1 << 1)
+	parseRunOutputMetadataLanguageDetectedLanguagesItemFieldCoverage     = big.NewInt(1 << 2)
+)
+
+type ParseRunOutputMetadataLanguageDetectedLanguagesItem struct {
+	// The BCP-47 code for the detected language.
+	LanguageCode string `json:"languageCode" url:"languageCode"`
+	// How sure the detector was about this language, between 0 and 1.
+	Confidence float64 `json:"confidence" url:"confidence"`
+	// How much of the document is written in this language, between 0 and 1.
+	Coverage float64 `json:"coverage" url:"coverage"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) GetLanguageCode() string {
+	if p == nil {
+		return ""
+	}
+	return p.LanguageCode
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) GetConfidence() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Confidence
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) GetCoverage() float64 {
+	if p == nil {
+		return 0
+	}
+	return p.Coverage
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetLanguageCode sets the LanguageCode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) SetLanguageCode(languageCode string) {
+	p.LanguageCode = languageCode
+	p.require(parseRunOutputMetadataLanguageDetectedLanguagesItemFieldLanguageCode)
+}
+
+// SetConfidence sets the Confidence field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) SetConfidence(confidence float64) {
+	p.Confidence = confidence
+	p.require(parseRunOutputMetadataLanguageDetectedLanguagesItemFieldConfidence)
+}
+
+// SetCoverage sets the Coverage field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) SetCoverage(coverage float64) {
+	p.Coverage = coverage
+	p.require(parseRunOutputMetadataLanguageDetectedLanguagesItemFieldCoverage)
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputMetadataLanguageDetectedLanguagesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputMetadataLanguageDetectedLanguagesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputMetadataLanguageDetectedLanguagesItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) String() string {
 	if p == nil {
 		return "<nil>"
 	}
@@ -28123,6 +28940,29 @@ func (p *ParseRunOutputMetadataPagesItem) String() string {
 		return value
 	}
 	return fmt.Sprintf("%#v", p)
+}
+
+// The encoding that `source.byteOffset`/`byteLength` values are measured against. Only set when `advancedOptions.htmlSourceAnchors` is enabled.
+type ParseRunOutputMetadataSourceEncoding string
+
+const (
+	ParseRunOutputMetadataSourceEncodingUtf8        ParseRunOutputMetadataSourceEncoding = "utf-8"
+	ParseRunOutputMetadataSourceEncodingWindows1252 ParseRunOutputMetadataSourceEncoding = "windows-1252"
+)
+
+func NewParseRunOutputMetadataSourceEncodingFromString(s string) (ParseRunOutputMetadataSourceEncoding, error) {
+	switch s {
+	case "utf-8":
+		return ParseRunOutputMetadataSourceEncodingUtf8, nil
+	case "windows-1252":
+		return ParseRunOutputMetadataSourceEncodingWindows1252, nil
+	}
+	var t ParseRunOutputMetadataSourceEncoding
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (p ParseRunOutputMetadataSourceEncoding) Ptr() *ParseRunOutputMetadataSourceEncoding {
+	return &p
 }
 
 // Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
@@ -28541,6 +29381,228 @@ func (p *ParseRunOutputOcrWordsItem) MarshalJSON() ([]byte, error) {
 }
 
 func (p *ParseRunOutputOcrWordsItem) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+// Word-level source anchors for text formats, the counterpart to `ocr` for documents parsed from markup rather than pixels. Only included when `advancedOptions.returnSourceNodes` is enabled and the file contains text.
+var (
+	parseRunOutputSourceFieldNodes = big.NewInt(1 << 0)
+)
+
+type ParseRunOutputSource struct {
+	// An array of words located in the uploaded file.
+	Nodes []*ParseRunOutputSourceNodesItem `json:"nodes" url:"nodes"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputSource) GetNodes() []*ParseRunOutputSourceNodesItem {
+	if p == nil {
+		return nil
+	}
+	return p.Nodes
+}
+
+func (p *ParseRunOutputSource) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputSource) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetNodes sets the Nodes field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputSource) SetNodes(nodes []*ParseRunOutputSourceNodesItem) {
+	p.Nodes = nodes
+	p.require(parseRunOutputSourceFieldNodes)
+}
+
+func (p *ParseRunOutputSource) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputSource
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputSource(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputSource) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputSource
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputSource) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	if len(p.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(p.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(p); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", p)
+}
+
+var (
+	parseRunOutputSourceNodesItemFieldContent    = big.NewInt(1 << 0)
+	parseRunOutputSourceNodesItemFieldByteOffset = big.NewInt(1 << 1)
+	parseRunOutputSourceNodesItemFieldByteLength = big.NewInt(1 << 2)
+	parseRunOutputSourceNodesItemFieldBlockID    = big.NewInt(1 << 3)
+)
+
+type ParseRunOutputSourceNodesItem struct {
+	// The text of this run with HTML entities decoded, so it matches text you would extract from the page (`&`, not `&amp;`).
+	Content string `json:"content" url:"content"`
+	// Zero-based byte offset into the uploaded file where this run starts.
+	ByteOffset int `json:"byteOffset" url:"byteOffset"`
+	// Length of this run, in bytes, starting at `byteOffset`.
+	ByteLength int `json:"byteLength" url:"byteLength"`
+	// The `id` of the block (see the `Block` schema) this text belongs to.
+	BlockID string `json:"blockId" url:"blockId"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (p *ParseRunOutputSourceNodesItem) GetContent() string {
+	if p == nil {
+		return ""
+	}
+	return p.Content
+}
+
+func (p *ParseRunOutputSourceNodesItem) GetByteOffset() int {
+	if p == nil {
+		return 0
+	}
+	return p.ByteOffset
+}
+
+func (p *ParseRunOutputSourceNodesItem) GetByteLength() int {
+	if p == nil {
+		return 0
+	}
+	return p.ByteLength
+}
+
+func (p *ParseRunOutputSourceNodesItem) GetBlockID() string {
+	if p == nil {
+		return ""
+	}
+	return p.BlockID
+}
+
+func (p *ParseRunOutputSourceNodesItem) GetExtraProperties() map[string]interface{} {
+	if p == nil {
+		return nil
+	}
+	return p.extraProperties
+}
+
+func (p *ParseRunOutputSourceNodesItem) require(field *big.Int) {
+	if p.explicitFields == nil {
+		p.explicitFields = big.NewInt(0)
+	}
+	p.explicitFields.Or(p.explicitFields, field)
+}
+
+// SetContent sets the Content field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputSourceNodesItem) SetContent(content string) {
+	p.Content = content
+	p.require(parseRunOutputSourceNodesItemFieldContent)
+}
+
+// SetByteOffset sets the ByteOffset field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputSourceNodesItem) SetByteOffset(byteOffset int) {
+	p.ByteOffset = byteOffset
+	p.require(parseRunOutputSourceNodesItemFieldByteOffset)
+}
+
+// SetByteLength sets the ByteLength field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputSourceNodesItem) SetByteLength(byteLength int) {
+	p.ByteLength = byteLength
+	p.require(parseRunOutputSourceNodesItemFieldByteLength)
+}
+
+// SetBlockID sets the BlockID field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunOutputSourceNodesItem) SetBlockID(blockID string) {
+	p.BlockID = blockID
+	p.require(parseRunOutputSourceNodesItemFieldBlockID)
+}
+
+func (p *ParseRunOutputSourceNodesItem) UnmarshalJSON(data []byte) error {
+	type unmarshaler ParseRunOutputSourceNodesItem
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*p = ParseRunOutputSourceNodesItem(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *p)
+	if err != nil {
+		return err
+	}
+	p.extraProperties = extraProperties
+	p.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (p *ParseRunOutputSourceNodesItem) MarshalJSON() ([]byte, error) {
+	type embed ParseRunOutputSourceNodesItem
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*p),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, p.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (p *ParseRunOutputSourceNodesItem) String() string {
 	if p == nil {
 		return "<nil>"
 	}
@@ -36220,7 +37282,7 @@ var (
 )
 
 type VerifyAdvancedOptions struct {
-	// If `true`, this forces the verify run to parse the document if it has not already been parsed in Extend. This is for checks that require OCR, like detecting mismatches with the text layer. `verify_agentic` requires this to be `true`, and rejects `false` with `400`. `verify_light` parses only when this is `true`. Defaults to `false` for `verify_light` to reduce latency. In both cases, if the file has already been parsed in Extend with Verify's default parse settings and you reuse the `fileId` without zero data retention (ZDR), then the parsed results will be used here.
+	// If `true`, this forces the verify run to parse the document if it has not already been parsed in Extend. This is for checks that require OCR, like detecting mismatches with the text layer. `verify_agentic` requires this to be `true`, and rejects `false` with `400`. `verify_standard` parses only when this is `true`. Defaults to `false` for `verify_standard` to reduce latency. In both cases, if the file has already been parsed in Extend with Verify's default parse settings and you reuse the `fileId` without zero data retention (ZDR), then the parsed results will be used here.
 	RequireParsing *bool `json:"requireParsing,omitempty" url:"requireParsing,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
@@ -36421,20 +37483,22 @@ func (v *VerifyConfig) String() string {
 
 // The verification engine:
 // * `"verify_agentic"` - Parses the file and runs every check, including the checks that read the parse, and leverages an agent harness optimized for tamper detection. Slower and more expensive, but the most performant option for detecting difficult cases of document fraud.
-// * `"verify_light"` - Faster checks that do not require parsing, but will use parsed results if the file has already been parsed in Extend. Covers all checks except the agentic checks around content and OCR.
+// * `"verify_standard"` - Faster checks that do not require parsing, but will use parsed results if the file has already been parsed in Extend. Covers all checks except the agentic checks around content and OCR.
+//
+// `verify_standard` was previously named `verify_light`. Requests that send `verify_light` are still accepted and run on `verify_standard`, and the resulting run reports `verify_standard` in `config.engine`.
 type VerifyEngine string
 
 const (
-	VerifyEngineVerifyAgentic VerifyEngine = "verify_agentic"
-	VerifyEngineVerifyLight   VerifyEngine = "verify_light"
+	VerifyEngineVerifyAgentic  VerifyEngine = "verify_agentic"
+	VerifyEngineVerifyStandard VerifyEngine = "verify_standard"
 )
 
 func NewVerifyEngineFromString(s string) (VerifyEngine, error) {
 	switch s {
 	case "verify_agentic":
 		return VerifyEngineVerifyAgentic, nil
-	case "verify_light":
-		return VerifyEngineVerifyLight, nil
+	case "verify_standard":
+		return VerifyEngineVerifyStandard, nil
 	}
 	var t VerifyEngine
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
