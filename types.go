@@ -9650,11 +9650,11 @@ func (e *EditConfig) String() string {
 var (
 	editConfigAdvancedOptionsFieldTableParsingEnabled             = big.NewInt(1 << 0)
 	editConfigAdvancedOptionsFieldFlattenPdf                      = big.NewInt(1 << 1)
-	editConfigAdvancedOptionsFieldRadioEnumsEnabled               = big.NewInt(1 << 2)
-	editConfigAdvancedOptionsFieldNativeFieldsOnly                = big.NewInt(1 << 3)
-	editConfigAdvancedOptionsFieldConditionalGenerationEnabled    = big.NewInt(1 << 4)
-	editConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled = big.NewInt(1 << 5)
-	editConfigAdvancedOptionsFieldPreserveSignatureValidity       = big.NewInt(1 << 6)
+	editConfigAdvancedOptionsFieldPreserveSignatureValidity       = big.NewInt(1 << 2)
+	editConfigAdvancedOptionsFieldRadioEnumsEnabled               = big.NewInt(1 << 3)
+	editConfigAdvancedOptionsFieldNativeFieldsOnly                = big.NewInt(1 << 4)
+	editConfigAdvancedOptionsFieldConditionalGenerationEnabled    = big.NewInt(1 << 5)
+	editConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled = big.NewInt(1 << 6)
 )
 
 // Advanced options for the edit operation.
@@ -9663,16 +9663,20 @@ type EditConfigAdvancedOptions struct {
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
 	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`.
 	FlattenPdf *bool `json:"flattenPdf,omitempty" url:"flattenPdf,omitempty"`
+	// When enabled, attempts to preserve existing digital signature validity on signed or append-only PDFs. Form filling is limited to existing compatible fields; set `extend_edit:source_acroform.fieldName` on each schema property to identify its existing PDF field. Matching schema field names are also supported. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails if all requested fields are blocked. New signatures may still be added where permitted. Enabling this option defaults `flattenPdf` to `false`; flattening signed or append-only PDFs is not supported in this mode. Requires Edit `1.0.0-beta` or later. Defaults to `false`, allowing edits that may invalidate existing signatures.
+	PreserveSignatureValidity *bool `json:"preserveSignatureValidity,omitempty" url:"preserveSignatureValidity,omitempty"`
 	// Whether to represent radio groups as enums so only one option can be selected. Defaults to `true` for Edit `1.0.0` and `1.0.0-beta`, and `false` for `0.0.1`.
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm from the PDF will be imported and used in the schema (skips object detection). Defaults to false.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
 	// When enabled and no `config.schema` is supplied, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Has no effect when a schema is supplied. Defaults to `false`.
 	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
-	// When enabled and no `config.schema` is supplied, refines the generated schema by organizing field names and descriptions across the document. Custom instructions can then nest related fields or combine checkbox and radio options into a single-choice group. Adds latency. Requires Edit `1.0.0` or later. Has no effect when a schema is supplied. When omitted, your organization's default applies, which is `false` unless Extend has enabled it for you.
+	// Refine generated field names and descriptions for consistency across the document. Custom instructions can nest related fields into objects and combine eligible checkbox or radio options into a single-choice enum. Adds processing latency.
+	//
+	// Requires Edit engine `1.0.0` or later; disabled on earlier engines, including `1.0.0-beta`. If omitted, uses the organization default (off unless enabled for the organization). Explicit `true` or `false` overrides that default on supported engines.
+	//
+	// Applies only when generating a schema automatically; has no effect when `config.schema` is supplied. Use `config.schemaGenerationInstructions` to guide refinement.
 	AdvancedSchemaRefinementEnabled *bool `json:"advancedSchemaRefinementEnabled,omitempty" url:"advancedSchemaRefinementEnabled,omitempty"`
-	// When enabled, attempts to preserve existing digital signature validity on signed or append-only PDFs. Form filling is limited to existing compatible fields; set `extend_edit:source_acroform.fieldName` on each schema property to identify its existing PDF field. Matching schema field names are also supported. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails if all requested fields are blocked. New signatures may still be added where permitted. Enabling this option defaults `flattenPdf` to `false`; flattening signed or append-only PDFs is not supported in this mode. Requires Edit `1.0.0-beta` or later. Defaults to `false`, allowing edits that may invalidate existing signatures.
-	PreserveSignatureValidity *bool `json:"preserveSignatureValidity,omitempty" url:"preserveSignatureValidity,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -9693,6 +9697,13 @@ func (e *EditConfigAdvancedOptions) GetFlattenPdf() *bool {
 		return nil
 	}
 	return e.FlattenPdf
+}
+
+func (e *EditConfigAdvancedOptions) GetPreserveSignatureValidity() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.PreserveSignatureValidity
 }
 
 func (e *EditConfigAdvancedOptions) GetRadioEnumsEnabled() *bool {
@@ -9721,13 +9732,6 @@ func (e *EditConfigAdvancedOptions) GetAdvancedSchemaRefinementEnabled() *bool {
 		return nil
 	}
 	return e.AdvancedSchemaRefinementEnabled
-}
-
-func (e *EditConfigAdvancedOptions) GetPreserveSignatureValidity() *bool {
-	if e == nil {
-		return nil
-	}
-	return e.PreserveSignatureValidity
 }
 
 func (e *EditConfigAdvancedOptions) GetExtraProperties() map[string]interface{} {
@@ -9760,6 +9764,13 @@ func (e *EditConfigAdvancedOptions) SetFlattenPdf(flattenPdf *bool) {
 	e.require(editConfigAdvancedOptionsFieldFlattenPdf)
 }
 
+// SetPreserveSignatureValidity sets the PreserveSignatureValidity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditConfigAdvancedOptions) SetPreserveSignatureValidity(preserveSignatureValidity *bool) {
+	e.PreserveSignatureValidity = preserveSignatureValidity
+	e.require(editConfigAdvancedOptionsFieldPreserveSignatureValidity)
+}
+
 // SetRadioEnumsEnabled sets the RadioEnumsEnabled field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (e *EditConfigAdvancedOptions) SetRadioEnumsEnabled(radioEnumsEnabled *bool) {
@@ -9786,13 +9797,6 @@ func (e *EditConfigAdvancedOptions) SetConditionalGenerationEnabled(conditionalG
 func (e *EditConfigAdvancedOptions) SetAdvancedSchemaRefinementEnabled(advancedSchemaRefinementEnabled *bool) {
 	e.AdvancedSchemaRefinementEnabled = advancedSchemaRefinementEnabled
 	e.require(editConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled)
-}
-
-// SetPreserveSignatureValidity sets the PreserveSignatureValidity field and marks it as non-optional;
-// this prevents an empty or null value for this field from being omitted during serialization.
-func (e *EditConfigAdvancedOptions) SetPreserveSignatureValidity(preserveSignatureValidity *bool) {
-	e.PreserveSignatureValidity = preserveSignatureValidity
-	e.require(editConfigAdvancedOptionsFieldPreserveSignatureValidity)
 }
 
 func (e *EditConfigAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -12017,7 +12021,11 @@ type EditSchemaGenerationConfigAdvancedOptions struct {
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
 	// When enabled, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. These rules validate form data when the schema is used for an edit; they do not add interactive UI behavior. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Defaults to `false`.
 	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
-	// When enabled, refines the generated schema by organizing field names and descriptions across the document. Custom instructions can then nest related fields or combine checkbox and radio options into a single-choice group. Adds latency. Requires Edit `1.0.0` or later. When omitted, your organization's default applies, which is `false` unless Extend has enabled it for you.
+	// Refine generated field names and descriptions for consistency across the document. Custom instructions can nest related fields into objects and combine eligible checkbox or radio options into a single-choice enum. Adds processing latency.
+	//
+	// Requires Edit engine `1.0.0` or later; disabled on earlier engines, including `1.0.0-beta`. If omitted, uses the organization default (off unless enabled for the organization). Explicit `true` or `false` overrides that default on supported engines.
+	//
+	// Use `config.instructions` to guide refinement. When `config.inputSchema` is supplied, refinement applies to the detected fields before mapping them to the input schema.
 	AdvancedSchemaRefinementEnabled *bool `json:"advancedSchemaRefinementEnabled,omitempty" url:"advancedSchemaRefinementEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
