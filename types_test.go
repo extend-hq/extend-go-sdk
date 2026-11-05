@@ -13966,6 +13966,139 @@ func TestSettersMarkExplicitDataRetention(t *testing.T) {
 
 }
 
+func TestSettersDataRetentionState(t *testing.T) {
+	t.Run("SetMode", func(t *testing.T) {
+		obj := &DataRetentionState{}
+		var fernTestValueMode DataRetentionStateMode
+		obj.SetMode(fernTestValueMode)
+		assert.Equal(t, fernTestValueMode, obj.Mode)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetStatus", func(t *testing.T) {
+		obj := &DataRetentionState{}
+		var fernTestValueStatus DataRetentionStateStatus
+		obj.SetStatus(fernTestValueStatus)
+		assert.Equal(t, fernTestValueStatus, obj.Status)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+}
+
+func TestGettersDataRetentionState(t *testing.T) {
+	t.Run("GetMode", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &DataRetentionState{}
+		var expected DataRetentionStateMode
+		obj.Mode = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetMode(), "getter should return the property value")
+	})
+
+	t.Run("GetMode_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *DataRetentionState
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetMode() // Should return zero value
+	})
+
+	t.Run("GetStatus", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &DataRetentionState{}
+		var expected DataRetentionStateStatus
+		obj.Status = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetStatus(), "getter should return the property value")
+	})
+
+	t.Run("GetStatus_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *DataRetentionState
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetStatus() // Should return zero value
+	})
+
+}
+
+func TestSettersMarkExplicitDataRetentionState(t *testing.T) {
+	t.Run("SetMode_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &DataRetentionState{}
+		var fernTestValueMode DataRetentionStateMode
+
+		// Act
+		obj.SetMode(fernTestValueMode)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetStatus_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &DataRetentionState{}
+		var fernTestValueStatus DataRetentionStateStatus
+
+		// Act
+		obj.SetStatus(fernTestValueStatus)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+}
+
 func TestGettersDetectFormRequestFile(t *testing.T) {
 	t.Run("GetFileFromURL", func(t *testing.T) {
 		t.Parallel()
@@ -16908,6 +17041,14 @@ func TestSettersEditConfigAdvancedOptions(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetPreserveSignatureValidity", func(t *testing.T) {
+		obj := &EditConfigAdvancedOptions{}
+		var fernTestValuePreserveSignatureValidity *bool
+		obj.SetPreserveSignatureValidity(fernTestValuePreserveSignatureValidity)
+		assert.Equal(t, fernTestValuePreserveSignatureValidity, obj.PreserveSignatureValidity)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetRadioEnumsEnabled", func(t *testing.T) {
 		obj := &EditConfigAdvancedOptions{}
 		var fernTestValueRadioEnumsEnabled *bool
@@ -16929,6 +17070,14 @@ func TestSettersEditConfigAdvancedOptions(t *testing.T) {
 		var fernTestValueConditionalGenerationEnabled *bool
 		obj.SetConditionalGenerationEnabled(fernTestValueConditionalGenerationEnabled)
 		assert.Equal(t, fernTestValueConditionalGenerationEnabled, obj.ConditionalGenerationEnabled)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
+	t.Run("SetAdvancedSchemaRefinementEnabled", func(t *testing.T) {
+		obj := &EditConfigAdvancedOptions{}
+		var fernTestValueAdvancedSchemaRefinementEnabled *bool
+		obj.SetAdvancedSchemaRefinementEnabled(fernTestValueAdvancedSchemaRefinementEnabled)
+		assert.Equal(t, fernTestValueAdvancedSchemaRefinementEnabled, obj.AdvancedSchemaRefinementEnabled)
 		assert.NotNil(t, obj.explicitFields)
 	})
 
@@ -16999,6 +17148,39 @@ func TestGettersEditConfigAdvancedOptions(t *testing.T) {
 			}
 		}()
 		_ = obj.GetFlattenPdf() // Should return zero value
+	})
+
+	t.Run("GetPreserveSignatureValidity", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		var expected *bool
+		obj.PreserveSignatureValidity = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetPreserveSignatureValidity(), "getter should return the property value")
+	})
+
+	t.Run("GetPreserveSignatureValidity_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		obj.PreserveSignatureValidity = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetPreserveSignatureValidity(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetPreserveSignatureValidity_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EditConfigAdvancedOptions
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetPreserveSignatureValidity() // Should return zero value
 	})
 
 	t.Run("GetRadioEnumsEnabled", func(t *testing.T) {
@@ -17100,6 +17282,39 @@ func TestGettersEditConfigAdvancedOptions(t *testing.T) {
 		_ = obj.GetConditionalGenerationEnabled() // Should return zero value
 	})
 
+	t.Run("GetAdvancedSchemaRefinementEnabled", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		var expected *bool
+		obj.AdvancedSchemaRefinementEnabled = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetAdvancedSchemaRefinementEnabled(), "getter should return the property value")
+	})
+
+	t.Run("GetAdvancedSchemaRefinementEnabled_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		obj.AdvancedSchemaRefinementEnabled = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetAdvancedSchemaRefinementEnabled(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetAdvancedSchemaRefinementEnabled_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EditConfigAdvancedOptions
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetAdvancedSchemaRefinementEnabled() // Should return zero value
+	})
+
 }
 
 func TestSettersMarkExplicitEditConfigAdvancedOptions(t *testing.T) {
@@ -17142,6 +17357,37 @@ func TestSettersMarkExplicitEditConfigAdvancedOptions(t *testing.T) {
 
 		// Act
 		obj.SetFlattenPdf(fernTestValueFlattenPdf)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetPreserveSignatureValidity_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		var fernTestValuePreserveSignatureValidity *bool
+
+		// Act
+		obj.SetPreserveSignatureValidity(fernTestValuePreserveSignatureValidity)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -17235,6 +17481,37 @@ func TestSettersMarkExplicitEditConfigAdvancedOptions(t *testing.T) {
 
 		// Act
 		obj.SetConditionalGenerationEnabled(fernTestValueConditionalGenerationEnabled)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetAdvancedSchemaRefinementEnabled_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditConfigAdvancedOptions{}
+		var fernTestValueAdvancedSchemaRefinementEnabled *bool
+
+		// Act
+		obj.SetAdvancedSchemaRefinementEnabled(fernTestValueAdvancedSchemaRefinementEnabled)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -21899,6 +22176,14 @@ func TestSettersEditSchemaGenerationConfigAdvancedOptions(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetAdvancedSchemaRefinementEnabled", func(t *testing.T) {
+		obj := &EditSchemaGenerationConfigAdvancedOptions{}
+		var fernTestValueAdvancedSchemaRefinementEnabled *bool
+		obj.SetAdvancedSchemaRefinementEnabled(fernTestValueAdvancedSchemaRefinementEnabled)
+		assert.Equal(t, fernTestValueAdvancedSchemaRefinementEnabled, obj.AdvancedSchemaRefinementEnabled)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 }
 
 func TestGettersEditSchemaGenerationConfigAdvancedOptions(t *testing.T) {
@@ -22034,6 +22319,39 @@ func TestGettersEditSchemaGenerationConfigAdvancedOptions(t *testing.T) {
 		_ = obj.GetConditionalGenerationEnabled() // Should return zero value
 	})
 
+	t.Run("GetAdvancedSchemaRefinementEnabled", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfigAdvancedOptions{}
+		var expected *bool
+		obj.AdvancedSchemaRefinementEnabled = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetAdvancedSchemaRefinementEnabled(), "getter should return the property value")
+	})
+
+	t.Run("GetAdvancedSchemaRefinementEnabled_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfigAdvancedOptions{}
+		obj.AdvancedSchemaRefinementEnabled = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetAdvancedSchemaRefinementEnabled(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetAdvancedSchemaRefinementEnabled_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *EditSchemaGenerationConfigAdvancedOptions
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetAdvancedSchemaRefinementEnabled() // Should return zero value
+	})
+
 }
 
 func TestSettersMarkExplicitEditSchemaGenerationConfigAdvancedOptions(t *testing.T) {
@@ -22138,6 +22456,37 @@ func TestSettersMarkExplicitEditSchemaGenerationConfigAdvancedOptions(t *testing
 
 		// Act
 		obj.SetConditionalGenerationEnabled(fernTestValueConditionalGenerationEnabled)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetAdvancedSchemaRefinementEnabled_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &EditSchemaGenerationConfigAdvancedOptions{}
+		var fernTestValueAdvancedSchemaRefinementEnabled *bool
+
+		// Act
+		obj.SetAdvancedSchemaRefinementEnabled(fernTestValueAdvancedSchemaRefinementEnabled)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -34491,6 +34840,14 @@ func TestSettersFile(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetDataRetention", func(t *testing.T) {
+		obj := &File{}
+		var fernTestValueDataRetention *DataRetentionState
+		obj.SetDataRetention(fernTestValueDataRetention)
+		assert.Equal(t, fernTestValueDataRetention, obj.DataRetention)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetCreatedAt", func(t *testing.T) {
 		obj := &File{}
 		var fernTestValueCreatedAt CreatedAt
@@ -34719,6 +35076,39 @@ func TestGettersFile(t *testing.T) {
 			}
 		}()
 		_ = obj.GetMetadata() // Should return zero value
+	})
+
+	t.Run("GetDataRetention", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &File{}
+		var expected *DataRetentionState
+		obj.DataRetention = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetDataRetention(), "getter should return the property value")
+	})
+
+	t.Run("GetDataRetention_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &File{}
+		obj.DataRetention = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetDataRetention(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetDataRetention_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *File
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetDataRetention() // Should return zero value
 	})
 
 	t.Run("GetCreatedAt", func(t *testing.T) {
@@ -34964,6 +35354,37 @@ func TestSettersMarkExplicitFile(t *testing.T) {
 
 		// Act
 		obj.SetMetadata(fernTestValueMetadata)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetDataRetention_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &File{}
+		var fernTestValueDataRetention *DataRetentionState
+
+		// Act
+		obj.SetDataRetention(fernTestValueDataRetention)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -37045,6 +37466,14 @@ func TestSettersFileSummary(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetDataRetention", func(t *testing.T) {
+		obj := &FileSummary{}
+		var fernTestValueDataRetention *DataRetentionState
+		obj.SetDataRetention(fernTestValueDataRetention)
+		assert.Equal(t, fernTestValueDataRetention, obj.DataRetention)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetCreatedAt", func(t *testing.T) {
 		obj := &FileSummary{}
 		var fernTestValueCreatedAt CreatedAt
@@ -37207,6 +37636,39 @@ func TestGettersFileSummary(t *testing.T) {
 			}
 		}()
 		_ = obj.GetMetadata() // Should return zero value
+	})
+
+	t.Run("GetDataRetention", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FileSummary{}
+		var expected *DataRetentionState
+		obj.DataRetention = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetDataRetention(), "getter should return the property value")
+	})
+
+	t.Run("GetDataRetention_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FileSummary{}
+		obj.DataRetention = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetDataRetention(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetDataRetention_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *FileSummary
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetDataRetention() // Should return zero value
 	})
 
 	t.Run("GetCreatedAt", func(t *testing.T) {
@@ -37390,6 +37852,37 @@ func TestSettersMarkExplicitFileSummary(t *testing.T) {
 
 		// Act
 		obj.SetMetadata(fernTestValueMetadata)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetDataRetention_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &FileSummary{}
+		var fernTestValueDataRetention *DataRetentionState
+
+		// Act
+		obj.SetDataRetention(fernTestValueDataRetention)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -51438,6 +51931,14 @@ func TestSettersParseRun(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetDataRetention", func(t *testing.T) {
+		obj := &ParseRun{}
+		var fernTestValueDataRetention *DataRetentionState
+		obj.SetDataRetention(fernTestValueDataRetention)
+		assert.Equal(t, fernTestValueDataRetention, obj.DataRetention)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 }
 
 func TestGettersParseRun(t *testing.T) {
@@ -51817,6 +52318,39 @@ func TestGettersParseRun(t *testing.T) {
 		_ = obj.GetUsage() // Should return zero value
 	})
 
+	t.Run("GetDataRetention", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRun{}
+		var expected *DataRetentionState
+		obj.DataRetention = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetDataRetention(), "getter should return the property value")
+	})
+
+	t.Run("GetDataRetention_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRun{}
+		obj.DataRetention = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetDataRetention(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetDataRetention_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *ParseRun
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetDataRetention() // Should return zero value
+	})
+
 }
 
 func TestSettersMarkExplicitParseRun(t *testing.T) {
@@ -52169,6 +52703,37 @@ func TestSettersMarkExplicitParseRun(t *testing.T) {
 
 		// Act
 		obj.SetUsage(fernTestValueUsage)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetDataRetention_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRun{}
+		var fernTestValueDataRetention *DataRetentionState
+
+		// Act
+		obj.SetDataRetention(fernTestValueDataRetention)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -55362,6 +55927,14 @@ func TestSettersParseRunStatus(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetDataRetention", func(t *testing.T) {
+		obj := &ParseRunStatus{}
+		var fernTestValueDataRetention *DataRetentionState
+		obj.SetDataRetention(fernTestValueDataRetention)
+		assert.Equal(t, fernTestValueDataRetention, obj.DataRetention)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 }
 
 func TestGettersParseRunStatus(t *testing.T) {
@@ -55510,6 +56083,39 @@ func TestGettersParseRunStatus(t *testing.T) {
 		_ = obj.GetMetadata() // Should return zero value
 	})
 
+	t.Run("GetDataRetention", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunStatus{}
+		var expected *DataRetentionState
+		obj.DataRetention = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetDataRetention(), "getter should return the property value")
+	})
+
+	t.Run("GetDataRetention_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunStatus{}
+		obj.DataRetention = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetDataRetention(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetDataRetention_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *ParseRunStatus
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetDataRetention() // Should return zero value
+	})
+
 }
 
 func TestSettersMarkExplicitParseRunStatus(t *testing.T) {
@@ -55645,6 +56251,37 @@ func TestSettersMarkExplicitParseRunStatus(t *testing.T) {
 
 		// Act
 		obj.SetMetadata(fernTestValueMetadata)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetDataRetention_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunStatus{}
+		var fernTestValueDataRetention *DataRetentionState
+
+		// Act
+		obj.SetDataRetention(fernTestValueDataRetention)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -80535,6 +81172,39 @@ func TestJSONMarshalingDataRetention(t *testing.T) {
 	})
 }
 
+func TestJSONMarshalingDataRetentionState(t *testing.T) {
+	t.Run("MarshalUnmarshal", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &DataRetentionState{}
+
+		// Act - Marshal to JSON
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		assert.NotNil(t, data, "marshaled data should not be nil")
+		assert.NotEmpty(t, data, "marshaled data should not be empty")
+
+		// Unmarshal back and verify round-trip
+		var unmarshaled DataRetentionState
+		err = json.Unmarshal(data, &unmarshaled)
+		assert.NoError(t, err, "round-trip unmarshal should succeed")
+	})
+
+	t.Run("UnmarshalInvalidJSON", func(t *testing.T) {
+		t.Parallel()
+		var obj DataRetentionState
+		err := json.Unmarshal([]byte(`{invalid json}`), &obj)
+		assert.Error(t, err, "unmarshaling invalid JSON should return an error")
+	})
+
+	t.Run("UnmarshalEmptyObject", func(t *testing.T) {
+		t.Parallel()
+		var obj DataRetentionState
+		err := json.Unmarshal([]byte(`{}`), &obj)
+		assert.NoError(t, err, "unmarshaling empty object should succeed")
+	})
+}
+
 func TestJSONMarshalingEditBoundingBox(t *testing.T) {
 	t.Run("MarshalUnmarshal", func(t *testing.T) {
 		t.Parallel()
@@ -87858,6 +88528,577 @@ func TestJSONMarshalingWorkflowVersionSummary(t *testing.T) {
 
 }
 
+func TestRequiredNullableRoundTripBoundingBox(t *testing.T) {
+	requiredNullableKeys := []string{
+		"left",
+		"top",
+		"right",
+		"bottom",
+	}
+	marshalToMap := func(t *testing.T, obj *BoundingBox) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj BoundingBox
+		require.NoError(t, json.Unmarshal([]byte(`{"left":null,"top":null,"right":null,"bottom":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "required nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "required nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj BoundingBox
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &BoundingBox{})
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestRequiredNullableRoundTripEditSchemaGenerationResponse(t *testing.T) {
+	requiredNullableKeys := []string{
+		"annotatedSchema",
+		"mappingResult",
+	}
+	marshalToMap := func(t *testing.T, obj *EditSchemaGenerationResponse) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj EditSchemaGenerationResponse
+		require.NoError(t, json.Unmarshal([]byte(`{"annotatedSchema":null,"mappingResult":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "required nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "required nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj EditSchemaGenerationResponse
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &EditSchemaGenerationResponse{})
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestRequiredNullableRoundTripKeyValueFormNode(t *testing.T) {
+	requiredNullableKeys := []string{
+		"boundingBox",
+		"selected",
+	}
+	marshalToMap := func(t *testing.T, obj *KeyValueFormNode) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj KeyValueFormNode
+		require.NoError(t, json.Unmarshal([]byte(`{"boundingBox":null,"selected":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "required nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "required nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj KeyValueFormNode
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &KeyValueFormNode{})
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestRequiredNullableRoundTripParseRunOutputMetadataPagesItem(t *testing.T) {
+	requiredNullableKeys := []string{
+		"rotationApplied",
+	}
+	marshalToMap := func(t *testing.T, obj *ParseRunOutputMetadataPagesItem) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputMetadataPagesItem
+		require.NoError(t, json.Unmarshal([]byte(`{"rotationApplied":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "required nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "required nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputMetadataPagesItem
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ParseRunOutputMetadataPagesItem{})
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestRequiredNullableRoundTripVerifyRunMetrics(t *testing.T) {
+	requiredNullableKeys := []string{
+		"pageCount",
+	}
+	marshalToMap := func(t *testing.T, obj *VerifyRunMetrics) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj VerifyRunMetrics
+		require.NoError(t, json.Unmarshal([]byte(`{"pageCount":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "required nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "required nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj VerifyRunMetrics
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &VerifyRunMetrics{})
+		for _, key := range requiredNullableKeys {
+			assert.NotContains(t, result, key, "required nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripBlockMetadata(t *testing.T) {
+	optionalNullableKeys := []string{
+		"minOcrConfidence",
+		"avgOcrConfidence",
+	}
+	marshalToMap := func(t *testing.T, obj *BlockMetadata) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj BlockMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{"minOcrConfidence":null,"avgOcrConfidence":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj BlockMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &BlockMetadata{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripChunkMetadata(t *testing.T) {
+	optionalNullableKeys := []string{
+		"minOcrConfidence",
+		"avgOcrConfidence",
+	}
+	marshalToMap := func(t *testing.T, obj *ChunkMetadata) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ChunkMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{"minOcrConfidence":null,"avgOcrConfidence":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ChunkMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ChunkMetadata{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripCitation(t *testing.T) {
+	optionalNullableKeys := []string{
+		"referenceText",
+	}
+	marshalToMap := func(t *testing.T, obj *Citation) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj Citation
+		require.NoError(t, json.Unmarshal([]byte(`{"referenceText":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj Citation
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &Citation{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripExtractOutputMetadataValue(t *testing.T) {
+	optionalNullableKeys := []string{
+		"ocrConfidence",
+		"logprobsConfidence",
+		"reviewAgentScore",
+	}
+	marshalToMap := func(t *testing.T, obj *ExtractOutputMetadataValue) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ExtractOutputMetadataValue
+		require.NoError(t, json.Unmarshal([]byte(`{"ocrConfidence":null,"logprobsConfidence":null,"reviewAgentScore":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ExtractOutputMetadataValue
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ExtractOutputMetadataValue{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripLegacyProvidedExtractionFieldResult(t *testing.T) {
+	optionalNullableKeys := []string{
+		"page",
+	}
+	marshalToMap := func(t *testing.T, obj *LegacyProvidedExtractionFieldResult) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj LegacyProvidedExtractionFieldResult
+		require.NoError(t, json.Unmarshal([]byte(`{"page":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj LegacyProvidedExtractionFieldResult
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &LegacyProvidedExtractionFieldResult{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripParseRunOutput(t *testing.T) {
+	optionalNullableKeys := []string{
+		"metadata",
+	}
+	marshalToMap := func(t *testing.T, obj *ParseRunOutput) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutput
+		require.NoError(t, json.Unmarshal([]byte(`{"metadata":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutput
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ParseRunOutput{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripParseRunOutputMetadata(t *testing.T) {
+	optionalNullableKeys := []string{
+		"originalMimeType",
+		"finalMimeType",
+		"pages",
+		"languageDetected",
+	}
+	marshalToMap := func(t *testing.T, obj *ParseRunOutputMetadata) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{"originalMimeType":null,"finalMimeType":null,"pages":null,"languageDetected":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ParseRunOutputMetadata{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
+func TestOptionalNullableRoundTripParseRunOutputOcrWordsItem(t *testing.T) {
+	optionalNullableKeys := []string{
+		"rotation",
+	}
+	marshalToMap := func(t *testing.T, obj *ParseRunOutputOcrWordsItem) map[string]json.RawMessage {
+		data, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed")
+		var result map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(data, &result), "marshaled data should be a JSON object")
+		return result
+	}
+
+	t.Run("NullPreserved", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputOcrWordsItem
+		require.NoError(t, json.Unmarshal([]byte(`{"rotation":null}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			value, ok := result[key]
+			require.True(t, ok, "optional nullable field %q received as null should be present in the output", key)
+			assert.Equal(t, "null", string(value), "optional nullable field %q received as null should be null in the output", key)
+		}
+	})
+
+	t.Run("AbsentStaysAbsent", func(t *testing.T) {
+		t.Parallel()
+		var obj ParseRunOutputOcrWordsItem
+		require.NoError(t, json.Unmarshal([]byte(`{}`), &obj))
+		result := marshalToMap(t, &obj)
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q absent from the input should be absent from the output", key)
+		}
+	})
+
+	t.Run("FreshValueOmits", func(t *testing.T) {
+		t.Parallel()
+		result := marshalToMap(t, &ParseRunOutputOcrWordsItem{})
+		for _, key := range optionalNullableKeys {
+			assert.NotContains(t, result, key, "optional nullable field %q should be omitted from a freshly constructed value", key)
+		}
+	})
+}
+
 func TestStringAPIError(t *testing.T) {
 	t.Run("StringMethod", func(t *testing.T) {
 		t.Parallel()
@@ -88701,6 +89942,22 @@ func TestStringDataRetention(t *testing.T) {
 	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *DataRetention
+		result := obj.String()
+		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
+	})
+}
+
+func TestStringDataRetentionState(t *testing.T) {
+	t.Run("StringMethod", func(t *testing.T) {
+		t.Parallel()
+		obj := &DataRetentionState{}
+		result := obj.String()
+		assert.NotEmpty(t, result, "String() should return a non-empty representation")
+	})
+
+	t.Run("StringMethod_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *DataRetentionState
 		result := obj.String()
 		assert.Equal(t, "<nil>", result, "String() should return <nil> for nil receiver")
 	})
@@ -92753,6 +94010,64 @@ func TestEnumDataRetentionMode(t *testing.T) {
 	})
 }
 
+func TestEnumDataRetentionStateMode(t *testing.T) {
+	t.Run("NewFromString_workspace_default", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewDataRetentionStateModeFromString("workspace_default")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, DataRetentionStateMode("workspace_default"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_zero", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewDataRetentionStateModeFromString("zero")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, DataRetentionStateMode("zero"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewDataRetentionStateModeFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewDataRetentionStateModeFromString("workspace_default")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
+func TestEnumDataRetentionStateStatus(t *testing.T) {
+	t.Run("NewFromString_available", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewDataRetentionStateStatusFromString("available")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, DataRetentionStateStatus("available"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_purged", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewDataRetentionStateStatusFromString("purged")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, DataRetentionStateStatus("purged"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_Invalid", func(t *testing.T) {
+		_, err := NewDataRetentionStateStatusFromString("invalid_value_that_does_not_exist")
+		assert.Error(t, err)
+	})
+
+	t.Run("Ptr", func(t *testing.T) {
+		val, err := NewDataRetentionStateStatusFromString("available")
+		assert.NoError(t, err)
+		ptr := val.Ptr()
+		assert.NotNil(t, ptr)
+		assert.Equal(t, val, *ptr)
+	})
+}
+
 func TestEnumEditJSONExtendEditFieldType(t *testing.T) {
 	t.Run("NewFromString_text", func(t *testing.T) {
 		t.Parallel()
@@ -94538,6 +95853,13 @@ func TestEnumParseRunStatusEnum(t *testing.T) {
 		val, err := NewParseRunStatusEnumFromString("FAILED")
 		assert.NoError(t, err, "valid enum value should not return error")
 		assert.Equal(t, ParseRunStatusEnum("FAILED"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_CANCELLED", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewParseRunStatusEnumFromString("CANCELLED")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, ParseRunStatusEnum("CANCELLED"), val, "enum value should match expected wire value")
 	})
 
 	t.Run("NewFromString_Invalid", func(t *testing.T) {
@@ -96493,6 +97815,29 @@ func TestExtraPropertiesDataRetention(t *testing.T) {
 	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
 		t.Parallel()
 		var obj *DataRetention
+		extraProps := obj.GetExtraProperties()
+		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
+	})
+}
+
+func TestExtraPropertiesDataRetentionState(t *testing.T) {
+	t.Run("GetExtraProperties", func(t *testing.T) {
+		t.Parallel()
+		obj := &DataRetentionState{}
+		// Should not panic when calling GetExtraProperties()
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("GetExtraProperties() panicked: %v", r)
+			}
+		}()
+		extraProps := obj.GetExtraProperties()
+		// Result can be nil or an empty/non-empty map
+		_ = extraProps
+	})
+
+	t.Run("GetExtraProperties_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *DataRetentionState
 		extraProps := obj.GetExtraProperties()
 		assert.Nil(t, extraProps, "nil receiver should return nil without panicking")
 	})

@@ -41,6 +41,19 @@ func NewClient(options *core.RequestOptions) *Client {
 // List every workspace in your organization.
 //
 // Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+//
+// Example:
+//
+//	request := &extend.WorkspacesListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	    ExtendWorkspaceID: "x-extend-workspace-id",
+//	}
+//	_, err := client.Workspaces.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.WorkspacesListRequest,
@@ -62,6 +75,17 @@ func (c *Client) List(
 // **Availability.** Workspace management may be enabled for customers on the Enterprise plan. Contact [support@extend.ai](mailto:support@extend.ai) if you would like to have it enabled for your organization.
 //
 // **Authentication.** Requires an **organization-scoped** API key. As with every organization-key request, you must still send `x-extend-workspace-id` with an existing workspace.
+//
+// Example:
+//
+//	request := &extend.WorkspacesCreateRequest{
+//	    ExtendWorkspaceID: "x-extend-workspace-id",
+//	    Name: "Workspace A",
+//	}
+//	_, err := client.Workspaces.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.WorkspacesCreateRequest,
@@ -81,6 +105,17 @@ func (c *Client) Create(
 // Retrieve a workspace by ID.
 //
 // Requires an **organization-scoped** API key. See [Create Workspace](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workspace/create-workspace) for the availability and authentication rules that apply to all `/workspaces` endpoints.
+//
+// Example:
+//
+//	request := &extend.WorkspacesRetrieveRequest{
+//	    ExtendWorkspaceID: "x-extend-workspace-id",
+//	}
+//	_, err := client.Workspaces.Retrieve(
+//	    context.TODO(),
+//	    "workspace_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the workspace.

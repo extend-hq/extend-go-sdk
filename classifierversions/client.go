@@ -41,6 +41,19 @@ func NewClient(options *core.RequestOptions) *Client {
 // This endpoint allows you to fetch all versions of a given classifier, including the current `draft` version.
 //
 // Versions are returned in descending order of creation (newest first) with the `draft` version first. The `draft` version is the latest unpublished version of the classifier, which can be published to create a new version. It might not have any changes from the last published version.
+//
+// Example:
+//
+//	request := &extend.ClassifierVersionsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ClassifierVersions.List(
+//	    context.TODO(),
+//	    "classifier_id_here",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the classifier.
@@ -65,6 +78,20 @@ func (c *Client) List(
 // This endpoint allows you to publish a new version of an existing classifier. Publishing a new version creates a snapshot of the classifier's current configuration and makes it available for use in workflows.
 //
 // Publishing a new version does not automatically update existing workflows using this classifier. You may need to manually update workflows to use the new version if desired.
+//
+// Example:
+//
+//	request := &extend.ClassifierVersionsCreateRequest{
+//	    ReleaseType: extend.ReleaseTypeMinor,
+//	    Description: extend.String(
+//	        "Added new document classification type",
+//	    ),
+//	}
+//	_, err := client.ClassifierVersions.Create(
+//	    context.TODO(),
+//	    "classifier_id_here",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the classifier.
@@ -87,6 +114,16 @@ func (c *Client) Create(
 }
 
 // Retrieve a specific version of a classifier in Extend
+//
+// Example:
+//
+//	request := &extend.ClassifierVersionsRetrieveRequest{}
+//	_, err := client.ClassifierVersions.Retrieve(
+//	    context.TODO(),
+//	    "classifier_id_here",
+//	    "draft",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the classifier.

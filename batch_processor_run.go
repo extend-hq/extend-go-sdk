@@ -23,10 +23,12 @@ type BatchProcessorRunGetRequest struct {
 }
 
 func (b *BatchProcessorRunGetRequest) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -205,10 +207,12 @@ func (l *LegacyBatchProcessorRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyBatchProcessorRun) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetObject sets the Object field and marks it as non-optional;
@@ -396,10 +400,12 @@ func (l *LegacyBatchProcessorRunMetrics) GetExtraProperties() map[string]interfa
 }
 
 func (l *LegacyBatchProcessorRunMetrics) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetNumFiles sets the NumFiles field and marks it as non-optional;
@@ -458,12 +464,12 @@ func (l *LegacyBatchProcessorRunMetrics) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
-// The options for the batch processor run.
 var (
 	legacyBatchProcessorRunOptionsFieldFuzzyMatchFields = big.NewInt(1 << 0)
 	legacyBatchProcessorRunOptionsFieldExcludeFields    = big.NewInt(1 << 1)
 )
 
+// The options for the batch processor run.
 type LegacyBatchProcessorRunOptions struct {
 	// The fields that were fuzzy matched.
 	FuzzyMatchFields []string `json:"fuzzyMatchFields,omitempty" url:"fuzzyMatchFields,omitempty"`
@@ -499,10 +505,12 @@ func (l *LegacyBatchProcessorRunOptions) GetExtraProperties() map[string]interfa
 }
 
 func (l *LegacyBatchProcessorRunOptions) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetFuzzyMatchFields sets the FuzzyMatchFields field and marks it as non-optional;
@@ -661,10 +669,12 @@ func (b *BatchProcessorRunGetResponse) GetExtraProperties() map[string]interface
 }
 
 func (b *BatchProcessorRunGetResponse) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;

@@ -23,10 +23,12 @@ type ClassifyRunsCancelRequest struct {
 }
 
 func (c *ClassifyRunsCancelRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -59,10 +61,12 @@ type ClassifyRunsCreateRequest struct {
 }
 
 func (c *ClassifyRunsCreateRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetClassifier sets the Classifier field and marks it as non-optional;
@@ -139,10 +143,12 @@ type ClassifyRunsCreateBatchRequest struct {
 }
 
 func (c *ClassifyRunsCreateBatchRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetClassifier sets the Classifier field and marks it as non-optional;
@@ -200,10 +206,12 @@ type ClassifyRunsDeleteRequest struct {
 }
 
 func (c *ClassifyRunsDeleteRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -257,10 +265,12 @@ type ClassifyRunsListRequest struct {
 }
 
 func (c *ClassifyRunsListRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -353,10 +363,12 @@ type ClassifyRunsRetrieveRequest struct {
 }
 
 func (c *ClassifyRunsRetrieveRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -366,7 +378,6 @@ func (c *ClassifyRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *st
 	c.require(classifyRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// Summary representation of a classify run.
 var (
 	classifyRunSummaryFieldID                = big.NewInt(1 << 0)
 	classifyRunSummaryFieldClassifier        = big.NewInt(1 << 1)
@@ -385,6 +396,19 @@ var (
 	classifyRunSummaryFieldUpdatedAt         = big.NewInt(1 << 14)
 )
 
+// classifyRunSummaryNullableFields maps the wire names of ClassifyRunSummary's nullable fields (required or optional) to their field bits.
+var classifyRunSummaryNullableFields = map[string]*big.Int{
+	"classifier":        classifyRunSummaryFieldClassifier,
+	"classifierVersion": classifyRunSummaryFieldClassifierVersion,
+	"failureReason":     classifyRunSummaryFieldFailureReason,
+	"failureMessage":    classifyRunSummaryFieldFailureMessage,
+	"metadata":          classifyRunSummaryFieldMetadata,
+	"file":              classifyRunSummaryFieldFile,
+	"parseRunId":        classifyRunSummaryFieldParseRunID,
+	"usage":             classifyRunSummaryFieldUsage,
+}
+
+// Summary representation of a classify run.
 type ClassifyRunSummary struct {
 	// The unique identifier for this classify run.
 	ID string `json:"id" url:"id"`
@@ -553,10 +577,12 @@ func (c *ClassifyRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyRunSummary) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -689,6 +715,13 @@ func (c *ClassifyRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, classifyRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -725,13 +758,13 @@ func (c *ClassifyRunSummary) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Reference to the classifier to run against every input in this batch.
 var (
 	classifyRunsCreateBatchRequestClassifierFieldID             = big.NewInt(1 << 0)
 	classifyRunsCreateBatchRequestClassifierFieldVersion        = big.NewInt(1 << 1)
 	classifyRunsCreateBatchRequestClassifierFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to the classifier to run against every input in this batch.
 type ClassifyRunsCreateBatchRequestClassifier struct {
 	// The ID of the classifier to use.
 	ID      string                  `json:"id" url:"id"`
@@ -775,10 +808,12 @@ func (c *ClassifyRunsCreateBatchRequestClassifier) GetExtraProperties() map[stri
 }
 
 func (c *ClassifyRunsCreateBatchRequestClassifier) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -883,10 +918,12 @@ func (c *ClassifyRunsCreateBatchRequestInputsItem) GetExtraProperties() map[stri
 }
 
 func (c *ClassifyRunsCreateBatchRequestInputsItem) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -976,6 +1013,54 @@ func (c *ClassifyRunsCreateBatchRequestInputsItemFile) GetFileFromText() *FileFr
 }
 
 func (c *ClassifyRunsCreateBatchRequestInputsItemFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		c.typ = "FileFromURL"
@@ -1029,13 +1114,13 @@ func (c *ClassifyRunsCreateBatchRequestInputsItemFile) Accept(visitor ClassifyRu
 	return fmt.Errorf("type %T does not include a non-empty union type", c)
 }
 
-// Reference to an existing classifier. One of `classifier` or `config` must be provided.
 var (
 	classifyRunsCreateRequestClassifierFieldID             = big.NewInt(1 << 0)
 	classifyRunsCreateRequestClassifierFieldVersion        = big.NewInt(1 << 1)
 	classifyRunsCreateRequestClassifierFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing classifier. One of `classifier` or `config` must be provided.
 type ClassifyRunsCreateRequestClassifier struct {
 	// The ID of the classifier to use.
 	ID      string                  `json:"id" url:"id"`
@@ -1079,10 +1164,12 @@ func (c *ClassifyRunsCreateRequestClassifier) GetExtraProperties() map[string]in
 }
 
 func (c *ClassifyRunsCreateRequestClassifier) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1179,6 +1266,54 @@ func (c *ClassifyRunsCreateRequestFile) GetFileFromText() *FileFromText {
 }
 
 func (c *ClassifyRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		c.typ = "FileFromURL"
@@ -1262,10 +1397,12 @@ func (c *ClassifyRunsDeleteResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (c *ClassifyRunsDeleteResponse) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1360,10 +1497,12 @@ func (c *ClassifyRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyRunsListResponse) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

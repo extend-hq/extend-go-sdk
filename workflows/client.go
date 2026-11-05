@@ -39,6 +39,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List all workflows. Returns a paginated list of workflow summaries.
+//
+// Example:
+//
+//	request := &extend.WorkflowsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.Workflows.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.WorkflowsListRequest,
@@ -60,6 +72,16 @@ func (c *Client) List(
 // When `steps` is omitted, the workflow is created with default steps (`TRIGGER` → `PARSE`). When `steps` is provided, the step graph is validated and the draft version is populated with the given steps.
 //
 // **Note:** The default steps may change in the future. If your integration depends on a specific step graph, provide `steps` explicitly.
+//
+// Example:
+//
+//	request := &extend.WorkflowsCreateRequest{
+//	    Name: "Invoice Processing",
+//	}
+//	_, err := client.Workflows.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.WorkflowsCreateRequest,
@@ -77,6 +99,13 @@ func (c *Client) Create(
 }
 
 // Get details of a workflow, including its draft version and steps.
+//
+// Example:
+//
+//	_, err := client.Workflows.Retrieve(
+//	    context.TODO(),
+//	    "workflow_abc123",
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the workflow.
@@ -97,6 +126,19 @@ func (c *Client) Retrieve(
 // Update a workflow's draft. You can update the name, the steps, or both.
 //
 // When `steps` is provided, the draft version's steps are replaced with the new set. Steps with matching names from the previous draft preserve their internal identity.
+//
+// Example:
+//
+//	request := &extend.WorkflowsUpdateRequest{
+//	    Name: extend.String(
+//	        "Updated Invoice Processing",
+//	    ),
+//	}
+//	_, err := client.Workflows.Update(
+//	    context.TODO(),
+//	    "workflow_abc123",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the workflow to update.

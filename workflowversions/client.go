@@ -39,6 +39,19 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List all versions of a workflow, including the draft version. Returns a paginated list of version summaries.
+//
+// Example:
+//
+//	request := &extend.WorkflowVersionsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.WorkflowVersions.List(
+//	    context.TODO(),
+//	    "workflow_abc123",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the workflow.
@@ -61,6 +74,15 @@ func (c *Client) List(
 // Deploy a new version of a workflow. The deployed version becomes available for running workflow runs.
 //
 // When `steps` is omitted, the current draft is deployed as-is. When `steps` is provided, the given steps are deployed directly without modifying the draft.
+//
+// Example:
+//
+//	request := &extend.WorkflowVersionsCreateRequest{}
+//	_, err := client.WorkflowVersions.Create(
+//	    context.TODO(),
+//	    "workflow_abc123",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the workflow to deploy.
@@ -81,6 +103,14 @@ func (c *Client) Create(
 }
 
 // Get a specific version of a workflow, including its step definitions.
+//
+// Example:
+//
+//	_, err := client.WorkflowVersions.Retrieve(
+//	    context.TODO(),
+//	    "workflow_abc123",
+//	    "draft",
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the workflow.

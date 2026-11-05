@@ -23,10 +23,12 @@ type ProcessorRunCancelRequest struct {
 }
 
 func (p *ProcessorRunCancelRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -76,10 +78,12 @@ type ProcessorRunCreateRequest struct {
 }
 
 func (p *ProcessorRunCreateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetProcessorID sets the ProcessorID field and marks it as non-optional;
@@ -172,10 +176,12 @@ type ProcessorRunDeleteRequest struct {
 }
 
 func (p *ProcessorRunDeleteRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -198,10 +204,12 @@ type ProcessorRunGetRequest struct {
 }
 
 func (p *ProcessorRunGetRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -276,10 +284,12 @@ type ProcessorRunListRequest struct {
 }
 
 func (p *ProcessorRunListRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -419,10 +429,12 @@ func (l *LegacyClassifierOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyClassifierOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -495,15 +507,15 @@ func (l *LegacyClassifierOutput) String() string {
 	return fmt.Sprintf("%#v", l)
 }
 
+var (
+	legacyDocumentProcessorRunCreditsFieldCredits = big.NewInt(1 << 0)
+)
+
 // These are usage credits for document processing (extraction, classification, or splitting). File parsing credits are tracked separately and can be retrieved from the [Get File](https://docs.extend.ai/2026-02-09/api-reference/endpoints/file/get-file) endpoint.
 //
 // This field will not be returned for processor runs created before October 7, 2025, or for customers on legacy billing systems.
 //
 // For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
-var (
-	legacyDocumentProcessorRunCreditsFieldCredits = big.NewInt(1 << 0)
-)
-
 type LegacyDocumentProcessorRunCredits struct {
 	// The number of credits consumed specifically for document processing in this processor run. This does not include file parsing credits.
 	Credits float64 `json:"credits" url:"credits"`
@@ -530,10 +542,12 @@ func (l *LegacyDocumentProcessorRunCredits) GetExtraProperties() map[string]inte
 }
 
 func (l *LegacyDocumentProcessorRunCredits) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetCredits sets the Credits field and marks it as non-optional;
@@ -684,10 +698,12 @@ func (l *LegacyExtractionFieldResult) GetExtraProperties() map[string]interface{
 }
 
 func (l *LegacyExtractionFieldResult) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -855,16 +871,32 @@ func (l *LegacyExtractionOutput) GetLegacyFieldsArrayOutput() LegacyFieldsArrayO
 }
 
 func (l *LegacyExtractionOutput) UnmarshalJSON(data []byte) error {
-	valueLegacyJSONOutput := new(LegacyJSONOutput)
-	if err := json.Unmarshal(data, &valueLegacyJSONOutput); err == nil {
-		l.typ = "LegacyJSONOutput"
-		l.LegacyJSONOutput = valueLegacyJSONOutput
-		return nil
+	if internal.MatchesObjectKeys(data, []string{"value", "metadata"}, []string{"value", "metadata"}) {
+		valueLegacyJSONOutput := new(LegacyJSONOutput)
+		if err := json.Unmarshal(data, &valueLegacyJSONOutput); err == nil {
+			l.typ = "LegacyJSONOutput"
+			l.LegacyJSONOutput = valueLegacyJSONOutput
+			return nil
+		}
 	}
 	var valueLegacyFieldsArrayOutput LegacyFieldsArrayOutput
 	if err := json.Unmarshal(data, &valueLegacyFieldsArrayOutput); err == nil {
 		l.typ = "LegacyFieldsArrayOutput"
 		l.LegacyFieldsArrayOutput = valueLegacyFieldsArrayOutput
+		return nil
+	}
+	if internal.HasObjectKeys(data, []string{"value", "metadata"}) {
+		valueLegacyJSONOutput := new(LegacyJSONOutput)
+		if err := json.Unmarshal(data, &valueLegacyJSONOutput); err == nil {
+			l.typ = "LegacyJSONOutput"
+			l.LegacyJSONOutput = valueLegacyJSONOutput
+			return nil
+		}
+	}
+	valueLegacyJSONOutput := new(LegacyJSONOutput)
+	if err := json.Unmarshal(data, &valueLegacyJSONOutput); err == nil {
+		l.typ = "LegacyJSONOutput"
+		l.LegacyJSONOutput = valueLegacyJSONOutput
 		return nil
 	}
 	return fmt.Errorf("%s cannot be deserialized as a %T", data, l)
@@ -895,7 +927,6 @@ func (l *LegacyExtractionOutput) Accept(visitor LegacyExtractionOutputVisitor) e
 	return fmt.Errorf("type %T does not include a non-empty union type", l)
 }
 
-// A record of edits made to the processor output.
 var (
 	legacyExtractionOutputEditsFieldOriginalValue = big.NewInt(1 << 0)
 	legacyExtractionOutputEditsFieldEditedValue   = big.NewInt(1 << 1)
@@ -904,6 +935,7 @@ var (
 	legacyExtractionOutputEditsFieldFieldType     = big.NewInt(1 << 4)
 )
 
+// A record of edits made to the processor output.
 type LegacyExtractionOutputEdits struct {
 	// The original value before editing.
 	OriginalValue any `json:"originalValue,omitempty" url:"originalValue,omitempty"`
@@ -966,10 +998,12 @@ func (l *LegacyExtractionOutputEdits) GetExtraProperties() map[string]interface{
 }
 
 func (l *LegacyExtractionOutputEdits) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetOriginalValue sets the OriginalValue field and marks it as non-optional;
@@ -1095,10 +1129,12 @@ func (l *LegacyJSONOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyJSONOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -1164,6 +1200,13 @@ var (
 	legacyJSONOutputMetadataValueFieldCitations          = big.NewInt(1 << 3)
 	legacyJSONOutputMetadataValueFieldInsights           = big.NewInt(1 << 4)
 )
+
+// legacyJSONOutputMetadataValueNullableFields maps the wire names of LegacyJSONOutputMetadataValue's nullable fields (required or optional) to their field bits.
+var legacyJSONOutputMetadataValueNullableFields = map[string]*big.Int{
+	"ocrConfidence":      legacyJSONOutputMetadataValueFieldOcrConfidence,
+	"logprobsConfidence": legacyJSONOutputMetadataValueFieldLogprobsConfidence,
+	"reviewAgentScore":   legacyJSONOutputMetadataValueFieldReviewAgentScore,
+}
 
 type LegacyJSONOutputMetadataValue struct {
 	// Confidence score from OCR processing, if applicable
@@ -1234,10 +1277,12 @@ func (l *LegacyJSONOutputMetadataValue) GetExtraProperties() map[string]interfac
 }
 
 func (l *LegacyJSONOutputMetadataValue) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetOcrConfidence sets the OcrConfidence field and marks it as non-optional;
@@ -1287,6 +1332,13 @@ func (l *LegacyJSONOutputMetadataValue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	l.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, legacyJSONOutputMetadataValueNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		l.require(presentFields)
+	}
 	l.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1325,6 +1377,11 @@ var (
 	legacyJSONOutputMetadataValueCitationsItemFieldPageWidth     = big.NewInt(1 << 4)
 	legacyJSONOutputMetadataValueCitationsItemFieldPageHeight    = big.NewInt(1 << 5)
 )
+
+// legacyJSONOutputMetadataValueCitationsItemNullableFields maps the wire names of LegacyJSONOutputMetadataValueCitationsItem's nullable fields (required or optional) to their field bits.
+var legacyJSONOutputMetadataValueCitationsItemNullableFields = map[string]*big.Int{
+	"referenceText": legacyJSONOutputMetadataValueCitationsItemFieldReferenceText,
+}
 
 type LegacyJSONOutputMetadataValueCitationsItem struct {
 	// Page number where the citation was found. For Excel, the 1-based worksheet index; for CSV, always 1.
@@ -1397,10 +1454,12 @@ func (l *LegacyJSONOutputMetadataValueCitationsItem) GetExtraProperties() map[st
 }
 
 func (l *LegacyJSONOutputMetadataValueCitationsItem) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetPage sets the Page field and marks it as non-optional;
@@ -1457,6 +1516,13 @@ func (l *LegacyJSONOutputMetadataValueCitationsItem) UnmarshalJSON(data []byte) 
 		return err
 	}
 	l.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, legacyJSONOutputMetadataValueCitationsItemNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		l.require(presentFields)
+	}
 	l.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -1527,10 +1593,12 @@ func (l *LegacyJSONOutputMetadataValueCitationsItemPolygonItem) GetExtraProperti
 }
 
 func (l *LegacyJSONOutputMetadataValueCitationsItemPolygonItem) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetX sets the X field and marks it as non-optional;
@@ -1640,6 +1708,38 @@ func (l *LegacyProcessorOutput) UnmarshalJSON(data []byte) error {
 		l.typ = "LegacyExtractionOutput"
 		l.LegacyExtractionOutput = valueLegacyExtractionOutput
 		return nil
+	}
+	if internal.MatchesObjectKeys(data, []string{"id", "type", "confidence", "insights"}, []string{"id", "type", "confidence", "insights"}) {
+		valueLegacyClassifierOutput := new(LegacyClassifierOutput)
+		if err := json.Unmarshal(data, &valueLegacyClassifierOutput); err == nil {
+			l.typ = "LegacyClassifierOutput"
+			l.LegacyClassifierOutput = valueLegacyClassifierOutput
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"splits", "isExternal"}, []string{"splits"}) {
+		valueLegacySplitterOutput := new(LegacySplitterOutput)
+		if err := json.Unmarshal(data, &valueLegacySplitterOutput); err == nil {
+			l.typ = "LegacySplitterOutput"
+			l.LegacySplitterOutput = valueLegacySplitterOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id", "type", "confidence", "insights"}) {
+		valueLegacyClassifierOutput := new(LegacyClassifierOutput)
+		if err := json.Unmarshal(data, &valueLegacyClassifierOutput); err == nil {
+			l.typ = "LegacyClassifierOutput"
+			l.LegacyClassifierOutput = valueLegacyClassifierOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"splits"}) {
+		valueLegacySplitterOutput := new(LegacySplitterOutput)
+		if err := json.Unmarshal(data, &valueLegacySplitterOutput); err == nil {
+			l.typ = "LegacySplitterOutput"
+			l.LegacySplitterOutput = valueLegacySplitterOutput
+			return nil
+		}
 	}
 	valueLegacyClassifierOutput := new(LegacyClassifierOutput)
 	if err := json.Unmarshal(data, &valueLegacyClassifierOutput); err == nil {
@@ -1930,10 +2030,12 @@ func (l *LegacyProcessorRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyProcessorRun) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetObject sets the Object field and marks it as non-optional;
@@ -2276,13 +2378,13 @@ func (l *LegacyProcessorRunConfig) validate() error {
 	return nil
 }
 
-// Input file for running a single processor.
 var (
 	legacyProcessorRunFileInputFieldFileName = big.NewInt(1 << 0)
 	legacyProcessorRunFileInputFieldFileURL  = big.NewInt(1 << 1)
 	legacyProcessorRunFileInputFieldFileID   = big.NewInt(1 << 2)
 )
 
+// Input file for running a single processor.
 type LegacyProcessorRunFileInput struct {
 	// The name of the file to be processed. If not provided, the file name will be inferred from the URL. It is highly recommended to include this parameter for legibility.
 	FileName *string `json:"fileName,omitempty" url:"fileName,omitempty"`
@@ -2327,10 +2429,12 @@ func (l *LegacyProcessorRunFileInput) GetExtraProperties() map[string]interface{
 }
 
 func (l *LegacyProcessorRunFileInput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetFileName sets the FileName field and marks it as non-optional;
@@ -2450,10 +2554,12 @@ func (l *LegacyProcessorRunMergedProcessorsItem) GetExtraProperties() map[string
 }
 
 func (l *LegacyProcessorRunMergedProcessorsItem) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetProcessorID sets the ProcessorID field and marks it as non-optional;
@@ -2642,10 +2748,12 @@ func (l *LegacyProcessorRunSummary) GetExtraProperties() map[string]interface{} 
 }
 
 func (l *LegacyProcessorRunSummary) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -2942,10 +3050,12 @@ func (l *LegacySplitterOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacySplitterOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetSplits sets the Splits field and marks it as non-optional;
@@ -3114,10 +3224,12 @@ func (l *LegacySplitterOutputSplitsItem) GetExtraProperties() map[string]interfa
 }
 
 func (l *LegacySplitterOutputSplitsItem) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -3263,10 +3375,12 @@ func (p *ProcessorRunCancelResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ProcessorRunCancelResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -3514,10 +3628,12 @@ func (p *ProcessorRunCreateResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ProcessorRunCreateResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -3625,10 +3741,12 @@ func (p *ProcessorRunDeleteResponse) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ProcessorRunDeleteResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -3732,10 +3850,12 @@ func (p *ProcessorRunGetResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProcessorRunGetResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -3878,10 +3998,12 @@ func (p *ProcessorRunListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProcessorRunListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;

@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List edit runs, with optional filters for status, source, and file name.
 //
 // Returns a paginated list of edit runs. Use `GET /edit_runs/{id}` to retrieve the full result, including `config` and `output`, for a specific run.
+//
+// Example:
+//
+//	request := &extend.EditRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.EditRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.EditRunsListRequest,
@@ -62,6 +74,33 @@ func (c *Client) List(
 // The Edit Runs endpoint allows you to convert and edit documents and get an edit run ID that can be used to check status and retrieve results with the Get Edit Run endpoint.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Edit Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.EditRunsCreateRequest{
+//	    File: &extend.EditRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/form.pdf",
+//	        },
+//	    },
+//	    Config: &extend.EditConfig{
+//	        EngineVersion: extend.String(
+//	            "1.0.0",
+//	        ),
+//	        Instructions: extend.String(
+//	            "Fill out the form with the provided data",
+//	        ),
+//	        AdvancedOptions: &extend.EditConfigAdvancedOptions{
+//	            FlattenPdf: extend.Bool(
+//	                true,
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.EditRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.EditRunsCreateRequest,
@@ -81,6 +120,15 @@ func (c *Client) Create(
 // Retrieve the status and results of an edit run.
 //
 // Use this endpoint to get results for an edit run that has already completed, or to check on the status of an edit run initiated via the [Create Edit Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/edit/create-edit-run) endpoint.
+//
+// Example:
+//
+//	request := &extend.EditRunsRetrieveRequest{}
+//	_, err := client.EditRuns.Retrieve(
+//	    context.TODO(),
+//	    "edit_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the edit run.
@@ -105,6 +153,15 @@ func (c *Client) Retrieve(
 // Delete an edit run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than relying on automated data retention policies, or to make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.EditRunsDeleteRequest{}
+//	_, err := client.EditRuns.Delete(
+//	    context.TODO(),
+//	    "edit_run_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the edit run to delete.

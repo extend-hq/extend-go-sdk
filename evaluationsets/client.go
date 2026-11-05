@@ -39,6 +39,21 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List evaluation sets in your account.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetsListRequest{
+//	    EntityID: extend.String(
+//	        "entity_id_here",
+//	    ),
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.EvaluationSets.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.EvaluationSetsListRequest,
@@ -58,6 +73,20 @@ func (c *Client) List(
 // Evaluation sets are collections of files and expected outputs that are used to evaluate the performance of a given extractor, classifier, or splitter. This endpoint will create a new evaluation set, which items can be added to using the [Create Evaluation Set Item](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/create-evaluation-set-item) endpoint.
 //
 // Note: It is not necessary to create an evaluation set via API. You can also create an evaluation set via the Extend dashboard and take the ID from there. To learn more about how to create evaluation sets, see the [Evaluation Sets](https://docs.extend.ai/2026-02-09/evaluation/overview) product page.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetsCreateRequest{
+//	    Name: "Invoice Processing Test Set",
+//	    Description: extend.String(
+//	        "Q4 vendor invoices for accuracy testing",
+//	    ),
+//	    EntityID: "ex_1234567890",
+//	}
+//	_, err := client.EvaluationSets.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.EvaluationSetsCreateRequest,
@@ -75,6 +104,15 @@ func (c *Client) Create(
 }
 
 // Retrieve a specific evaluation set by ID. This returns an evaluation set object, but does not include the items in the evaluation set. You can use the [List Evaluation Set Items](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/list-evaluation-set-items) endpoint to get the items in an evaluation set.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetsRetrieveRequest{}
+//	_, err := client.EvaluationSets.Retrieve(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set.

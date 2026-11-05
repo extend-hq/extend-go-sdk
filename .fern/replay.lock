@@ -42,19 +42,25 @@ generations:
     cli_version: unknown
     generator_versions:
       fernapi/fern-go-sdk: 1.49.5
-current_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
+  - commit_sha: 01c5c468a82f30278d62d186e82a1ec2759e920d
+    tree_hash: 82288f786d24009d957ecaf71ecf78b3d4c38692
+    timestamp: 2026-11-05T13:03:49.627Z
+    cli_version: unknown
+    generator_versions:
+      fernapi/fern-go-sdk: 1.70.16
+current_generation: 01c5c468a82f30278d62d186e82a1ec2759e920d
 patches:
   - id: patch-78027956
     content_hash: sha256:dfe003b3de81d479ab5ef9c0ec0b23f8e5667b8357a19b3004496b97baa492ee
     original_commit: 780279565555a9b62c4f2298b6580cf64e30abee
     original_message: Add plain-English SDK blurb before README badges.
     original_author: jordan-extend <jordan@extend.app>
-    base_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
+    base_generation: 01c5c468a82f30278d62d186e82a1ec2759e920d
     files:
       - README.md
     patch_content: |
       diff --git a/README.md b/README.md
-      index 86fe0ba..a4ba5e2 100644
+      index aad9be6..bca861b 100644
       --- a/README.md
       +++ b/README.md
       @@ -1,5 +1,7 @@
@@ -84,6 +90,7 @@ patches:
         - [Errors](#errors)
         - [Request Options](#request-options)
         - [Advanced](#advanced)
+          - [Additional Body Properties](#additional-body-properties)
           - [Response Headers](#response-headers)
           - [Retries](#retries)
           - [Timeouts](#timeouts)
@@ -114,20 +121,24 @@ patches:
             option "github.com/extend-hq/extend-go-sdk/option"
         )
 
-        func do() {
+        func do() error {
             client := client.NewClient(
                 option.WithToken(
                     "<token>",
                 ),
             )
             request := &extend.FilesUploadRequest{}
-            client.Files.Upload(
+            _, err := client.Files.Upload(
                 context.TODO(),
                 strings.NewReader(
                     "",
                 ),
                 request,
             )
+            if err != nil {
+                return err
+            }
+            return nil
         }
         ```
 
@@ -151,7 +162,7 @@ patches:
         response, err := client.Files.Upload(...)
         if err != nil {
             var apiError *core.APIError
-            if errors.As(err, apiError) {
+            if errors.As(err, &apiError) {
                 // Do something with the API error ...
             }
             return err
@@ -188,7 +199,29 @@ patches:
         )
         ```
 
+        When credentials are not explicitly provided, the client reads them from the
+        following environment variables:
+
+        - `EXTEND_API_KEY`
+
         ## Advanced
+
+        ### Additional Body Properties
+
+        If you need to send a request body property that isn't part of the generated request type (e.g. an
+        undocumented or beta field), use the `option.WithBodyProperties` request option. Keys are sent exactly as
+        provided (use the API's wire-format names), and they override any generated field with the same name. If the
+        endpoint has no request body, a JSON body is created from the given properties. Body properties are applied to
+        JSON and form URL encoded request bodies; they are not applied to multipart file upload or raw byte requests.
+
+        ```go
+        response, err := client.Files.Upload(
+            ...,
+            option.WithBodyProperties(map[string]interface{}{
+                "custom_field": "custom-value",
+            }),
+        )
+        ```
 
         ### Response Headers
 
@@ -289,12 +322,12 @@ patches:
     original_commit: af7588b96daec368808177a677af502afe4ffad1
     original_message: Bump supported file types claim to 35+.
     original_author: jordan-extend <jordan@extend.app>
-    base_generation: 87c72b0335f3ddd1e7e105459287dca143816a25
+    base_generation: 01c5c468a82f30278d62d186e82a1ec2759e920d
     files:
       - README.md
     patch_content: |
       diff --git a/README.md b/README.md
-      index 86fe0ba..a4ba5e2 100644
+      index aad9be6..bca861b 100644
       --- a/README.md
       +++ b/README.md
       @@ -1,5 +1,7 @@
@@ -324,6 +357,7 @@ patches:
         - [Errors](#errors)
         - [Request Options](#request-options)
         - [Advanced](#advanced)
+          - [Additional Body Properties](#additional-body-properties)
           - [Response Headers](#response-headers)
           - [Retries](#retries)
           - [Timeouts](#timeouts)
@@ -354,20 +388,24 @@ patches:
             option "github.com/extend-hq/extend-go-sdk/option"
         )
 
-        func do() {
+        func do() error {
             client := client.NewClient(
                 option.WithToken(
                     "<token>",
                 ),
             )
             request := &extend.FilesUploadRequest{}
-            client.Files.Upload(
+            _, err := client.Files.Upload(
                 context.TODO(),
                 strings.NewReader(
                     "",
                 ),
                 request,
             )
+            if err != nil {
+                return err
+            }
+            return nil
         }
         ```
 
@@ -391,7 +429,7 @@ patches:
         response, err := client.Files.Upload(...)
         if err != nil {
             var apiError *core.APIError
-            if errors.As(err, apiError) {
+            if errors.As(err, &apiError) {
                 // Do something with the API error ...
             }
             return err
@@ -428,7 +466,29 @@ patches:
         )
         ```
 
+        When credentials are not explicitly provided, the client reads them from the
+        following environment variables:
+
+        - `EXTEND_API_KEY`
+
         ## Advanced
+
+        ### Additional Body Properties
+
+        If you need to send a request body property that isn't part of the generated request type (e.g. an
+        undocumented or beta field), use the `option.WithBodyProperties` request option. Keys are sent exactly as
+        provided (use the API's wire-format names), and they override any generated field with the same name. If the
+        endpoint has no request body, a JSON body is created from the given properties. Body properties are applied to
+        JSON and form URL encoded request bodies; they are not applied to multipart file upload or raw byte requests.
+
+        ```go
+        response, err := client.Files.Upload(
+            ...,
+            option.WithBodyProperties(map[string]interface{}{
+                "custom_field": "custom-value",
+            }),
+        )
+        ```
 
         ### Response Headers
 

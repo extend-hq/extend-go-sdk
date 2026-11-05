@@ -23,10 +23,12 @@ type ParseRunsCancelRequest struct {
 }
 
 func (p *ParseRunsCancelRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -55,10 +57,12 @@ type ParseRunsCreateRequest struct {
 }
 
 func (p *ParseRunsCreateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -128,10 +132,12 @@ type ParseRunsCreateBatchRequest struct {
 }
 
 func (p *ParseRunsCreateBatchRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetInputs sets the Inputs field and marks it as non-optional;
@@ -189,10 +195,12 @@ type ParseRunsDeleteRequest struct {
 }
 
 func (p *ParseRunsDeleteRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -240,10 +248,12 @@ type ParseRunsListRequest struct {
 }
 
 func (p *ParseRunsListRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -320,10 +330,12 @@ type ParseRunsRetrieveRequest struct {
 }
 
 func (p *ParseRunsRetrieveRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -385,7 +397,6 @@ func (p ParseRunSource) Ptr() *ParseRunSource {
 	return &p
 }
 
-// Summary representation of a parse run.
 var (
 	parseRunSummaryFieldID             = big.NewInt(1 << 0)
 	parseRunSummaryFieldBatchID        = big.NewInt(1 << 1)
@@ -396,10 +407,22 @@ var (
 	parseRunSummaryFieldMetadata       = big.NewInt(1 << 6)
 	parseRunSummaryFieldMetrics        = big.NewInt(1 << 7)
 	parseRunSummaryFieldUsage          = big.NewInt(1 << 8)
-	parseRunSummaryFieldCreatedAt      = big.NewInt(1 << 9)
-	parseRunSummaryFieldUpdatedAt      = big.NewInt(1 << 10)
+	parseRunSummaryFieldDataRetention  = big.NewInt(1 << 9)
+	parseRunSummaryFieldCreatedAt      = big.NewInt(1 << 10)
+	parseRunSummaryFieldUpdatedAt      = big.NewInt(1 << 11)
 )
 
+// parseRunSummaryNullableFields maps the wire names of ParseRunSummary's nullable fields (required or optional) to their field bits.
+var parseRunSummaryNullableFields = map[string]*big.Int{
+	"batchId":        parseRunSummaryFieldBatchID,
+	"failureReason":  parseRunSummaryFieldFailureReason,
+	"failureMessage": parseRunSummaryFieldFailureMessage,
+	"metadata":       parseRunSummaryFieldMetadata,
+	"metrics":        parseRunSummaryFieldMetrics,
+	"usage":          parseRunSummaryFieldUsage,
+}
+
+// Summary representation of a parse run.
 type ParseRunSummary struct {
 	// A unique identifier for the parse run.
 	//
@@ -418,6 +441,7 @@ type ParseRunSummary struct {
 	// * `"PROCESSING"` - The file is still being processed
 	// * `"PROCESSED"` - The file was successfully processed
 	// * `"FAILED"` - The processing failed (see `failureReason` for details)
+	// * `"CANCELLED"` - The run was cancelled with `POST /parse_runs/{id}/cancel`
 	Status ParseRunSummaryStatus `json:"status" url:"status"`
 	// The reason for failure.
 	//
@@ -456,9 +480,10 @@ type ParseRunSummary struct {
 	// Usage credits consumed by this parse run. Omits `breakdown` — fetch the full parse run by id to see the per-line items.
 	//
 	// **Availability:** Present when `status` is `"PROCESSED"`, the run was created after October 7, 2025, and the customer is on the current billing system.
-	Usage     *RunUsageSummary `json:"usage,omitempty" url:"usage,omitempty"`
-	CreatedAt CreatedAt        `json:"createdAt" url:"createdAt"`
-	UpdatedAt UpdatedAt        `json:"updatedAt" url:"updatedAt"`
+	Usage         *RunUsageSummary    `json:"usage,omitempty" url:"usage,omitempty"`
+	DataRetention *DataRetentionState `json:"dataRetention,omitempty" url:"dataRetention,omitempty"`
+	CreatedAt     CreatedAt           `json:"createdAt" url:"createdAt"`
+	UpdatedAt     UpdatedAt           `json:"updatedAt" url:"updatedAt"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -531,6 +556,13 @@ func (p *ParseRunSummary) GetUsage() *RunUsageSummary {
 	return p.Usage
 }
 
+func (p *ParseRunSummary) GetDataRetention() *DataRetentionState {
+	if p == nil {
+		return nil
+	}
+	return p.DataRetention
+}
+
 func (p *ParseRunSummary) GetCreatedAt() CreatedAt {
 	if p == nil {
 		return time.Time{}
@@ -557,10 +589,12 @@ func (p *ParseRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunSummary) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -626,6 +660,13 @@ func (p *ParseRunSummary) SetUsage(usage *RunUsageSummary) {
 	p.require(parseRunSummaryFieldUsage)
 }
 
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunSummary) SetDataRetention(dataRetention *DataRetentionState) {
+	p.DataRetention = dataRetention
+	p.require(parseRunSummaryFieldDataRetention)
+}
+
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (p *ParseRunSummary) SetCreatedAt(createdAt CreatedAt) {
@@ -665,6 +706,13 @@ func (p *ParseRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -701,14 +749,14 @@ func (p *ParseRunSummary) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Metrics about the parsing process.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	parseRunSummaryMetricsFieldProcessingTimeMs = big.NewInt(1 << 0)
 	parseRunSummaryMetricsFieldPageCount        = big.NewInt(1 << 1)
 )
 
+// Metrics about the parsing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type ParseRunSummaryMetrics struct {
 	// The time taken to process the document in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -744,10 +792,12 @@ func (p *ParseRunSummaryMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunSummaryMetrics) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -811,6 +861,7 @@ func (p *ParseRunSummaryMetrics) String() string {
 // * `"PROCESSING"` - The file is still being processed
 // * `"PROCESSED"` - The file was successfully processed
 // * `"FAILED"` - The processing failed (see `failureReason` for details)
+// * `"CANCELLED"` - The run was cancelled with `POST /parse_runs/{id}/cancel`
 type ParseRunSummaryStatus string
 
 const (
@@ -818,6 +869,7 @@ const (
 	ParseRunSummaryStatusProcessing ParseRunSummaryStatus = "PROCESSING"
 	ParseRunSummaryStatusProcessed  ParseRunSummaryStatus = "PROCESSED"
 	ParseRunSummaryStatusFailed     ParseRunSummaryStatus = "FAILED"
+	ParseRunSummaryStatusCancelled  ParseRunSummaryStatus = "CANCELLED"
 )
 
 func NewParseRunSummaryStatusFromString(s string) (ParseRunSummaryStatus, error) {
@@ -830,6 +882,8 @@ func NewParseRunSummaryStatusFromString(s string) (ParseRunSummaryStatus, error)
 		return ParseRunSummaryStatusProcessed, nil
 	case "FAILED":
 		return ParseRunSummaryStatusFailed, nil
+	case "CANCELLED":
+		return ParseRunSummaryStatusCancelled, nil
 	}
 	var t ParseRunSummaryStatus
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -878,10 +932,12 @@ func (p *ParseRunsCreateBatchRequestInputsItem) GetExtraProperties() map[string]
 }
 
 func (p *ParseRunsCreateBatchRequestInputsItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -971,6 +1027,54 @@ func (p *ParseRunsCreateBatchRequestInputsItemFile) GetFileFromText() *FileFromT
 }
 
 func (p *ParseRunsCreateBatchRequestInputsItemFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			p.typ = "FileFromText"
+			p.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			p.typ = "FileFromText"
+			p.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		p.typ = "FileFromURL"
@@ -1047,6 +1151,38 @@ func (p *ParseRunsCreateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (p *ParseRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		p.typ = "FileFromURL"
@@ -1117,10 +1253,12 @@ func (p *ParseRunsDeleteResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunsDeleteResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1243,10 +1381,12 @@ func (p *ParseRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunsListResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

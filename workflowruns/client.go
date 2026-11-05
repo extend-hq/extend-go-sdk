@@ -39,6 +39,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List runs of a Workflow. Workflows are sequences of steps that process files and data in a specific order to achieve a desired outcome. A WorkflowRun represents a single execution of a workflow against a file.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.WorkflowRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.WorkflowRunsListRequest,
@@ -60,6 +72,23 @@ func (c *Client) List(
 // Pass `file` for a single document use case (more common), or `package` to process 2-50 files together as one package in a single run where context across files is used together to determine final output. Exactly one of `file` or `package` must be provided.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Workflow Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsCreateRequest{
+//	    Workflow: &extend.WorkflowReference{
+//	        ID: "wf_1234567890",
+//	    },
+//	    File: &extend.WorkflowRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/invoice.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.WorkflowRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.WorkflowRunsCreateRequest,
@@ -77,6 +106,15 @@ func (c *Client) Create(
 }
 
 // Once a workflow has been run, you can check the status and output of a specific WorkflowRun.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsRetrieveRequest{}
+//	_, err := client.WorkflowRuns.Retrieve(
+//	    context.TODO(),
+//	    "workflow_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the workflow run.
@@ -99,6 +137,23 @@ func (c *Client) Retrieve(
 }
 
 // You can update the name and metadata of an in progress WorkflowRun at any time using this endpoint.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsUpdateRequest{
+//	    Name: extend.String(
+//	        "Invoice #12345",
+//	    ),
+//	    Metadata: map[string]any{
+//	        "customerId": "cust_abc123",
+//	        "source": "email-inbox",
+//	    },
+//	}
+//	_, err := client.WorkflowRuns.Update(
+//	    context.TODO(),
+//	    "workflow_run_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the workflow run.
@@ -123,6 +178,15 @@ func (c *Client) Update(
 // Delete a workflow run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsDeleteRequest{}
+//	_, err := client.WorkflowRuns.Delete(
+//	    context.TODO(),
+//	    "workflow_run_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the workflow run.
@@ -147,6 +211,15 @@ func (c *Client) Delete(
 // Cancel a running workflow run by its ID. This endpoint allows you to stop a workflow run that is currently in progress.
 //
 // Note: Only workflow runs with a status of `PROCESSING` or `PENDING` can be cancelled. Workflow runs that are completed, failed, in review, rejected, or already cancelled cannot be cancelled.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsCancelRequest{}
+//	_, err := client.WorkflowRuns.Cancel(
+//	    context.TODO(),
+//	    "workflow_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the workflow run.
@@ -181,6 +254,40 @@ func (c *Client) Cancel(
 //
 // - **Monitoring:** Track the progress and consume results of individual runs using [Webhooks](https://docs.extend.ai/2026-02-09/webhooks/configuration). Subscribe to events like `workflow_run.completed`, `workflow_run.failed`, etc. The webhook payload for these events will include the corresponding `batchId` and the `metadata` you provided for each input.
 // - **Fetching Results:** You can also use the [List Workflow Runs](https://docs.extend.ai/2026-02-09/api-reference/endpoints/workflow/list-workflow-runs) endpoint and filter using the `batchId` query param.
+//
+// Example:
+//
+//	request := &extend.WorkflowRunsCreateBatchRequest{
+//	    Workflow: &extend.WorkflowReference{
+//	        ID: "wf_1234567890",
+//	    },
+//	    Inputs: []*extend.WorkflowRunsCreateBatchRequestInputsItem{
+//	        &extend.WorkflowRunsCreateBatchRequestInputsItem{
+//	            File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/invoice1.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_abc123",
+//	            },
+//	        },
+//	        &extend.WorkflowRunsCreateBatchRequestInputsItem{
+//	            File: &extend.WorkflowRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/invoice2.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_def456",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.WorkflowRuns.CreateBatch(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateBatch(
 	ctx context.Context,
 	request *extend.WorkflowRunsCreateBatchRequest,

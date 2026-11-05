@@ -23,10 +23,12 @@ type VerifyRunsCancelRequest struct {
 }
 
 func (v *VerifyRunsCancelRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -56,10 +58,12 @@ type VerifyRunsCreateRequest struct {
 }
 
 func (v *VerifyRunsCreateRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -124,10 +128,12 @@ type VerifyRunsDeleteRequest struct {
 }
 
 func (v *VerifyRunsDeleteRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -175,10 +181,12 @@ type VerifyRunsListRequest struct {
 }
 
 func (v *VerifyRunsListRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -264,10 +272,12 @@ type VerifyRunsRetrieveRequest struct {
 }
 
 func (v *VerifyRunsRetrieveRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -277,7 +287,6 @@ func (v *VerifyRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *stri
 	v.require(verifyRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// Summary representation of a verify run, as returned by `GET /verify_runs`. Carries the run's `riskLevel` but not its `output`; use `GET /verify_runs/{id}` for the signals and evidence.
 var (
 	verifyRunSummaryFieldID             = big.NewInt(1 << 0)
 	verifyRunSummaryFieldFile           = big.NewInt(1 << 1)
@@ -295,6 +304,18 @@ var (
 	verifyRunSummaryFieldUpdatedAt      = big.NewInt(1 << 13)
 )
 
+// verifyRunSummaryNullableFields maps the wire names of VerifyRunSummary's nullable fields (required or optional) to their field bits.
+var verifyRunSummaryNullableFields = map[string]*big.Int{
+	"riskLevel":      verifyRunSummaryFieldRiskLevel,
+	"failureReason":  verifyRunSummaryFieldFailureReason,
+	"failureMessage": verifyRunSummaryFieldFailureMessage,
+	"metadata":       verifyRunSummaryFieldMetadata,
+	"metrics":        verifyRunSummaryFieldMetrics,
+	"usage":          verifyRunSummaryFieldUsage,
+	"sourceId":       verifyRunSummaryFieldSourceID,
+}
+
+// Summary representation of a verify run, as returned by `GET /verify_runs`. Carries the run's `riskLevel` but not its `output`; use `GET /verify_runs/{id}` for the signals and evidence.
 type VerifyRunSummary struct {
 	// A unique identifier for the verify run.
 	//
@@ -442,10 +463,12 @@ func (v *VerifyRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRunSummary) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -571,6 +594,13 @@ func (v *VerifyRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, verifyRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		v.require(presentFields)
+	}
 	v.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -653,6 +683,38 @@ func (v *VerifyRunsCreateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (v *VerifyRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			v.typ = "FileFromURL"
+			v.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			v.typ = "FileFromID"
+			v.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			v.typ = "FileFromURL"
+			v.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			v.typ = "FileFromID"
+			v.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		v.typ = "FileFromURL"
@@ -723,10 +785,12 @@ func (v *VerifyRunsDeleteResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRunsDeleteResponse) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -843,10 +907,12 @@ func (v *VerifyRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRunsListResponse) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

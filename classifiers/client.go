@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all classifiers.
 //
 // Returns a summary of each classifier. Use `GET /classifiers/{id}` to retrieve the full object including `draftVersion`.
+//
+// Example:
+//
+//	request := &extend.ClassifiersListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.Classifiers.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ClassifiersListRequest,
@@ -58,6 +70,35 @@ func (c *Client) List(
 }
 
 // Create a new classifier.
+//
+// Example:
+//
+//	request := &extend.ClassifiersCreateRequest{
+//	    Name: "Document Classifier",
+//	    Config: &extend.ClassifyConfig{
+//	        Classifications: []*extend.Classification{
+//	            &extend.Classification{
+//	                ID: "invoice",
+//	                Type: "invoice",
+//	                Description: "An invoice or bill for goods or services",
+//	            },
+//	            &extend.Classification{
+//	                ID: "receipt",
+//	                Type: "receipt",
+//	                Description: "A receipt confirming payment",
+//	            },
+//	            &extend.Classification{
+//	                ID: "other",
+//	                Type: "other",
+//	                Description: "Any other document type",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.Classifiers.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ClassifiersCreateRequest,
@@ -75,6 +116,15 @@ func (c *Client) Create(
 }
 
 // Get details of a classifier.
+//
+// Example:
+//
+//	request := &extend.ClassifiersRetrieveRequest{}
+//	_, err := client.Classifiers.Retrieve(
+//	    context.TODO(),
+//	    "classifier_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the classifier to get.
@@ -97,6 +147,19 @@ func (c *Client) Retrieve(
 }
 
 // Update an existing classifier.
+//
+// Example:
+//
+//	request := &extend.ClassifiersUpdateRequest{
+//	    Name: extend.String(
+//	        "Document Classifier v2",
+//	    ),
+//	}
+//	_, err := client.Classifiers.Update(
+//	    context.TODO(),
+//	    "classifier_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the classifier to update.

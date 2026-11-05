@@ -15,6 +15,7 @@ The Extend Go library provides convenient access to the Extend APIs from Go.
 - [Errors](#errors)
 - [Request Options](#request-options)
 - [Advanced](#advanced)
+  - [Additional Body Properties](#additional-body-properties)
   - [Response Headers](#response-headers)
   - [Retries](#retries)
   - [Timeouts](#timeouts)
@@ -45,20 +46,24 @@ import (
     option "github.com/extend-hq/extend-go-sdk/option"
 )
 
-func do() {
+func do() error {
     client := client.NewClient(
         option.WithToken(
             "<token>",
         ),
     )
     request := &extend.FilesUploadRequest{}
-    client.Files.Upload(
+    _, err := client.Files.Upload(
         context.TODO(),
         strings.NewReader(
             "",
         ),
         request,
     )
+    if err != nil {
+        return err
+    }
+    return nil
 }
 ```
 
@@ -82,7 +87,7 @@ with the `errors.Is` and `errors.As` APIs, so you can access the error like so:
 response, err := client.Files.Upload(...)
 if err != nil {
     var apiError *core.APIError
-    if errors.As(err, apiError) {
+    if errors.As(err, &apiError) {
         // Do something with the API error ...
     }
     return err
@@ -119,7 +124,29 @@ response, err := client.Files.Upload(
 )
 ```
 
+When credentials are not explicitly provided, the client reads them from the
+following environment variables:
+
+- `EXTEND_API_KEY`
+
 ## Advanced
+
+### Additional Body Properties
+
+If you need to send a request body property that isn't part of the generated request type (e.g. an
+undocumented or beta field), use the `option.WithBodyProperties` request option. Keys are sent exactly as
+provided (use the API's wire-format names), and they override any generated field with the same name. If the
+endpoint has no request body, a JSON body is created from the given properties. Body properties are applied to
+JSON and form URL encoded request bodies; they are not applied to multipart file upload or raw byte requests.
+
+```go
+response, err := client.Files.Upload(
+    ...,
+    option.WithBodyProperties(map[string]interface{}{
+        "custom_field": "custom-value",
+    }),
+)
+```
 
 ### Response Headers
 

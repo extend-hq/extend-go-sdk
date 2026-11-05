@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List parse runs, with optional filters for status, batch ID, source, and file name.
 //
 // Returns a paginated list of parse runs. Use `GET /parse_runs/{id}` to retrieve the full result including output for a specific run.
+//
+// Example:
+//
+//	request := &extend.ParseRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ParseRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ParseRunsListRequest,
@@ -62,6 +74,23 @@ func (c *Client) List(
 // The Parse endpoint allows you to convert documents into structured, machine-readable formats with fine-grained control over the parsing process. This endpoint is ideal for extracting cleaned document content to be used as context for downstream processing, e.g. RAG pipelines, custom ingestion pipelines, embeddings classification, etc.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Parse Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.ParseRunsCreateRequest{
+//	    File: &extend.ParseRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/bank_statement.pdf",
+//	            Name: extend.String(
+//	                "bank_statement.pdf",
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.ParseRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ParseRunsCreateRequest,
@@ -81,6 +110,15 @@ func (c *Client) Create(
 // Retrieve the status and results of a parse run.
 //
 // Use this endpoint to get results for a parse run that has already completed, or to check on the status of a parse run initiated by the [Create Parse Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/parse/create-parse-run) endpoint.
+//
+// Example:
+//
+//	request := &extend.ParseRunsRetrieveRequest{}
+//	_, err := client.ParseRuns.Retrieve(
+//	    context.TODO(),
+//	    "parse_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the parse run.
@@ -105,6 +143,15 @@ func (c *Client) Retrieve(
 // Delete a parse run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.ParseRunsDeleteRequest{}
+//	_, err := client.ParseRuns.Delete(
+//	    context.TODO(),
+//	    "parse_run_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the parse run to delete.
@@ -129,6 +176,15 @@ func (c *Client) Delete(
 // Cancel an in-progress parse run.
 //
 // Note: Only parse runs with a status of `"PROCESSING"` can be cancelled. Parse runs that have already completed, failed, or been cancelled cannot be cancelled again.
+//
+// Example:
+//
+//	request := &extend.ParseRunsCancelRequest{}
+//	_, err := client.ParseRuns.Cancel(
+//	    context.TODO(),
+//	    "parse_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the parse run to cancel.
@@ -161,6 +217,47 @@ func (c *Client) Cancel(
 // **Notes:**
 // - `inputs` must contain between 1 and 1,000 items.
 // - File input supports URLs, Extend file IDs, and raw text strings.
+//
+// Example:
+//
+//	request := &extend.ParseRunsCreateBatchRequest{
+//	    Inputs: []*extend.ParseRunsCreateBatchRequestInputsItem{
+//	        &extend.ParseRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/document1.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_abc123",
+//	            },
+//	        },
+//	        &extend.ParseRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/document2.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_def456",
+//	            },
+//	        },
+//	        &extend.ParseRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ParseRunsCreateBatchRequestInputsItemFile{
+//	                FileFromText: &extend.FileFromText{
+//	                    Text: "This is some raw text to parse.",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "source": "manual-entry",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.ParseRuns.CreateBatch(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateBatch(
 	ctx context.Context,
 	request *extend.ParseRunsCreateBatchRequest,

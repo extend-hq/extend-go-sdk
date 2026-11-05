@@ -34,10 +34,12 @@ type EditRunsCreateRequest struct {
 }
 
 func (e *EditRunsCreateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -95,10 +97,12 @@ type EditRunsDeleteRequest struct {
 }
 
 func (e *EditRunsDeleteRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -140,10 +144,12 @@ type EditRunsListRequest struct {
 }
 
 func (e *EditRunsListRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -215,10 +221,12 @@ type EditRunsRetrieveRequest struct {
 }
 
 func (e *EditRunsRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -257,7 +265,6 @@ func (e EditRunSource) Ptr() *EditRunSource {
 	return &e
 }
 
-// Summary representation of an edit run.
 var (
 	editRunSummaryFieldID             = big.NewInt(1 << 0)
 	editRunSummaryFieldFile           = big.NewInt(1 << 1)
@@ -270,6 +277,15 @@ var (
 	editRunSummaryFieldUpdatedAt      = big.NewInt(1 << 8)
 )
 
+// editRunSummaryNullableFields maps the wire names of EditRunSummary's nullable fields (required or optional) to their field bits.
+var editRunSummaryNullableFields = map[string]*big.Int{
+	"failureReason":  editRunSummaryFieldFailureReason,
+	"failureMessage": editRunSummaryFieldFailureMessage,
+	"metrics":        editRunSummaryFieldMetrics,
+	"usage":          editRunSummaryFieldUsage,
+}
+
+// Summary representation of an edit run.
 type EditRunSummary struct {
 	// A unique identifier for the edit run.
 	//
@@ -400,10 +416,12 @@ func (e *EditRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -494,6 +512,13 @@ func (e *EditRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, editRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -530,9 +555,6 @@ func (e *EditRunSummary) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Metrics about the editing process.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	editRunSummaryMetricsFieldProcessingTimeMs      = big.NewInt(1 << 0)
 	editRunSummaryMetricsFieldPageCount             = big.NewInt(1 << 1)
@@ -544,6 +566,9 @@ var (
 	editRunSummaryMetricsFieldFieldFillingTimeMs    = big.NewInt(1 << 7)
 )
 
+// Metrics about the editing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type EditRunSummaryMetrics struct {
 	// Total processing time in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -633,10 +658,12 @@ func (e *EditRunSummaryMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunSummaryMetrics) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -791,6 +818,38 @@ func (e *EditRunsCreateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (e *EditRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -861,10 +920,12 @@ func (e *EditRunsDeleteResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunsDeleteResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -984,10 +1045,12 @@ func (e *EditRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunsListResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

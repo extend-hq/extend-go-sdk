@@ -33,10 +33,12 @@ type ProcessorCreateRequest struct {
 }
 
 func (p *ProcessorCreateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -116,10 +118,12 @@ type ProcessorListRequest struct {
 }
 
 func (p *ProcessorListRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -256,10 +260,12 @@ func (l *LegacyListProcessorsProcessor) GetExtraProperties() map[string]interfac
 }
 
 func (l *LegacyListProcessorsProcessor) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -409,10 +415,12 @@ func (l *LegacyListProcessorsProcessorVersion) GetExtraProperties() map[string]i
 }
 
 func (l *LegacyListProcessorsProcessorVersion) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -477,6 +485,12 @@ var (
 	legacyListProcessorsResponseFieldNextPageToken = big.NewInt(1 << 2)
 )
 
+// legacyListProcessorsResponseNullableFields maps the wire names of LegacyListProcessorsResponse's nullable fields (required or optional) to their field bits.
+var legacyListProcessorsResponseNullableFields = map[string]*big.Int{
+	"warning":       legacyListProcessorsResponseFieldWarning,
+	"nextPageToken": legacyListProcessorsResponseFieldNextPageToken,
+}
+
 type LegacyListProcessorsResponse struct {
 	// Optional warning message
 	Warning *string `json:"warning,omitempty" url:"warning,omitempty"`
@@ -526,10 +540,12 @@ func (l *LegacyListProcessorsResponse) GetExtraProperties() map[string]interface
 }
 
 func (l *LegacyListProcessorsResponse) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetWarning sets the Warning field and marks it as non-optional;
@@ -574,6 +590,13 @@ func (l *LegacyListProcessorsResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	l.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, legacyListProcessorsResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		l.require(presentFields)
+	}
 	l.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -702,10 +725,12 @@ func (l *LegacyProcessor) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyProcessor) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetObject sets the Object field and marks it as non-optional;
@@ -1000,10 +1025,12 @@ func (p *ProcessorCreateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProcessorCreateResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -1298,10 +1325,12 @@ func (p *ProcessorUpdateResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProcessorUpdateResponse) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -1382,10 +1411,12 @@ type ProcessorUpdateRequest struct {
 }
 
 func (p *ProcessorUpdateRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;

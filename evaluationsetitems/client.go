@@ -41,6 +41,19 @@ func NewClient(options *core.RequestOptions) *Client {
 // List items in a specific evaluation set.
 //
 // Returns a summary of each evaluation set item. Use the [Get Evaluation Set Item](https://docs.extend.ai/2026-02-09/api-reference/endpoints/evaluation/get-evaluation-set-item) endpoint to get the full details of an evaluation set item.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetItemsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.EvaluationSetItems.List(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the evaluation set.
@@ -72,6 +85,32 @@ func (c *Client) List(
 // **Limit:** You can create up to 100 items at a time.
 //
 // Learn more about how to create evaluation set items in the [Evaluation Sets](https://docs.extend.ai/2026-02-09/evaluation/overview) product page.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetItemsCreateRequest{
+//	    Items: []*extend.EvaluationSetItemsCreateRequestItemsItem{
+//	        &extend.EvaluationSetItemsCreateRequestItemsItem{
+//	            FileID: extend.String(
+//	                "file_xK9mLPqRtN3vS8wF5hB2cQ",
+//	            ),
+//	            ExpectedOutput: &extend.ProvidedProcessorOutput{
+//	                ProvidedExtractOutput: &extend.ProvidedExtractOutput{
+//	                    Value: &extend.JSONObject{
+//	                        "invoice_number": "INV-001",
+//	                        "total_amount": 1500,
+//	                        "vendor_name": "Acme Corp",
+//	                    },
+//	                },
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.EvaluationSetItems.Create(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the evaluation set.
@@ -94,6 +133,16 @@ func (c *Client) Create(
 }
 
 // Get details of an evaluation set item.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetItemsRetrieveRequest{}
+//	_, err := client.EvaluationSetItems.Retrieve(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    "evaluation_set_item_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the evaluation set.
@@ -121,6 +170,26 @@ func (c *Client) Retrieve(
 }
 
 // If you need to change the expected output for a given evaluation set item, you can use this endpoint to update the item. This can be useful if you need to correct an error in the expected output or if the output of the extractor, classifier, or splitter has changed.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetItemsUpdateRequest{
+//	    ExpectedOutput: &extend.ProvidedProcessorOutput{
+//	        ProvidedExtractOutput: &extend.ProvidedExtractOutput{
+//	            Value: &extend.JSONObject{
+//	                "invoice_number": "INV-001",
+//	                "total_amount": 1750,
+//	                "vendor_name": "Acme Corp",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.EvaluationSetItems.Update(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    "evaluation_set_item_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the evaluation set.
@@ -148,6 +217,16 @@ func (c *Client) Update(
 }
 
 // Delete an evaluation set item.
+//
+// Example:
+//
+//	request := &extend.EvaluationSetItemsDeleteRequest{}
+//	_, err := client.EvaluationSetItems.Delete(
+//	    context.TODO(),
+//	    "evaluation_set_id_here",
+//	    "evaluation_set_item_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the evaluation set.

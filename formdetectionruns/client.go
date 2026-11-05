@@ -41,6 +41,33 @@ func NewClient(options *core.RequestOptions) *Client {
 // Start detecting fields in a PDF form and return immediately with a `form_detection_run` resource, typically in the `PROCESSING` state.
 //
 // Subscribe to the `form_detection_run.processed` and `form_detection_run.failed` webhook events, or poll `GET /form_detection_runs/{id}` until the status is `PROCESSED` or `FAILED`. When processing succeeds, `output.schema` contains an edit schema you can pass directly to `POST /edit` or `POST /edit_runs`.
+//
+// Example:
+//
+//	request := &extend.FormDetectionRunsCreateRequest{
+//	    File: &extend.FormDetectionRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/form.pdf",
+//	        },
+//	    },
+//	    Config: &extend.EditSchemaGenerationConfig{
+//	        EngineVersion: extend.String(
+//	            "1.0.0",
+//	        ),
+//	        Instructions: extend.String(
+//	            "Detect the form fields and use human-readable field names.",
+//	        ),
+//	        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+//	            RadioEnumsEnabled: extend.Bool(
+//	                true,
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.FormDetectionRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.FormDetectionRunsCreateRequest,
@@ -60,6 +87,15 @@ func (c *Client) Create(
 // Retrieve the status and results of a form detection run.
 //
 // Use this endpoint to poll a run created with `POST /form_detection_runs`. When `status` is `PROCESSED`, `output.schema` contains the generated edit schema.
+//
+// Example:
+//
+//	request := &extend.FormDetectionRunsRetrieveRequest{}
+//	_, err := client.FormDetectionRuns.Retrieve(
+//	    context.TODO(),
+//	    "sgr_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the form detection run.

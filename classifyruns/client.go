@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all classify runs.
 //
 // Returns a summary of each run. Use `GET /classify_runs/{id}` to retrieve the full object including `output` and `config`.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ClassifyRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ClassifyRunsListRequest,
@@ -60,6 +72,23 @@ func (c *Client) List(
 // Classify a document using an existing classifier or an inline configuration.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Classify Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsCreateRequest{
+//	    Classifier: &extend.ClassifyRunsCreateRequestClassifier{
+//	        ID: "cl_1234567890",
+//	    },
+//	    File: &extend.ClassifyRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/document.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.ClassifyRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ClassifyRunsCreateRequest,
@@ -79,6 +108,15 @@ func (c *Client) Create(
 // Retrieve details about a specific classify run, including its status and outputs.
 //
 // A common use case for this endpoint is to poll for the status and final output of a classify run when using the [Create Classify Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/classify/create-classify-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsRetrieveRequest{}
+//	_, err := client.ClassifyRuns.Retrieve(
+//	    context.TODO(),
+//	    "classify_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for this classify run.
@@ -103,6 +141,15 @@ func (c *Client) Retrieve(
 // Delete a classify run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsDeleteRequest{}
+//	_, err := client.ClassifyRuns.Delete(
+//	    context.TODO(),
+//	    "id",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the classify run.
@@ -125,6 +172,15 @@ func (c *Client) Delete(
 // Cancel an in-progress classify run.
 //
 // Note: Only classify runs with a status of `"PROCESSING"` can be cancelled. Classifier runs that have already completed, failed, or been cancelled cannot be cancelled again.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsCancelRequest{}
+//	_, err := client.ClassifyRuns.Cancel(
+//	    context.TODO(),
+//	    "classify_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the classify run to cancel.
@@ -158,6 +214,50 @@ func (c *Client) Cancel(
 // - A processor reference (`classifier.id`) is required — inline `config` is not supported for batch requests.
 // - `inputs` must contain between 1 and 1,000 items.
 // - All inputs in a batch use the same classifier version and override config.
+//
+// Example:
+//
+//	request := &extend.ClassifyRunsCreateBatchRequest{
+//	    Classifier: &extend.ClassifyRunsCreateBatchRequestClassifier{
+//	        ID: "cl_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    },
+//	    Inputs: []*extend.ClassifyRunsCreateBatchRequestInputsItem{
+//	        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/document1.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_abc123",
+//	            },
+//	        },
+//	        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/document2.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_def456",
+//	            },
+//	        },
+//	        &extend.ClassifyRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ClassifyRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/document3.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_ghi789",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.ClassifyRuns.CreateBatch(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateBatch(
 	ctx context.Context,
 	request *extend.ClassifyRunsCreateBatchRequest,

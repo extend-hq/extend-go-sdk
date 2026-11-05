@@ -23,10 +23,12 @@ type SplitRunsCancelRequest struct {
 }
 
 func (s *SplitRunsCancelRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -59,10 +61,12 @@ type SplitRunsCreateRequest struct {
 }
 
 func (s *SplitRunsCreateRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplitter sets the Splitter field and marks it as non-optional;
@@ -139,10 +143,12 @@ type SplitRunsCreateBatchRequest struct {
 }
 
 func (s *SplitRunsCreateBatchRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplitter sets the Splitter field and marks it as non-optional;
@@ -200,10 +206,12 @@ type SplitRunsDeleteRequest struct {
 }
 
 func (s *SplitRunsDeleteRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -257,10 +265,12 @@ type SplitRunsListRequest struct {
 }
 
 func (s *SplitRunsListRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -353,10 +363,12 @@ type SplitRunsRetrieveRequest struct {
 }
 
 func (s *SplitRunsRetrieveRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -366,7 +378,6 @@ func (s *SplitRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *strin
 	s.require(splitRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// Summary representation of a split run.
 var (
 	splitRunSummaryFieldID              = big.NewInt(1 << 0)
 	splitRunSummaryFieldSplitter        = big.NewInt(1 << 1)
@@ -385,6 +396,19 @@ var (
 	splitRunSummaryFieldUpdatedAt       = big.NewInt(1 << 14)
 )
 
+// splitRunSummaryNullableFields maps the wire names of SplitRunSummary's nullable fields (required or optional) to their field bits.
+var splitRunSummaryNullableFields = map[string]*big.Int{
+	"splitter":        splitRunSummaryFieldSplitter,
+	"splitterVersion": splitRunSummaryFieldSplitterVersion,
+	"failureReason":   splitRunSummaryFieldFailureReason,
+	"failureMessage":  splitRunSummaryFieldFailureMessage,
+	"metadata":        splitRunSummaryFieldMetadata,
+	"file":            splitRunSummaryFieldFile,
+	"parseRunId":      splitRunSummaryFieldParseRunID,
+	"usage":           splitRunSummaryFieldUsage,
+}
+
+// Summary representation of a split run.
 type SplitRunSummary struct {
 	// The unique identifier for this split run.
 	ID string `json:"id" url:"id"`
@@ -553,10 +577,12 @@ func (s *SplitRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitRunSummary) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -689,6 +715,13 @@ func (s *SplitRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, splitRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		s.require(presentFields)
+	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -764,10 +797,12 @@ func (s *SplitRunsCreateBatchRequestInputsItem) GetExtraProperties() map[string]
 }
 
 func (s *SplitRunsCreateBatchRequestInputsItem) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -849,6 +884,38 @@ func (s *SplitRunsCreateBatchRequestInputsItemFile) GetFileFromID() *FileFromID 
 }
 
 func (s *SplitRunsCreateBatchRequestInputsItemFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		s.typ = "FileFromURL"
@@ -889,13 +956,13 @@ func (s *SplitRunsCreateBatchRequestInputsItemFile) Accept(visitor SplitRunsCrea
 	return fmt.Errorf("type %T does not include a non-empty union type", s)
 }
 
-// Reference to the splitter to run against every input in this batch.
 var (
 	splitRunsCreateBatchRequestSplitterFieldID             = big.NewInt(1 << 0)
 	splitRunsCreateBatchRequestSplitterFieldVersion        = big.NewInt(1 << 1)
 	splitRunsCreateBatchRequestSplitterFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to the splitter to run against every input in this batch.
 type SplitRunsCreateBatchRequestSplitter struct {
 	// The ID of the splitter to use.
 	ID      string                  `json:"id" url:"id"`
@@ -939,10 +1006,12 @@ func (s *SplitRunsCreateBatchRequestSplitter) GetExtraProperties() map[string]in
 }
 
 func (s *SplitRunsCreateBatchRequestSplitter) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1031,6 +1100,38 @@ func (s *SplitRunsCreateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (s *SplitRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		s.typ = "FileFromURL"
@@ -1071,13 +1172,13 @@ func (s *SplitRunsCreateRequestFile) Accept(visitor SplitRunsCreateRequestFileVi
 	return fmt.Errorf("type %T does not include a non-empty union type", s)
 }
 
-// Reference to an existing splitter. One of `splitter` or `config` must be provided.
 var (
 	splitRunsCreateRequestSplitterFieldID             = big.NewInt(1 << 0)
 	splitRunsCreateRequestSplitterFieldVersion        = big.NewInt(1 << 1)
 	splitRunsCreateRequestSplitterFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing splitter. One of `splitter` or `config` must be provided.
 type SplitRunsCreateRequestSplitter struct {
 	// The ID of the splitter to use.
 	ID      string                  `json:"id" url:"id"`
@@ -1121,10 +1222,12 @@ func (s *SplitRunsCreateRequestSplitter) GetExtraProperties() map[string]interfa
 }
 
 func (s *SplitRunsCreateRequestSplitter) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1220,10 +1323,12 @@ func (s *SplitRunsDeleteResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitRunsDeleteResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1318,10 +1423,12 @@ func (s *SplitRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitRunsListResponse) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

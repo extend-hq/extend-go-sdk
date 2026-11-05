@@ -35,10 +35,12 @@ type WebhookEndpointsCreateRequest struct {
 }
 
 func (w *WebhookEndpointsCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetURL sets the URL field and marks it as non-optional;
@@ -117,10 +119,12 @@ type WebhookEndpointsDeleteRequest struct {
 }
 
 func (w *WebhookEndpointsDeleteRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -152,10 +156,12 @@ type WebhookEndpointsListRequest struct {
 }
 
 func (w *WebhookEndpointsListRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -206,10 +212,12 @@ type WebhookEndpointsRetrieveRequest struct {
 }
 
 func (w *WebhookEndpointsRetrieveRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -221,12 +229,12 @@ func (w *WebhookEndpointsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID
 
 type APIVersionEnum = string
 
-// Advanced configuration options for the webhook endpoint, including custom headers and payload delivery settings.
 var (
 	webhookAdvancedOptionsFieldHeaders = big.NewInt(1 << 0)
 	webhookAdvancedOptionsFieldPayload = big.NewInt(1 << 1)
 )
 
+// Advanced configuration options for the webhook endpoint, including custom headers and payload delivery settings.
 type WebhookAdvancedOptions struct {
 	// Custom HTTP headers to include in webhook requests.
 	Headers map[string]string      `json:"headers,omitempty" url:"headers,omitempty"`
@@ -261,10 +269,12 @@ func (w *WebhookAdvancedOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookAdvancedOptions) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetHeaders sets the Headers field and marks it as non-optional;
@@ -334,6 +344,12 @@ var (
 	webhookEndpointFieldCreatedAt       = big.NewInt(1 << 7)
 	webhookEndpointFieldCreatedBy       = big.NewInt(1 << 8)
 )
+
+// webhookEndpointNullableFields maps the wire names of WebhookEndpoint's nullable fields (required or optional) to their field bits.
+var webhookEndpointNullableFields = map[string]*big.Int{
+	"advancedOptions": webhookEndpointFieldAdvancedOptions,
+	"createdBy":       webhookEndpointFieldCreatedBy,
+}
 
 type WebhookEndpoint struct {
 	// Unique identifier for the webhook endpoint.
@@ -435,10 +451,12 @@ func (w *WebhookEndpoint) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookEndpoint) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -527,6 +545,13 @@ func (w *WebhookEndpoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -561,7 +586,6 @@ func (w *WebhookEndpoint) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// The response when creating a webhook endpoint. Includes the `signingSecret`, which is only returned on creation and cannot be retrieved again.
 var (
 	webhookEndpointCreateFieldID              = big.NewInt(1 << 0)
 	webhookEndpointCreateFieldURL             = big.NewInt(1 << 1)
@@ -575,6 +599,13 @@ var (
 	webhookEndpointCreateFieldCreatedBy       = big.NewInt(1 << 9)
 )
 
+// webhookEndpointCreateNullableFields maps the wire names of WebhookEndpointCreate's nullable fields (required or optional) to their field bits.
+var webhookEndpointCreateNullableFields = map[string]*big.Int{
+	"advancedOptions": webhookEndpointCreateFieldAdvancedOptions,
+	"createdBy":       webhookEndpointCreateFieldCreatedBy,
+}
+
+// The response when creating a webhook endpoint. Includes the `signingSecret`, which is only returned on creation and cannot be retrieved again.
 type WebhookEndpointCreate struct {
 	// Unique identifier for the webhook endpoint.
 	ID string `json:"id" url:"id"`
@@ -686,10 +717,12 @@ func (w *WebhookEndpointCreate) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookEndpointCreate) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -785,6 +818,13 @@ func (w *WebhookEndpointCreate) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, webhookEndpointCreateNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -987,12 +1027,12 @@ func (w WebhookPayloadFormat) Ptr() *WebhookPayloadFormat {
 	return &w
 }
 
-// Configuration for how webhook payloads are delivered.
 var (
 	webhookPayloadOptionsFieldFormat            = big.NewInt(1 << 0)
 	webhookPayloadOptionsFieldURLThresholdBytes = big.NewInt(1 << 1)
 )
 
+// Configuration for how webhook payloads are delivered.
 type WebhookPayloadOptions struct {
 	Format WebhookPayloadFormat `json:"format" url:"format"`
 	// When `format` is `url`, payloads larger than this threshold (in bytes) are delivered as a signed download URL instead of inline JSON. Only applicable when `format` is `url`.
@@ -1027,10 +1067,12 @@ func (w *WebhookPayloadOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WebhookPayloadOptions) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetFormat sets the Format field and marks it as non-optional;
@@ -1119,10 +1161,12 @@ func (w *WebhookEndpointsDeleteResponse) GetExtraProperties() map[string]interfa
 }
 
 func (w *WebhookEndpointsDeleteResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1217,10 +1261,12 @@ func (w *WebhookEndpointsListResponse) GetExtraProperties() map[string]interface
 }
 
 func (w *WebhookEndpointsListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;
@@ -1316,10 +1362,12 @@ type WebhookEndpointsUpdateRequest struct {
 }
 
 func (w *WebhookEndpointsUpdateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
