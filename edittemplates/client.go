@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List the edit templates saved in a workspace, with an optional filter on the template name.
 //
 // Returns a paginated list of edit template summaries. Use `GET /edit_templates/{id}` to retrieve a specific template in full, including its `config` and `schemaConfig`.
+//
+// Example:
+//
+//	request := &extend.EditTemplatesListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.EditTemplates.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.EditTemplatesListRequest,
@@ -60,6 +72,15 @@ func (c *Client) List(
 // Retrieve a saved edit template by ID.
 //
 // Use this endpoint to inspect the source file, default edit configuration, and optional schema generation configuration saved on an edit template. To run an edit directly from a template, pass its ID as the top-level `templateId` field (in place of `file`) to `POST /edit` or `POST /edit_runs` — the template's file and `config` are used automatically, and any `config` values also set on the request take precedence over the template's. Reuse `schemaConfig` with `POST /detect_form` or `POST /form_detection_runs`.
+//
+// Example:
+//
+//	request := &extend.EditTemplatesRetrieveRequest{}
+//	_, err := client.EditTemplates.Retrieve(
+//	    context.TODO(),
+//	    "edit_template_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for the edit template.

@@ -36,10 +36,12 @@ type EditTemplatesListRequest struct {
 }
 
 func (e *EditTemplatesListRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -97,10 +99,12 @@ type EditTemplatesRetrieveRequest struct {
 }
 
 func (e *EditTemplatesRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -110,7 +114,6 @@ func (e *EditTemplatesRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *s
 	e.require(editTemplatesRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// A saved edit template. Edit templates contain a source file, default edit configuration, and optional schema generation configuration that can be reused for edit runs.
 var (
 	editTemplateFieldID           = big.NewInt(1 << 0)
 	editTemplateFieldName         = big.NewInt(1 << 1)
@@ -122,6 +125,13 @@ var (
 	editTemplateFieldUpdatedAt    = big.NewInt(1 << 7)
 )
 
+// editTemplateNullableFields maps the wire names of EditTemplate's nullable fields (required or optional) to their field bits.
+var editTemplateNullableFields = map[string]*big.Int{
+	"description":  editTemplateFieldDescription,
+	"schemaConfig": editTemplateFieldSchemaConfig,
+}
+
+// A saved edit template. Edit templates contain a source file, default edit configuration, and optional schema generation configuration that can be reused for edit runs.
 type EditTemplate struct {
 	// A unique identifier for the edit template.
 	//
@@ -216,10 +226,12 @@ func (e *EditTemplate) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditTemplate) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -303,6 +315,13 @@ func (e *EditTemplate) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, editTemplateNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -339,7 +358,6 @@ func (e *EditTemplate) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Summary representation of an edit template.
 var (
 	editTemplateSummaryFieldID          = big.NewInt(1 << 0)
 	editTemplateSummaryFieldName        = big.NewInt(1 << 1)
@@ -349,6 +367,12 @@ var (
 	editTemplateSummaryFieldUpdatedAt   = big.NewInt(1 << 5)
 )
 
+// editTemplateSummaryNullableFields maps the wire names of EditTemplateSummary's nullable fields (required or optional) to their field bits.
+var editTemplateSummaryNullableFields = map[string]*big.Int{
+	"description": editTemplateSummaryFieldDescription,
+}
+
+// Summary representation of an edit template.
 type EditTemplateSummary struct {
 	// A unique identifier for the edit template.
 	//
@@ -425,10 +449,12 @@ func (e *EditTemplateSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditTemplateSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -498,6 +524,13 @@ func (e *EditTemplateSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, editTemplateSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -577,10 +610,12 @@ func (e *EditTemplatesListResponse) GetExtraProperties() map[string]interface{} 
 }
 
 func (e *EditTemplatesListResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

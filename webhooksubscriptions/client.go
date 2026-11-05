@@ -39,6 +39,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List webhook subscriptions. You can filter by `webhookEndpointId` to see all subscriptions for a given endpoint, or by `resourceId` to see all subscriptions for a given resource.
+//
+// Example:
+//
+//	request := &extend.WebhookSubscriptionsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.WebhookSubscriptions.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.WebhookSubscriptionsListRequest,
@@ -60,6 +72,22 @@ func (c *Client) List(
 // Subscriptions let you receive events for a specific resource (e.g., a single extractor or workflow) rather than all resources of that type. The `enabledEvents` must be valid for the given `resourceType` and the endpoint's `apiVersion`.
 //
 // If a subscription already exists for the same endpoint and resource, it will be updated with the new `enabledEvents` instead of creating a duplicate.
+//
+// Example:
+//
+//	request := &extend.WebhookSubscriptionsCreateRequest{
+//	    WebhookEndpointID: "wh_Xj8mK2pL9nR4vT7qY5wZ",
+//	    ResourceType: extend.WebhookSubscriptionResourceTypeExtractor,
+//	    ResourceID: "ex_Xj8mK2pL9nR4vT7qY5wZ",
+//	    EnabledEvents: []extend.WebhookSubscriptionEventType{
+//	        extend.WebhookSubscriptionEventTypeExtractRunProcessed,
+//	        extend.WebhookSubscriptionEventTypeExtractRunFailed,
+//	    },
+//	}
+//	_, err := client.WebhookSubscriptions.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.WebhookSubscriptionsCreateRequest,
@@ -77,6 +105,15 @@ func (c *Client) Create(
 }
 
 // Retrieve a webhook subscription by ID.
+//
+// Example:
+//
+//	request := &extend.WebhookSubscriptionsRetrieveRequest{}
+//	_, err := client.WebhookSubscriptions.Retrieve(
+//	    context.TODO(),
+//	    "webhook_subscription_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the webhook subscription.
@@ -99,6 +136,19 @@ func (c *Client) Retrieve(
 }
 
 // Update the enabled events on a webhook subscription.
+//
+// Example:
+//
+//	request := &extend.WebhookSubscriptionsUpdateRequest{
+//	    EnabledEvents: []extend.WebhookSubscriptionEventType{
+//	        extend.WebhookSubscriptionEventTypeExtractRunProcessed,
+//	    },
+//	}
+//	_, err := client.WebhookSubscriptions.Update(
+//	    context.TODO(),
+//	    "webhook_subscription_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the webhook subscription to update.
@@ -121,6 +171,15 @@ func (c *Client) Update(
 }
 
 // Delete a webhook subscription. This operation is permanent and cannot be undone.
+//
+// Example:
+//
+//	request := &extend.WebhookSubscriptionsDeleteRequest{}
+//	_, err := client.WebhookSubscriptions.Delete(
+//	    context.TODO(),
+//	    "webhook_subscription_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the webhook subscription to delete.

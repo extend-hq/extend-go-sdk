@@ -859,6 +859,14 @@ func TestSettersParseRunSummary(t *testing.T) {
 		assert.NotNil(t, obj.explicitFields)
 	})
 
+	t.Run("SetDataRetention", func(t *testing.T) {
+		obj := &ParseRunSummary{}
+		var fernTestValueDataRetention *DataRetentionState
+		obj.SetDataRetention(fernTestValueDataRetention)
+		assert.Equal(t, fernTestValueDataRetention, obj.DataRetention)
+		assert.NotNil(t, obj.explicitFields)
+	})
+
 	t.Run("SetCreatedAt", func(t *testing.T) {
 		obj := &ParseRunSummary{}
 		var fernTestValueCreatedAt CreatedAt
@@ -1153,6 +1161,39 @@ func TestGettersParseRunSummary(t *testing.T) {
 			}
 		}()
 		_ = obj.GetUsage() // Should return zero value
+	})
+
+	t.Run("GetDataRetention", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunSummary{}
+		var expected *DataRetentionState
+		obj.DataRetention = expected
+
+		// Act & Assert
+		assert.Equal(t, expected, obj.GetDataRetention(), "getter should return the property value")
+	})
+
+	t.Run("GetDataRetention_NilValue", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunSummary{}
+		obj.DataRetention = nil
+
+		// Act & Assert
+		assert.Nil(t, obj.GetDataRetention(), "getter should return nil when property is nil")
+	})
+
+	t.Run("GetDataRetention_NilReceiver", func(t *testing.T) {
+		t.Parallel()
+		var obj *ParseRunSummary
+		// Should not panic - getters should handle nil receiver gracefully
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Getter panicked on nil receiver: %v", r)
+			}
+		}()
+		_ = obj.GetDataRetention() // Should return zero value
 	})
 
 	t.Run("GetCreatedAt", func(t *testing.T) {
@@ -1460,6 +1501,37 @@ func TestSettersMarkExplicitParseRunSummary(t *testing.T) {
 
 		// Act
 		obj.SetUsage(fernTestValueUsage)
+
+		// Assert - object with explicitly set field can be marshaled/unmarshaled
+		bytes, err := json.Marshal(obj)
+		require.NoError(t, err, "marshaling should succeed for test setup")
+
+		// This test ensures JSON marshaling and unmarshaling succeed when the field has a zero/nil value
+		// Detect if marshaled JSON is an object or primitive to use correct unmarshal target
+		if len(bytes) > 0 && bytes[0] == '{' {
+			// JSON object - unmarshal into map
+			var unmarshaled map[string]interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		} else {
+			// JSON primitive (string, number, boolean, null) - unmarshal into interface{}
+			var unmarshaled interface{}
+			err = json.Unmarshal(bytes, &unmarshaled)
+			require.NoError(t, err, "unmarshaling should succeed for test verification")
+		}
+
+		// Note: This does not explicitly assert the presence of a specific JSON field
+		// It verifies that setting a field via setter allows successful JSON round-trip
+	})
+
+	t.Run("SetDataRetention_MarksExplicit", func(t *testing.T) {
+		t.Parallel()
+		// Arrange
+		obj := &ParseRunSummary{}
+		var fernTestValueDataRetention *DataRetentionState
+
+		// Act
+		obj.SetDataRetention(fernTestValueDataRetention)
 
 		// Assert - object with explicitly set field can be marshaled/unmarshaled
 		bytes, err := json.Marshal(obj)
@@ -2552,6 +2624,13 @@ func TestEnumParseRunSummaryStatus(t *testing.T) {
 		val, err := NewParseRunSummaryStatusFromString("FAILED")
 		assert.NoError(t, err, "valid enum value should not return error")
 		assert.Equal(t, ParseRunSummaryStatus("FAILED"), val, "enum value should match expected wire value")
+	})
+
+	t.Run("NewFromString_CANCELLED", func(t *testing.T) {
+		t.Parallel()
+		val, err := NewParseRunSummaryStatusFromString("CANCELLED")
+		assert.NoError(t, err, "valid enum value should not return error")
+		assert.Equal(t, ParseRunSummaryStatus("CANCELLED"), val, "enum value should match expected wire value")
 	})
 
 	t.Run("NewFromString_Invalid", func(t *testing.T) {

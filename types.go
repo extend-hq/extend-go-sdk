@@ -31,10 +31,12 @@ type ClassifyRequest struct {
 }
 
 func (c *ClassifyRequest) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetClassifier sets the Classifier field and marks it as non-optional;
@@ -101,10 +103,12 @@ type DetectFormRequest struct {
 }
 
 func (d *DetectFormRequest) require(field *big.Int) {
-	if d.explicitFields == nil {
-		d.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if d.explicitFields != nil {
+		next.Set(d.explicitFields)
 	}
-	d.explicitFields.Or(d.explicitFields, field)
+	next.Or(next, field)
+	d.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -166,10 +170,12 @@ type EditRequest struct {
 }
 
 func (e *EditRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -242,10 +248,12 @@ type ExtractRequest struct {
 }
 
 func (e *ExtractRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtractor sets the Extractor field and marks it as non-optional;
@@ -331,10 +339,12 @@ type ParseRequest struct {
 }
 
 func (p *ParseRequest) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -421,10 +431,12 @@ type SplitRequest struct {
 }
 
 func (s *SplitRequest) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplitter sets the Splitter field and marks it as non-optional;
@@ -476,9 +488,6 @@ func (s *SplitRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(explicitMarshaler)
 }
 
-// Standard error response format for all Extend API errors.
-//
-// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 var (
 	aPIErrorFieldCode      = big.NewInt(1 << 0)
 	aPIErrorFieldMessage   = big.NewInt(1 << 1)
@@ -488,6 +497,9 @@ var (
 	aPIErrorFieldRunID     = big.NewInt(1 << 5)
 )
 
+// Standard error response format for all Extend API errors.
+//
+// See the [Error Codes documentation](https://docs.extend.ai/2026-02-09/api-reference/error-handling) for error handling recommendations.
 type APIError struct {
 	// Error code for programmatic handling.
 	Code string `json:"code" url:"code"`
@@ -562,10 +574,12 @@ func (a *APIError) GetExtraProperties() map[string]interface{} {
 }
 
 func (a *APIError) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -694,10 +708,12 @@ func (a *ArrayStrategy) GetExtraProperties() map[string]interface{} {
 }
 
 func (a *ArrayStrategy) require(field *big.Int) {
-	if a.explicitFields == nil {
-		a.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if a.explicitFields != nil {
+		next.Set(a.explicitFields)
 	}
-	a.explicitFields.Or(a.explicitFields, field)
+	next.Or(next, field)
+	a.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -787,13 +803,13 @@ func (a ArrayStrategyType) Ptr() *ArrayStrategyType {
 	return &a
 }
 
-// Details for barcode blocks
 var (
 	barcodeDetailsFieldImageURL     = big.NewInt(1 << 0)
 	barcodeDetailsFieldDecodedValue = big.NewInt(1 << 1)
 	barcodeDetailsFieldFormat       = big.NewInt(1 << 2)
 )
 
+// Details for barcode blocks
 type BarcodeDetails struct {
 	// URL to the clipped/segmented barcode image. Only set if the option `imageClippingEnabled` in blockOptions.barcodes is `true`.
 	ImageURL *string `json:"imageUrl,omitempty" url:"imageUrl,omitempty"`
@@ -843,10 +859,12 @@ func (b *BarcodeDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BarcodeDetails) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetImageURL sets the ImageURL field and marks it as non-optional;
@@ -962,10 +980,12 @@ func (b *BatchParseRunCompletedWebhookEvent) GetExtraProperties() map[string]int
 }
 
 func (b *BatchParseRunCompletedWebhookEvent) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -1063,10 +1083,12 @@ func (b *BatchParseRunFailedWebhookEvent) GetExtraProperties() map[string]interf
 }
 
 func (b *BatchParseRunFailedWebhookEvent) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -1164,10 +1186,12 @@ func (b *BatchProcessorRunCompletedWebhookEvent) GetExtraProperties() map[string
 }
 
 func (b *BatchProcessorRunCompletedWebhookEvent) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -1265,10 +1289,12 @@ func (b *BatchProcessorRunFailedWebhookEvent) GetExtraProperties() map[string]in
 }
 
 func (b *BatchProcessorRunFailedWebhookEvent) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -1327,9 +1353,6 @@ func (b *BatchProcessorRunFailedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// A batch run represents a batch of files submitted for processing via one of the batch endpoints (`POST /parse_runs/batch`, `POST /extract_runs/batch`, `POST /classify_runs/batch`, or `POST /split_runs/batch`). Use `GET /batch_runs/{id}` to poll the status.
-//
-// **Note:** This object is not used for workflow batch runs. See `POST /workflow_runs/batch` for workflow batching.
 var (
 	batchRunFieldID        = big.NewInt(1 << 0)
 	batchRunFieldStatus    = big.NewInt(1 << 1)
@@ -1337,6 +1360,9 @@ var (
 	batchRunFieldCreatedAt = big.NewInt(1 << 3)
 )
 
+// A batch run represents a batch of files submitted for processing via one of the batch endpoints (`POST /parse_runs/batch`, `POST /extract_runs/batch`, `POST /classify_runs/batch`, or `POST /split_runs/batch`). Use `GET /batch_runs/{id}` to poll the status.
+//
+// **Note:** This object is not used for workflow batch runs. See `POST /workflow_runs/batch` for workflow batching.
 type BatchRun struct {
 	// The unique identifier for this batch run.
 	//
@@ -1395,10 +1421,12 @@ func (b *BatchRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BatchRun) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1661,10 +1689,12 @@ func (b *Block) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *Block) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1861,6 +1891,124 @@ func (b *BlockDetails) GetEmptyBlockDetails() EmptyBlockDetails {
 }
 
 func (b *BlockDetails) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"type", "cellReference"}, []string{"type"}) {
+		valueTextDetails := new(TextDetails)
+		if err := json.Unmarshal(data, &valueTextDetails); err == nil {
+			b.typ = "TextDetails"
+			b.TextDetails = valueTextDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "rowCount", "columnCount"}, []string{"type", "rowCount", "columnCount"}) {
+		valueTableDetails := new(TableDetails)
+		if err := json.Unmarshal(data, &valueTableDetails); err == nil {
+			b.typ = "TableDetails"
+			b.TableDetails = valueTableDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "rowIndex", "columnIndex", "cellReference", "formula", "formatting"}, []string{"type", "rowIndex", "columnIndex"}) {
+		valueTableCellDetails := new(TableCellDetails)
+		if err := json.Unmarshal(data, &valueTableCellDetails); err == nil {
+			b.typ = "TableCellDetails"
+			b.TableCellDetails = valueTableCellDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "imageUrl", "figureType"}, []string{"type"}) {
+		valueFigureDetails := new(FigureDetails)
+		if err := json.Unmarshal(data, &valueFigureDetails); err == nil {
+			b.typ = "FigureDetails"
+			b.FigureDetails = valueFigureDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "imageUrl", "decodedValue", "format"}, []string{"type"}) {
+		valueBarcodeDetails := new(BarcodeDetails)
+		if err := json.Unmarshal(data, &valueBarcodeDetails); err == nil {
+			b.typ = "BarcodeDetails"
+			b.BarcodeDetails = valueBarcodeDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "latex"}, []string{"type"}) {
+		valueFormulaDetails := new(FormulaDetails)
+		if err := json.Unmarshal(data, &valueFormulaDetails); err == nil {
+			b.typ = "FormulaDetails"
+			b.FormulaDetails = valueFormulaDetails
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"type", "form"}, []string{"type"}) {
+		valueKeyValueDetails := new(KeyValueDetails)
+		if err := json.Unmarshal(data, &valueKeyValueDetails); err == nil {
+			b.typ = "KeyValueDetails"
+			b.KeyValueDetails = valueKeyValueDetails
+			return nil
+		}
+	}
+	var valueEmptyBlockDetails EmptyBlockDetails
+	if err := json.Unmarshal(data, &valueEmptyBlockDetails); err == nil {
+		b.typ = "EmptyBlockDetails"
+		b.EmptyBlockDetails = valueEmptyBlockDetails
+		return nil
+	}
+	if internal.HasObjectKeys(data, []string{"type"}) {
+		valueTextDetails := new(TextDetails)
+		if err := json.Unmarshal(data, &valueTextDetails); err == nil {
+			b.typ = "TextDetails"
+			b.TextDetails = valueTextDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type", "rowCount", "columnCount"}) {
+		valueTableDetails := new(TableDetails)
+		if err := json.Unmarshal(data, &valueTableDetails); err == nil {
+			b.typ = "TableDetails"
+			b.TableDetails = valueTableDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type", "rowIndex", "columnIndex"}) {
+		valueTableCellDetails := new(TableCellDetails)
+		if err := json.Unmarshal(data, &valueTableCellDetails); err == nil {
+			b.typ = "TableCellDetails"
+			b.TableCellDetails = valueTableCellDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type"}) {
+		valueFigureDetails := new(FigureDetails)
+		if err := json.Unmarshal(data, &valueFigureDetails); err == nil {
+			b.typ = "FigureDetails"
+			b.FigureDetails = valueFigureDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type"}) {
+		valueBarcodeDetails := new(BarcodeDetails)
+		if err := json.Unmarshal(data, &valueBarcodeDetails); err == nil {
+			b.typ = "BarcodeDetails"
+			b.BarcodeDetails = valueBarcodeDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type"}) {
+		valueFormulaDetails := new(FormulaDetails)
+		if err := json.Unmarshal(data, &valueFormulaDetails); err == nil {
+			b.typ = "FormulaDetails"
+			b.FormulaDetails = valueFormulaDetails
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"type"}) {
+		valueKeyValueDetails := new(KeyValueDetails)
+		if err := json.Unmarshal(data, &valueKeyValueDetails); err == nil {
+			b.typ = "KeyValueDetails"
+			b.KeyValueDetails = valueKeyValueDetails
+			return nil
+		}
+	}
 	valueTextDetails := new(TextDetails)
 	if err := json.Unmarshal(data, &valueTextDetails); err == nil {
 		b.typ = "TextDetails"
@@ -1901,12 +2049,6 @@ func (b *BlockDetails) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &valueKeyValueDetails); err == nil {
 		b.typ = "KeyValueDetails"
 		b.KeyValueDetails = valueKeyValueDetails
-		return nil
-	}
-	var valueEmptyBlockDetails EmptyBlockDetails
-	if err := json.Unmarshal(data, &valueEmptyBlockDetails); err == nil {
-		b.typ = "EmptyBlockDetails"
-		b.EmptyBlockDetails = valueEmptyBlockDetails
 		return nil
 	}
 	return fmt.Errorf("%s cannot be deserialized as a %T", data, b)
@@ -1979,7 +2121,6 @@ func (b *BlockDetails) Accept(visitor BlockDetailsVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", b)
 }
 
-// Metadata about the block.
 var (
 	blockMetadataFieldPage             = big.NewInt(1 << 0)
 	blockMetadataFieldSheet            = big.NewInt(1 << 1)
@@ -1987,6 +2128,13 @@ var (
 	blockMetadataFieldAvgOcrConfidence = big.NewInt(1 << 3)
 )
 
+// blockMetadataNullableFields maps the wire names of BlockMetadata's nullable fields (required or optional) to their field bits.
+var blockMetadataNullableFields = map[string]*big.Int{
+	"minOcrConfidence": blockMetadataFieldMinOcrConfidence,
+	"avgOcrConfidence": blockMetadataFieldAvgOcrConfidence,
+}
+
+// Metadata about the block.
 type BlockMetadata struct {
 	// Information about the page this block appears on.
 	Page *BlockMetadataPage `json:"page,omitempty" url:"page,omitempty"`
@@ -2040,10 +2188,12 @@ func (b *BlockMetadata) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BlockMetadata) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetPage sets the Page field and marks it as non-optional;
@@ -2086,6 +2236,13 @@ func (b *BlockMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	b.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, blockMetadataNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		b.require(presentFields)
+	}
 	b.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2116,13 +2273,13 @@ func (b *BlockMetadata) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Information about the page this block appears on.
 var (
 	blockMetadataPageFieldNumber = big.NewInt(1 << 0)
 	blockMetadataPageFieldWidth  = big.NewInt(1 << 1)
 	blockMetadataPageFieldHeight = big.NewInt(1 << 2)
 )
 
+// Information about the page this block appears on.
 type BlockMetadataPage struct {
 	// The page number where this block appears.
 	Number int `json:"number" url:"number"`
@@ -2167,10 +2324,12 @@ func (b *BlockMetadataPage) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BlockMetadataPage) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetNumber sets the Number field and marks it as non-optional;
@@ -2236,12 +2395,12 @@ func (b *BlockMetadataPage) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Spreadsheet sheet metadata. Present for blocks parsed from spreadsheet files, such as Excel workbooks.
 var (
 	blockMetadataSheetFieldIndex = big.NewInt(1 << 0)
 	blockMetadataSheetFieldName  = big.NewInt(1 << 1)
 )
 
+// Spreadsheet sheet metadata. Present for blocks parsed from spreadsheet files, such as Excel workbooks.
 type BlockMetadataSheet struct {
 	// The zero-based index of the sheet in the original workbook.
 	Index int `json:"index" url:"index"`
@@ -2277,10 +2436,12 @@ func (b *BlockMetadataSheet) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BlockMetadataSheet) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetIndex sets the Index field and marks it as non-optional;
@@ -2377,10 +2538,12 @@ func (b *BlockPolygonItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BlockPolygonItem) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetX sets the X field and marks it as non-optional;
@@ -2439,12 +2602,12 @@ func (b *BlockPolygonItem) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// The byte range this block came from in the uploaded file, measured in the encoding reported by `output.metadata.sourceEncoding`. Replaces `polygon`/`boundingBox`. Only set for HTML input when `advancedOptions.htmlSourceAnchors` is enabled.
 var (
 	blockSourceFieldByteOffset = big.NewInt(1 << 0)
 	blockSourceFieldByteLength = big.NewInt(1 << 1)
 )
 
+// The byte range this block came from in the uploaded file, measured in the encoding reported by `output.metadata.sourceEncoding`. Replaces `polygon`/`boundingBox`. Only set for HTML input when `advancedOptions.htmlSourceAnchors` is enabled.
 type BlockSource struct {
 	// Zero-based byte offset into the uploaded file where this block starts.
 	ByteOffset int `json:"byteOffset" url:"byteOffset"`
@@ -2485,10 +2648,12 @@ func (b *BlockSource) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BlockSource) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetByteOffset sets the ByteOffset field and marks it as non-optional;
@@ -2627,7 +2792,6 @@ func (b BlockType) Ptr() *BlockType {
 	return &b
 }
 
-// A bounding box defined by its edges.
 var (
 	boundingBoxFieldLeft   = big.NewInt(1 << 0)
 	boundingBoxFieldTop    = big.NewInt(1 << 1)
@@ -2635,6 +2799,15 @@ var (
 	boundingBoxFieldBottom = big.NewInt(1 << 3)
 )
 
+// boundingBoxNullableFields maps the wire names of BoundingBox's nullable fields (required or optional) to their field bits.
+var boundingBoxNullableFields = map[string]*big.Int{
+	"left":   boundingBoxFieldLeft,
+	"top":    boundingBoxFieldTop,
+	"right":  boundingBoxFieldRight,
+	"bottom": boundingBoxFieldBottom,
+}
+
+// A bounding box defined by its edges.
 type BoundingBox struct {
 	// The left coordinate of the bounding box.
 	Left *float64 `json:"left,omitempty" url:"left,omitempty"`
@@ -2688,10 +2861,12 @@ func (b *BoundingBox) GetExtraProperties() map[string]interface{} {
 }
 
 func (b *BoundingBox) require(field *big.Int) {
-	if b.explicitFields == nil {
-		b.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if b.explicitFields != nil {
+		next.Set(b.explicitFields)
 	}
-	b.explicitFields.Or(b.explicitFields, field)
+	next.Or(next, field)
+	b.explicitFields = next
 }
 
 // SetLeft sets the Left field and marks it as non-optional;
@@ -2734,6 +2909,13 @@ func (b *BoundingBox) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	b.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, boundingBoxNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		b.require(presentFields)
+	}
 	b.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -2764,7 +2946,6 @@ func (b *BoundingBox) String() string {
 	return fmt.Sprintf("%#v", b)
 }
 
-// Structured formatting for an Excel table cell
 var (
 	cellFormattingFieldBold            = big.NewInt(1 << 0)
 	cellFormattingFieldItalic          = big.NewInt(1 << 1)
@@ -2772,6 +2953,7 @@ var (
 	cellFormattingFieldBackgroundColor = big.NewInt(1 << 3)
 )
 
+// Structured formatting for an Excel table cell
 type CellFormatting struct {
 	// Whether the cell text is bold.
 	Bold *bool `json:"bold,omitempty" url:"bold,omitempty"`
@@ -2825,10 +3007,12 @@ func (c *CellFormatting) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CellFormatting) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetBold sets the Bold field and marks it as non-optional;
@@ -2966,10 +3150,12 @@ func (c *Chunk) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *Chunk) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -3053,13 +3239,19 @@ func (c *Chunk) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Metadata about the chunk.
 var (
 	chunkMetadataFieldPageRange        = big.NewInt(1 << 0)
 	chunkMetadataFieldMinOcrConfidence = big.NewInt(1 << 1)
 	chunkMetadataFieldAvgOcrConfidence = big.NewInt(1 << 2)
 )
 
+// chunkMetadataNullableFields maps the wire names of ChunkMetadata's nullable fields (required or optional) to their field bits.
+var chunkMetadataNullableFields = map[string]*big.Int{
+	"minOcrConfidence": chunkMetadataFieldMinOcrConfidence,
+	"avgOcrConfidence": chunkMetadataFieldAvgOcrConfidence,
+}
+
+// Metadata about the chunk.
 type ChunkMetadata struct {
 	// The page range this chunk covers. Often will just be a partial page, in which cases `start` and `end` will be the same.
 	PageRange *ChunkMetadataPageRange `json:"pageRange" url:"pageRange"`
@@ -3104,10 +3296,12 @@ func (c *ChunkMetadata) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ChunkMetadata) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetPageRange sets the PageRange field and marks it as non-optional;
@@ -3143,6 +3337,13 @@ func (c *ChunkMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, chunkMetadataNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -3173,12 +3374,12 @@ func (c *ChunkMetadata) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// The page range this chunk covers. Often will just be a partial page, in which cases `start` and `end` will be the same.
 var (
 	chunkMetadataPageRangeFieldStart = big.NewInt(1 << 0)
 	chunkMetadataPageRangeFieldEnd   = big.NewInt(1 << 1)
 )
 
+// The page range this chunk covers. Often will just be a partial page, in which cases `start` and `end` will be the same.
 type ChunkMetadataPageRange struct {
 	// The starting page number (inclusive).
 	Start int `json:"start" url:"start"`
@@ -3214,10 +3415,12 @@ func (c *ChunkMetadataPageRange) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ChunkMetadataPageRange) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetStart sets the Start field and marks it as non-optional;
@@ -3310,6 +3513,11 @@ var (
 	citationFieldCellRange     = big.NewInt(1 << 4)
 )
 
+// citationNullableFields maps the wire names of Citation's nullable fields (required or optional) to their field bits.
+var citationNullableFields = map[string]*big.Int{
+	"referenceText": citationFieldReferenceText,
+}
+
 type Citation struct {
 	// ID of the file the cited content was found in. On multifile runs, join this against the run's `files` array to determine which input file the citation refers to; on single-file runs it equals the run's `file.id`.
 	FileID *string       `json:"fileId,omitempty" url:"fileId,omitempty"`
@@ -3371,10 +3579,12 @@ func (c *Citation) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *Citation) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetFileID sets the FileID field and marks it as non-optional;
@@ -3424,6 +3634,13 @@ func (c *Citation) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, citationNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -3504,10 +3721,12 @@ func (c *CitationPage) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CitationPage) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetNumber sets the Number field and marks it as non-optional;
@@ -3623,10 +3842,12 @@ func (c *Classification) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *Classification) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -3692,14 +3913,14 @@ func (c *Classification) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// A next entry for `CLASSIFY` and `SPLIT` steps. Routes based on the classification result.
-//
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	classificationNextEntryFieldStep             = big.NewInt(1 << 0)
 	classificationNextEntryFieldClassificationID = big.NewInt(1 << 1)
 )
 
+// A next entry for `CLASSIFY` and `SPLIT` steps. Routes based on the classification result.
+//
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 type ClassificationNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -3735,10 +3956,12 @@ func (c *ClassificationNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassificationNextEntry) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -3839,10 +4062,12 @@ func (c *ClassifierCreatedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (c *ClassifierCreatedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -3940,10 +4165,12 @@ func (c *ClassifierDeletedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (c *ClassifierDeletedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -4041,10 +4268,12 @@ func (c *ClassifierDraftUpdatedWebhookEvent) GetExtraProperties() map[string]int
 }
 
 func (c *ClassifierDraftUpdatedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -4103,12 +4332,12 @@ func (c *ClassifierDraftUpdatedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// A reference to a classifier.
 var (
 	classifierRefFieldID      = big.NewInt(1 << 0)
 	classifierRefFieldVersion = big.NewInt(1 << 1)
 )
 
+// A reference to a classifier.
 type ClassifierRef struct {
 	// The classifier ID.
 	ID string `json:"id" url:"id"`
@@ -4144,10 +4373,12 @@ func (c *ClassifierRef) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifierRef) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -4273,10 +4504,12 @@ func (c *ClassifierSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifierSummary) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -4407,10 +4640,12 @@ func (c *ClassifierUpdatedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (c *ClassifierUpdatedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -4478,6 +4713,12 @@ var (
 	classifierVersionFieldCreatedAt    = big.NewInt(1 << 5)
 	classifierVersionFieldCreatedBy    = big.NewInt(1 << 6)
 )
+
+// classifierVersionNullableFields maps the wire names of ClassifierVersion's nullable fields (required or optional) to their field bits.
+var classifierVersionNullableFields = map[string]*big.Int{
+	"description": classifierVersionFieldDescription,
+	"createdBy":   classifierVersionFieldCreatedBy,
+}
 
 type ClassifierVersion struct {
 	// The unique identifier for this version of the classifier.
@@ -4570,10 +4811,12 @@ func (c *ClassifierVersion) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifierVersion) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -4648,6 +4891,13 @@ func (c *ClassifierVersion) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, classifierVersionNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -4721,10 +4971,12 @@ func (c *ClassifierVersionPublishedWebhookEvent) GetExtraProperties() map[string
 }
 
 func (c *ClassifierVersionPublishedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -4791,6 +5043,12 @@ var (
 	classifierVersionSummaryFieldCreatedAt    = big.NewInt(1 << 4)
 	classifierVersionSummaryFieldCreatedBy    = big.NewInt(1 << 5)
 )
+
+// classifierVersionSummaryNullableFields maps the wire names of ClassifierVersionSummary's nullable fields (required or optional) to their field bits.
+var classifierVersionSummaryNullableFields = map[string]*big.Int{
+	"description": classifierVersionSummaryFieldDescription,
+	"createdBy":   classifierVersionSummaryFieldCreatedBy,
+}
 
 type ClassifierVersionSummary struct {
 	// The unique identifier for this version of the classifier.
@@ -4874,10 +5132,12 @@ func (c *ClassifierVersionSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifierVersionSummary) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -4945,6 +5205,13 @@ func (c *ClassifierVersionSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, classifierVersionSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -5038,10 +5305,12 @@ func (c *ClassifyAdvancedOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyAdvancedOptions) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetContext sets the Context field and marks it as non-optional;
@@ -5241,10 +5510,12 @@ func (c *ClassifyConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyConfig) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -5391,10 +5662,12 @@ func (c *ClassifyOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyOutput) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -5467,8 +5740,6 @@ func (c *ClassifyOutput) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Partial configuration override for an existing classifier. All fields are optional — only the fields you provide will override the classifier's saved configuration.
-// For example, you can pass only `classificationRules` without providing `classifications`.
 var (
 	classifyOverrideConfigFieldBaseProcessor       = big.NewInt(1 << 0)
 	classifyOverrideConfigFieldBaseVersion         = big.NewInt(1 << 1)
@@ -5478,6 +5749,8 @@ var (
 	classifyOverrideConfigFieldParseConfig         = big.NewInt(1 << 5)
 )
 
+// Partial configuration override for an existing classifier. All fields are optional — only the fields you provide will override the classifier's saved configuration.
+// For example, you can pass only `classificationRules` without providing `classifications`.
 type ClassifyOverrideConfig struct {
 	BaseProcessor *ClassifyBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
 	// The version of the `"classification_performance"` or `"classification_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Classification Changelog](https://docs.extend.ai/2026-02-09/model-versioning/classification/classification-performance) for more details.
@@ -5547,10 +5820,12 @@ func (c *ClassifyOverrideConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyOverrideConfig) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -5637,13 +5912,13 @@ func (c *ClassifyOverrideConfig) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Reference to an existing classifier. One of `classifier` or `config` must be provided.
 var (
 	classifyRequestClassifierFieldID             = big.NewInt(1 << 0)
 	classifyRequestClassifierFieldVersion        = big.NewInt(1 << 1)
 	classifyRequestClassifierFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing classifier. One of `classifier` or `config` must be provided.
 type ClassifyRequestClassifier struct {
 	// The ID of the classifier to use.
 	ID      string                  `json:"id" url:"id"`
@@ -5687,10 +5962,12 @@ func (c *ClassifyRequestClassifier) GetExtraProperties() map[string]interface{} 
 }
 
 func (c *ClassifyRequestClassifier) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -5787,6 +6064,54 @@ func (c *ClassifyRequestFile) GetFileFromText() *FileFromText {
 }
 
 func (c *ClassifyRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			c.typ = "FileFromURL"
+			c.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			c.typ = "FileFromID"
+			c.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			c.typ = "FileFromText"
+			c.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		c.typ = "FileFromURL"
@@ -5840,7 +6165,6 @@ func (c *ClassifyRequestFile) Accept(visitor ClassifyRequestFileVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", c)
 }
 
-// Classify run object.
 var (
 	classifyRunFieldID                = big.NewInt(1 << 0)
 	classifyRunFieldStatus            = big.NewInt(1 << 1)
@@ -5863,6 +6187,22 @@ var (
 	classifyRunFieldUpdatedAt         = big.NewInt(1 << 18)
 )
 
+// classifyRunNullableFields maps the wire names of ClassifyRun's nullable fields (required or optional) to their field bits.
+var classifyRunNullableFields = map[string]*big.Int{
+	"output":            classifyRunFieldOutput,
+	"classifier":        classifyRunFieldClassifier,
+	"classifierVersion": classifyRunFieldClassifierVersion,
+	"initialOutput":     classifyRunFieldInitialOutput,
+	"reviewedOutput":    classifyRunFieldReviewedOutput,
+	"failureReason":     classifyRunFieldFailureReason,
+	"failureMessage":    classifyRunFieldFailureMessage,
+	"metadata":          classifyRunFieldMetadata,
+	"file":              classifyRunFieldFile,
+	"parseRunId":        classifyRunFieldParseRunID,
+	"usage":             classifyRunFieldUsage,
+}
+
+// Classify run object.
 type ClassifyRun struct {
 	// The unique identifier for this classify run.
 	//
@@ -6088,10 +6428,12 @@ func (c *ClassifyRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyRun) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -6252,6 +6594,13 @@ func (c *ClassifyRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	c.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, classifyRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		c.require(presentFields)
+	}
 	c.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -6327,10 +6676,12 @@ func (c *ClassifyRunFailedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (c *ClassifyRunFailedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -6428,10 +6779,12 @@ func (c *ClassifyRunProcessedWebhookEvent) GetExtraProperties() map[string]inter
 }
 
 func (c *ClassifyRunProcessedWebhookEvent) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -6490,6 +6843,12 @@ func (c *ClassifyRunProcessedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+var (
+	classifyStepDefinitionFieldName   = big.NewInt(1 << 0)
+	classifyStepDefinitionFieldConfig = big.NewInt(1 << 1)
+	classifyStepDefinitionFieldNext   = big.NewInt(1 << 2)
+)
+
 // Classifies documents using a classifier. Routes to different next steps based on classification result.
 //
 // The step's classifier can be specified in one of two ways:
@@ -6498,12 +6857,6 @@ func (c *ClassifyRunProcessedWebhookEvent) String() string {
 // - **Inline config** (`classifierConfig`): embeds the full classifier configuration directly in the step. No saved classifier is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces. Routing (`next[].classificationId`) validates against the inline `classifications` array.
 //
 // See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
-var (
-	classifyStepDefinitionFieldName   = big.NewInt(1 << 0)
-	classifyStepDefinitionFieldConfig = big.NewInt(1 << 1)
-	classifyStepDefinitionFieldNext   = big.NewInt(1 << 2)
-)
-
 type ClassifyStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -6555,10 +6908,12 @@ func (c *ClassifyStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ClassifyStepDefinition) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -6624,6 +6979,11 @@ func (c *ClassifyStepDefinition) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
+var (
+	classifyStepDefinitionConfigFieldClassifier       = big.NewInt(1 << 0)
+	classifyStepDefinitionConfigFieldClassifierConfig = big.NewInt(1 << 1)
+)
+
 // Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 //
 // When present, must contain exactly one of `classifier` (saved processor reference) or `classifierConfig` (inline configuration) — not both.
@@ -6631,11 +6991,6 @@ func (c *ClassifyStepDefinition) String() string {
 // The `next[].classificationId` values must match classification `id` values (not `type` strings) from the classifier's configuration — the referenced version's config for a saved reference, or the inline `classifications` array for an inline config. For example, if the classifier defines `{ "id": "cls_invoice", "type": "invoice" }`, use `"cls_invoice"` as the `classificationId`.
 //
 // See the [Classify step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#classify).
-var (
-	classifyStepDefinitionConfigFieldClassifier       = big.NewInt(1 << 0)
-	classifyStepDefinitionConfigFieldClassifierConfig = big.NewInt(1 << 1)
-)
-
 type ClassifyStepDefinitionConfig struct {
 	// Reference to a saved classifier. Provide either this or `classifierConfig`, not both.
 	//
@@ -6675,10 +7030,12 @@ func (c *ClassifyStepDefinitionConfig) GetExtraProperties() map[string]interface
 }
 
 func (c *ClassifyStepDefinitionConfig) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetClassifier sets the Classifier field and marks it as non-optional;
@@ -6737,14 +7094,14 @@ func (c *ClassifyStepDefinitionConfig) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Collects outputs from multiple upstream branches before continuing.
-//
-// See the [Collect step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#collect).
 var (
 	collectStepDefinitionFieldName = big.NewInt(1 << 0)
 	collectStepDefinitionFieldNext = big.NewInt(1 << 1)
 )
 
+// Collects outputs from multiple upstream branches before continuing.
+//
+// See the [Collect step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#collect).
 type CollectStepDefinition struct {
 	Name string             `json:"name" url:"name"`
 	Next []*SimpleNextEntry `json:"next,omitempty" url:"next,omitempty"`
@@ -6778,10 +7135,12 @@ func (c *CollectStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CollectStepDefinition) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -6840,17 +7199,17 @@ func (c *CollectStepDefinition) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Runs extractors based on formula conditions.
-//
-// Each extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`). Rules only support saved extractor references — inline configs are not supported in `CONDITIONAL_EXTRACT` rules.
-//
-// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract).
 var (
 	conditionalExtractStepDefinitionFieldName   = big.NewInt(1 << 0)
 	conditionalExtractStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	conditionalExtractStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Runs extractors based on formula conditions.
+//
+// Each extractor reference must include an explicit `version`. Valid values are `"latest"`, `"draft"`, or a specific semver string (e.g. `"1.0"`). Rules only support saved extractor references — inline configs are not supported in `CONDITIONAL_EXTRACT` rules.
+//
+// See the [Conditional Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional-extract).
 type ConditionalExtractStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -6894,10 +7253,12 @@ func (c *ConditionalExtractStepDefinition) GetExtraProperties() map[string]inter
 }
 
 func (c *ConditionalExtractStepDefinition) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -6963,11 +7324,11 @@ func (c *ConditionalExtractStepDefinition) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 var (
 	conditionalExtractStepDefinitionConfigFieldRules = big.NewInt(1 << 0)
 )
 
+// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 type ConditionalExtractStepDefinitionConfig struct {
 	// Formula-based extractor rules for this step. Each rule pairs a formula with an extractor reference. The last rule must have `formula: "TRUE"` as a default catch-all.
 	//
@@ -6996,10 +7357,12 @@ func (c *ConditionalExtractStepDefinitionConfig) GetExtraProperties() map[string
 }
 
 func (c *ConditionalExtractStepDefinitionConfig) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetRules sets the Rules field and marks it as non-optional;
@@ -7101,10 +7464,12 @@ func (c *ConditionalExtractStepDefinitionConfigRulesItem) GetExtraProperties() m
 }
 
 func (c *ConditionalExtractStepDefinitionConfigRulesItem) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -7170,14 +7535,14 @@ func (c *ConditionalExtractStepDefinitionConfigRulesItem) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// A next entry for `CONDITIONAL` steps. Routes based on which condition branch matched.
-//
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	conditionalNextEntryFieldStep        = big.NewInt(1 << 0)
 	conditionalNextEntryFieldConditionID = big.NewInt(1 << 1)
 )
 
+// A next entry for `CONDITIONAL` steps. Routes based on which condition branch matched.
+//
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 type ConditionalNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -7213,10 +7578,12 @@ func (c *ConditionalNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *ConditionalNextEntry) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -7275,15 +7642,15 @@ func (c *ConditionalNextEntry) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Routes to different next steps based on ordered conditional branches evaluated against upstream step outputs.
-//
-// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 var (
 	conditionalStepDefinitionFieldName   = big.NewInt(1 << 0)
 	conditionalStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	conditionalStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Routes to different next steps based on ordered conditional branches evaluated against upstream step outputs.
+//
+// See the [Conditional step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#conditional).
 type ConditionalStepDefinition struct {
 	Name   string                           `json:"name" url:"name"`
 	Config *ConditionalStepDefinitionConfig `json:"config" url:"config"`
@@ -7328,10 +7695,12 @@ func (c *ConditionalStepDefinition) GetExtraProperties() map[string]interface{} 
 }
 
 func (c *ConditionalStepDefinition) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -7429,10 +7798,12 @@ func (c *ConditionalStepDefinitionConfig) GetExtraProperties() map[string]interf
 }
 
 func (c *ConditionalStepDefinitionConfig) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetConditions sets the Conditions field and marks it as non-optional;
@@ -7559,10 +7930,12 @@ func (c *ConditionalStepDefinitionConfigConditionsItem) GetExtraProperties() map
 }
 
 func (c *ConditionalStepDefinitionConfigConditionsItem) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -7841,11 +8214,11 @@ func (c *CreatedBy) validate() error {
 	return nil
 }
 
-// Attribution for a resource created via the API using an API key.
 var (
 	createdByAPIKeyFieldName = big.NewInt(1 << 0)
 )
 
+// Attribution for a resource created via the API using an API key.
 type CreatedByAPIKey struct {
 	// The name of the API key that created the resource.
 	Name string `json:"name" url:"name"`
@@ -7872,10 +8245,12 @@ func (c *CreatedByAPIKey) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CreatedByAPIKey) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -7927,11 +8302,11 @@ func (c *CreatedByAPIKey) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Attribution for a resource created via the studio by a logged-in user.
 var (
 	createdByUserFieldEmail = big.NewInt(1 << 0)
 )
 
+// Attribution for a resource created via the studio by a logged-in user.
 type CreatedByUser struct {
 	// The email address of the user who created the resource.
 	Email string `json:"email" url:"email"`
@@ -7958,10 +8333,12 @@ func (c *CreatedByUser) GetExtraProperties() map[string]interface{} {
 }
 
 func (c *CreatedByUser) require(field *big.Int) {
-	if c.explicitFields == nil {
-		c.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if c.explicitFields != nil {
+		next.Set(c.explicitFields)
 	}
-	c.explicitFields.Or(c.explicitFields, field)
+	next.Or(next, field)
+	c.explicitFields = next
 }
 
 // SetEmail sets the Email field and marks it as non-optional;
@@ -8013,13 +8390,13 @@ func (c *CreatedByUser) String() string {
 	return fmt.Sprintf("%#v", c)
 }
 
-// Controls data retention for this run. When omitted or set to `workspace_default`, Extend uses your workspace's configured retention policy. Set `mode` to `zero` to request zero data retention for the run, which deletes supported run data after processing instead of retaining it under the workspace policy.
-//
-// Zero data retention is available to all customers on paid plans upon request. If you're on a free plan, the request will fail with a 400 error. If you'd like to request ZDR to be enabled, please reach out to support@extend.ai.
 var (
 	dataRetentionFieldMode = big.NewInt(1 << 0)
 )
 
+// Controls data retention for this run. When omitted or set to `workspace_default`, Extend uses your workspace's configured retention policy. Set `mode` to `zero` to request zero data retention for the run, which deletes supported run data after processing instead of retaining it under the workspace policy.
+//
+// Zero data retention is available to all customers on paid plans upon request. If you're on a free plan, the request will fail with a 400 error. If you'd like to request ZDR to be enabled, please reach out to support@extend.ai.
 type DataRetention struct {
 	// The retention mode for this run:
 	// * `workspace_default` - Use the workspace's configured retention policy.
@@ -8048,10 +8425,12 @@ func (d *DataRetention) GetExtraProperties() map[string]interface{} {
 }
 
 func (d *DataRetention) require(field *big.Int) {
-	if d.explicitFields == nil {
-		d.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if d.explicitFields != nil {
+		next.Set(d.explicitFields)
 	}
-	d.explicitFields.Or(d.explicitFields, field)
+	next.Or(next, field)
+	d.explicitFields = next
 }
 
 // SetMode sets the Mode field and marks it as non-optional;
@@ -8128,6 +8507,161 @@ func (d DataRetentionMode) Ptr() *DataRetentionMode {
 	return &d
 }
 
+var (
+	dataRetentionStateFieldMode   = big.NewInt(1 << 0)
+	dataRetentionStateFieldStatus = big.NewInt(1 << 1)
+)
+
+// The data retention that applies to a file or parse run, and whether its contents are still stored.
+type DataRetentionState struct {
+	// * `workspace_default` - Data is kept under the workspace's configured retention policy.
+	// * `zero` - Zero data retention: Extend deletes the data after processing.
+	Mode DataRetentionStateMode `json:"mode" url:"mode"`
+	// * `available` - The contents are still stored.
+	// * `purged` - The contents have been deleted. The record is kept for history: a purged parse run returns an empty output, and using a purged file as run input returns a `404` with code `FILE_PURGED`.
+	Status DataRetentionStateStatus `json:"status" url:"status"`
+
+	// Private bitmask of fields set to an explicit value and therefore not to be omitted
+	explicitFields *big.Int `json:"-" url:"-"`
+
+	extraProperties map[string]interface{}
+	rawJSON         json.RawMessage
+}
+
+func (d *DataRetentionState) GetMode() DataRetentionStateMode {
+	if d == nil {
+		return ""
+	}
+	return d.Mode
+}
+
+func (d *DataRetentionState) GetStatus() DataRetentionStateStatus {
+	if d == nil {
+		return ""
+	}
+	return d.Status
+}
+
+func (d *DataRetentionState) GetExtraProperties() map[string]interface{} {
+	if d == nil {
+		return nil
+	}
+	return d.extraProperties
+}
+
+func (d *DataRetentionState) require(field *big.Int) {
+	next := new(big.Int)
+	if d.explicitFields != nil {
+		next.Set(d.explicitFields)
+	}
+	next.Or(next, field)
+	d.explicitFields = next
+}
+
+// SetMode sets the Mode field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DataRetentionState) SetMode(mode DataRetentionStateMode) {
+	d.Mode = mode
+	d.require(dataRetentionStateFieldMode)
+}
+
+// SetStatus sets the Status field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (d *DataRetentionState) SetStatus(status DataRetentionStateStatus) {
+	d.Status = status
+	d.require(dataRetentionStateFieldStatus)
+}
+
+func (d *DataRetentionState) UnmarshalJSON(data []byte) error {
+	type unmarshaler DataRetentionState
+	var value unmarshaler
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*d = DataRetentionState(value)
+	extraProperties, err := internal.ExtractExtraProperties(data, *d)
+	if err != nil {
+		return err
+	}
+	d.extraProperties = extraProperties
+	d.rawJSON = json.RawMessage(data)
+	return nil
+}
+
+func (d *DataRetentionState) MarshalJSON() ([]byte, error) {
+	type embed DataRetentionState
+	var marshaler = struct {
+		embed
+	}{
+		embed: embed(*d),
+	}
+	explicitMarshaler := internal.HandleExplicitFields(marshaler, d.explicitFields)
+	return json.Marshal(explicitMarshaler)
+}
+
+func (d *DataRetentionState) String() string {
+	if d == nil {
+		return "<nil>"
+	}
+	if len(d.rawJSON) > 0 {
+		if value, err := internal.StringifyJSON(d.rawJSON); err == nil {
+			return value
+		}
+	}
+	if value, err := internal.StringifyJSON(d); err == nil {
+		return value
+	}
+	return fmt.Sprintf("%#v", d)
+}
+
+// * `workspace_default` - Data is kept under the workspace's configured retention policy.
+// * `zero` - Zero data retention: Extend deletes the data after processing.
+type DataRetentionStateMode string
+
+const (
+	DataRetentionStateModeWorkspaceDefault DataRetentionStateMode = "workspace_default"
+	DataRetentionStateModeZero             DataRetentionStateMode = "zero"
+)
+
+func NewDataRetentionStateModeFromString(s string) (DataRetentionStateMode, error) {
+	switch s {
+	case "workspace_default":
+		return DataRetentionStateModeWorkspaceDefault, nil
+	case "zero":
+		return DataRetentionStateModeZero, nil
+	}
+	var t DataRetentionStateMode
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (d DataRetentionStateMode) Ptr() *DataRetentionStateMode {
+	return &d
+}
+
+// * `available` - The contents are still stored.
+// * `purged` - The contents have been deleted. The record is kept for history: a purged parse run returns an empty output, and using a purged file as run input returns a `404` with code `FILE_PURGED`.
+type DataRetentionStateStatus string
+
+const (
+	DataRetentionStateStatusAvailable DataRetentionStateStatus = "available"
+	DataRetentionStateStatusPurged    DataRetentionStateStatus = "purged"
+)
+
+func NewDataRetentionStateStatusFromString(s string) (DataRetentionStateStatus, error) {
+	switch s {
+	case "available":
+		return DataRetentionStateStatusAvailable, nil
+	case "purged":
+		return DataRetentionStateStatusPurged, nil
+	}
+	var t DataRetentionStateStatus
+	return "", fmt.Errorf("%s is not a valid %T", s, t)
+}
+
+func (d DataRetentionStateStatus) Ptr() *DataRetentionStateStatus {
+	return &d
+}
+
 // The PDF form to analyze. Files can be provided as a URL or an Extend file ID.
 type DetectFormRequestFile struct {
 	FileFromURL *FileFromURL
@@ -8151,6 +8685,38 @@ func (d *DetectFormRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (d *DetectFormRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			d.typ = "FileFromURL"
+			d.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			d.typ = "FileFromID"
+			d.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			d.typ = "FileFromURL"
+			d.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			d.typ = "FileFromID"
+			d.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		d.typ = "FileFromURL"
@@ -8191,7 +8757,6 @@ func (d *DetectFormRequestFile) Accept(visitor DetectFormRequestFileVisitor) err
 	return fmt.Errorf("type %T does not include a non-empty union type", d)
 }
 
-// Bounding box coordinates for the field location in the PDF (pixel coordinates)
 var (
 	editBoundingBoxFieldLeft   = big.NewInt(1 << 0)
 	editBoundingBoxFieldTop    = big.NewInt(1 << 1)
@@ -8199,6 +8764,7 @@ var (
 	editBoundingBoxFieldBottom = big.NewInt(1 << 3)
 )
 
+// Bounding box coordinates for the field location in the PDF (pixel coordinates)
 type EditBoundingBox struct {
 	// The left coordinate of the bounding box (pixels)
 	Left float64 `json:"left" url:"left"`
@@ -8252,10 +8818,12 @@ func (e *EditBoundingBox) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditBoundingBox) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetLeft sets the Left field and marks it as non-optional;
@@ -8328,8 +8896,6 @@ func (e *EditBoundingBox) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Recursive conditional clause for edit schemas. Use these clauses with root-level `if` / `then` / `else`,
-// `dependentRequired`, and logical combinators to model conditional field requirements.
 var (
 	editConditionalClauseFieldProperties        = big.NewInt(1 << 0)
 	editConditionalClauseFieldRequired          = big.NewInt(1 << 1)
@@ -8343,6 +8909,8 @@ var (
 	editConditionalClauseFieldNot               = big.NewInt(1 << 9)
 )
 
+// Recursive conditional clause for edit schemas. Use these clauses with root-level `if` / `then` / `else`,
+// `dependentRequired`, and logical combinators to model conditional field requirements.
 type EditConditionalClause struct {
 	// Conditional field constraints keyed by top-level property name.
 	Properties map[string]*EditConditionalProperty `json:"properties,omitempty" url:"properties,omitempty"`
@@ -8445,10 +9013,12 @@ func (e *EditConditionalClause) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditConditionalClause) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetProperties sets the Properties field and marks it as non-optional;
@@ -8563,9 +9133,6 @@ func (e *EditConditionalClause) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Field-level schema fragment used inside conditional clauses. These condition objects support nested JSON
-// Schema structure such as `type`, `enum`, `items`, `properties`, `required`, and `contains`, but do not
-// allow any `extend_edit:*` placement or styling keys.
 var (
 	editConditionalPropertyFieldType                 = big.NewInt(1 << 0)
 	editConditionalPropertyFieldDescription          = big.NewInt(1 << 1)
@@ -8589,6 +9156,9 @@ var (
 	editConditionalPropertyFieldMaxContains          = big.NewInt(1 << 19)
 )
 
+// Field-level schema fragment used inside conditional clauses. These condition objects support nested JSON
+// Schema structure such as `type`, `enum`, `items`, `properties`, `required`, and `contains`, but do not
+// allow any `extend_edit:*` placement or styling keys.
 type EditConditionalProperty struct {
 	// JSON Schema type for the conditional property. Can be a simple type such as `"object"` or `"array"`,
 	// a nullable tuple like `["string", "null"]`, or omitted for enum-only constraints.
@@ -8787,10 +9357,12 @@ func (e *EditConditionalProperty) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditConditionalProperty) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -9058,7 +9630,6 @@ func (e *EditConditionalPropertyEnumItem) Accept(visitor EditConditionalProperty
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// Configuration options for the editing process.
 var (
 	editConfigFieldEngineVersion                = big.NewInt(1 << 0)
 	editConfigFieldSchema                       = big.NewInt(1 << 1)
@@ -9067,6 +9638,7 @@ var (
 	editConfigFieldAdvancedOptions              = big.NewInt(1 << 4)
 )
 
+// Configuration options for the editing process.
 type EditConfig struct {
 	// The Edit engine version to use. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `1.0.0` when omitted. Responses contain the resolved exact version.
 	EngineVersion *string       `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
@@ -9128,10 +9700,12 @@ func (e *EditConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditConfig) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEngineVersion sets the EngineVersion field and marks it as non-optional;
@@ -9211,26 +9785,40 @@ func (e *EditConfig) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Advanced options for the edit operation.
 var (
-	editConfigAdvancedOptionsFieldTableParsingEnabled          = big.NewInt(1 << 0)
-	editConfigAdvancedOptionsFieldFlattenPdf                   = big.NewInt(1 << 1)
-	editConfigAdvancedOptionsFieldRadioEnumsEnabled            = big.NewInt(1 << 2)
-	editConfigAdvancedOptionsFieldNativeFieldsOnly             = big.NewInt(1 << 3)
-	editConfigAdvancedOptionsFieldConditionalGenerationEnabled = big.NewInt(1 << 4)
+	editConfigAdvancedOptionsFieldTableParsingEnabled             = big.NewInt(1 << 0)
+	editConfigAdvancedOptionsFieldFlattenPdf                      = big.NewInt(1 << 1)
+	editConfigAdvancedOptionsFieldPreserveSignatureValidity       = big.NewInt(1 << 2)
+	editConfigAdvancedOptionsFieldRadioEnumsEnabled               = big.NewInt(1 << 3)
+	editConfigAdvancedOptionsFieldNativeFieldsOnly                = big.NewInt(1 << 4)
+	editConfigAdvancedOptionsFieldConditionalGenerationEnabled    = big.NewInt(1 << 5)
+	editConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled = big.NewInt(1 << 6)
 )
 
+// Advanced options for the edit operation.
 type EditConfigAdvancedOptions struct {
 	// Whether to parse table regions as arrays of objects. Defaults to `false`.
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
-	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`.
+	// Whether to flatten PDF forms after editing (makes form fields non-editable). Defaults to `true` for Edit `1.0.0` and `0.0.1`, and `false` for `1.0.0-beta`. When `preserveSignatureValidity` is enabled, defaults to `false` if omitted. Flattening signed or append-only PDFs is not supported in preservation mode.
 	FlattenPdf *bool `json:"flattenPdf,omitempty" url:"flattenPdf,omitempty"`
+	// When enabled, attempts to preserve existing digital signature validity on signed or append-only PDFs. Requires Edit engine `1.0.0-beta` or later. Defaults to `false`, allowing edits that may invalidate existing signatures.
+	//
+	// Form filling is limited to existing compatible fields: set `extend_edit:source_acroform.fieldName` on each schema property to identify its existing PDF field. Matching schema field names are also supported. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails with `INVALID_OPTIONS` if all requested fields are blocked. New signatures may still be added where permitted.
+	//
+	// Defaults `flattenPdf` to `false` when omitted. On signed or append-only PDFs, explicitly setting `flattenPdf: true` fails with `INVALID_OPTIONS`. PDFs certified to permit no changes, or PDFs that cannot be saved incrementally, also fail in this mode.
+	PreserveSignatureValidity *bool `json:"preserveSignatureValidity,omitempty" url:"preserveSignatureValidity,omitempty"`
 	// Whether to represent radio groups as enums so only one option can be selected. Defaults to `true` for Edit `1.0.0` and `1.0.0-beta`, and `false` for `0.0.1`.
 	RadioEnumsEnabled *bool `json:"radioEnumsEnabled,omitempty" url:"radioEnumsEnabled,omitempty"`
 	// If enabled, only native AcroForm from the PDF will be imported and used in the schema (skips object detection). Defaults to false.
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
 	// When enabled and no `config.schema` is supplied, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Has no effect when a schema is supplied. Defaults to `false`.
 	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
+	// Refine generated field names and descriptions for consistency across the document. Custom instructions can nest related fields into objects and combine eligible checkbox or radio options into a single-choice enum. Adds processing latency.
+	//
+	// Requires Edit engine `1.0.0` or later; disabled on earlier engines, including `1.0.0-beta`. If omitted, uses the organization default (off unless enabled for the organization). Explicit `true` or `false` overrides that default on supported engines.
+	//
+	// Applies only when generating a schema automatically; has no effect when `config.schema` is supplied. Use `config.schemaGenerationInstructions` to guide refinement.
+	AdvancedSchemaRefinementEnabled *bool `json:"advancedSchemaRefinementEnabled,omitempty" url:"advancedSchemaRefinementEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -9251,6 +9839,13 @@ func (e *EditConfigAdvancedOptions) GetFlattenPdf() *bool {
 		return nil
 	}
 	return e.FlattenPdf
+}
+
+func (e *EditConfigAdvancedOptions) GetPreserveSignatureValidity() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.PreserveSignatureValidity
 }
 
 func (e *EditConfigAdvancedOptions) GetRadioEnumsEnabled() *bool {
@@ -9274,6 +9869,13 @@ func (e *EditConfigAdvancedOptions) GetConditionalGenerationEnabled() *bool {
 	return e.ConditionalGenerationEnabled
 }
 
+func (e *EditConfigAdvancedOptions) GetAdvancedSchemaRefinementEnabled() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.AdvancedSchemaRefinementEnabled
+}
+
 func (e *EditConfigAdvancedOptions) GetExtraProperties() map[string]interface{} {
 	if e == nil {
 		return nil
@@ -9282,10 +9884,12 @@ func (e *EditConfigAdvancedOptions) GetExtraProperties() map[string]interface{} 
 }
 
 func (e *EditConfigAdvancedOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetTableParsingEnabled sets the TableParsingEnabled field and marks it as non-optional;
@@ -9300,6 +9904,13 @@ func (e *EditConfigAdvancedOptions) SetTableParsingEnabled(tableParsingEnabled *
 func (e *EditConfigAdvancedOptions) SetFlattenPdf(flattenPdf *bool) {
 	e.FlattenPdf = flattenPdf
 	e.require(editConfigAdvancedOptionsFieldFlattenPdf)
+}
+
+// SetPreserveSignatureValidity sets the PreserveSignatureValidity field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditConfigAdvancedOptions) SetPreserveSignatureValidity(preserveSignatureValidity *bool) {
+	e.PreserveSignatureValidity = preserveSignatureValidity
+	e.require(editConfigAdvancedOptionsFieldPreserveSignatureValidity)
 }
 
 // SetRadioEnumsEnabled sets the RadioEnumsEnabled field and marks it as non-optional;
@@ -9321,6 +9932,13 @@ func (e *EditConfigAdvancedOptions) SetNativeFieldsOnly(nativeFieldsOnly *bool) 
 func (e *EditConfigAdvancedOptions) SetConditionalGenerationEnabled(conditionalGenerationEnabled *bool) {
 	e.ConditionalGenerationEnabled = conditionalGenerationEnabled
 	e.require(editConfigAdvancedOptionsFieldConditionalGenerationEnabled)
+}
+
+// SetAdvancedSchemaRefinementEnabled sets the AdvancedSchemaRefinementEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditConfigAdvancedOptions) SetAdvancedSchemaRefinementEnabled(advancedSchemaRefinementEnabled *bool) {
+	e.AdvancedSchemaRefinementEnabled = advancedSchemaRefinementEnabled
+	e.require(editConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled)
 }
 
 func (e *EditConfigAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -9368,16 +9986,6 @@ func (e *EditConfigAdvancedOptions) String() string {
 // Map of field names to additional fields that become required when the key field is present.
 type EditDependentRequired = map[string][]string
 
-// Schema definition for a field to edit in a PDF. This is a union type that supports:
-// * `EditStringJSONSchema` - type: ["string", "null"], field_type: "text" | "signature"
-// * `EditNumberJSONSchema` - type: ["number", "null"], field_type: "text"
-// * `EditIntegerJSONSchema` - type: ["integer", "null"], field_type: "text"
-// * `EditBooleanJSONSchema` - type: ["boolean", "null"], field_type: "checkbox" | "radio"
-// * `EditArrayJSONSchema` - type: "array", field_type: "text" | "table"
-// * `EditEnumJSONSchema` - has enum property (no type field), field_type: "radio" | "optionList" | "dropdown"
-// * `EditObjectJSON` - type: "object", field_type: "signature"
-//
-// All variants share common `extend_edit:*` properties for positioning and styling.
 var (
 	editJSONFieldType                      = big.NewInt(1 << 0)
 	editJSONFieldDescription               = big.NewInt(1 << 1)
@@ -9400,6 +10008,16 @@ var (
 	editJSONFieldAdditionalProperties      = big.NewInt(1 << 18)
 )
 
+// Schema definition for a field to edit in a PDF. This is a union type that supports:
+// * `EditStringJSONSchema` - type: ["string", "null"], field_type: "text" | "signature"
+// * `EditNumberJSONSchema` - type: ["number", "null"], field_type: "text"
+// * `EditIntegerJSONSchema` - type: ["integer", "null"], field_type: "text"
+// * `EditBooleanJSONSchema` - type: ["boolean", "null"], field_type: "checkbox" | "radio"
+// * `EditArrayJSONSchema` - type: "array", field_type: "text" | "table"
+// * `EditEnumJSONSchema` - has enum property (no type field), field_type: "radio" | "optionList" | "dropdown"
+// * `EditObjectJSON` - type: "object", field_type: "signature"
+//
+// All variants share common `extend_edit:*` properties for positioning and styling.
 type EditJSON struct {
 	// The JSON schema type of the field. Can be:
 	// * A string: "array" or "object"
@@ -9595,10 +10213,12 @@ func (e *EditJSON) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -9824,11 +10444,11 @@ func (e EditJSONExtendEditFieldType) Ptr() *EditJSONExtendEditFieldType {
 	return &e
 }
 
-// Image fill for signature fields. Only PNG and JPEG image URLs are supported.
 var (
 	editJSONExtendEditImageFieldImageURL = big.NewInt(1 << 0)
 )
 
+// Image fill for signature fields. Only PNG and JPEG image URLs are supported.
 type EditJSONExtendEditImage struct {
 	// URL of the image to place in the signature field.
 	ImageURL string `json:"image_url" url:"image_url"`
@@ -9855,10 +10475,12 @@ func (e *EditJSONExtendEditImage) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditJSONExtendEditImage) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetImageURL sets the ImageURL field and marks it as non-optional;
@@ -9910,7 +10532,6 @@ func (e *EditJSONExtendEditImage) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Schema definition for an object field in a PDF edit schema. Used for signature fields and as items schema for arrays/tables.
 var (
 	editObjectJSONFieldType                 = big.NewInt(1 << 0)
 	editObjectJSONFieldDescription          = big.NewInt(1 << 1)
@@ -9920,6 +10541,7 @@ var (
 	editObjectJSONFieldAdditionalProperties = big.NewInt(1 << 5)
 )
 
+// Schema definition for an object field in a PDF edit schema. Used for signature fields and as items schema for arrays/tables.
 type EditObjectJSON struct {
 	// Must be "object" for object schemas
 	Type *string `json:"type,omitempty" url:"type,omitempty"`
@@ -9977,10 +10599,12 @@ func (e *EditObjectJSON) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditObjectJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -10092,6 +10716,38 @@ func (e *EditRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (e *EditRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -10132,10 +10788,6 @@ func (e *EditRequestFile) Accept(visitor EditRequestFileVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// JSON Schema definition for editing PDF documents. The schema defines the structure and placement of fields to edit.
-// It also supports JSON Schema conditional keywords at the root level, including `dependentRequired`,
-// `if` / `then` / `else`, and logical combinators such as `allOf`, `oneOf`, `anyOf`, and `not`.
-// Conditional property constraints do not accept `extend_edit:*` keys.
 var (
 	editRootJSONFieldProperties           = big.NewInt(1 << 0)
 	editRootJSONFieldRequired             = big.NewInt(1 << 1)
@@ -10150,6 +10802,10 @@ var (
 	editRootJSONFieldNot                  = big.NewInt(1 << 10)
 )
 
+// JSON Schema definition for editing PDF documents. The schema defines the structure and placement of fields to edit.
+// It also supports JSON Schema conditional keywords at the root level, including `dependentRequired`,
+// `if` / `then` / `else`, and logical combinators such as `allOf`, `oneOf`, `anyOf`, and `not`.
+// Conditional property constraints do not accept `extend_edit:*` keys.
 type EditRootJSON struct {
 	// Map of field names to their schema definitions
 	Properties map[string]*EditJSON `json:"properties" url:"properties"`
@@ -10266,10 +10922,12 @@ func (e *EditRootJSON) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRootJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetProperties sets the Properties field and marks it as non-optional;
@@ -10402,7 +11060,6 @@ func (e *EditRootJSON) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Edit run object.
 var (
 	editRunFieldID             = big.NewInt(1 << 0)
 	editRunFieldFile           = big.NewInt(1 << 1)
@@ -10415,6 +11072,16 @@ var (
 	editRunFieldUsage          = big.NewInt(1 << 8)
 )
 
+// editRunNullableFields maps the wire names of EditRun's nullable fields (required or optional) to their field bits.
+var editRunNullableFields = map[string]*big.Int{
+	"failureReason":  editRunFieldFailureReason,
+	"failureMessage": editRunFieldFailureMessage,
+	"output":         editRunFieldOutput,
+	"metrics":        editRunFieldMetrics,
+	"usage":          editRunFieldUsage,
+}
+
+// Edit run object.
 type EditRun struct {
 	// A unique identifier for the edit run.
 	//
@@ -10549,10 +11216,12 @@ func (e *EditRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRun) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -10639,6 +11308,13 @@ func (e *EditRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, editRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -10671,12 +11347,12 @@ func (e *EditRun) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Triggered when an API-created EditRun fails before it finishes filling the document's form fields. A failure in an internal FormDetectionRun is reported through this parent EditRun event; the internal run does not emit a Form Detection webhook.
 var (
 	editRunFailedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	editRunFailedWebhookEventFieldPayload = big.NewInt(1 << 1)
 )
 
+// Triggered when an API-created EditRun fails before it finishes filling the document's form fields. A failure in an internal FormDetectionRun is reported through this parent EditRun event; the internal run does not emit a Form Detection webhook.
 type EditRunFailedWebhookEvent struct {
 	// Unique identifier for the event
 	EventID string   `json:"eventId" url:"eventId"`
@@ -10711,10 +11387,12 @@ func (e *EditRunFailedWebhookEvent) GetExtraProperties() map[string]interface{} 
 }
 
 func (e *EditRunFailedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -10773,9 +11451,6 @@ func (e *EditRunFailedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Metrics about the editing process.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	editRunMetricsFieldProcessingTimeMs      = big.NewInt(1 << 0)
 	editRunMetricsFieldPageCount             = big.NewInt(1 << 1)
@@ -10787,6 +11462,9 @@ var (
 	editRunMetricsFieldFieldFillingTimeMs    = big.NewInt(1 << 7)
 )
 
+// Metrics about the editing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type EditRunMetrics struct {
 	// Total processing time in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -10876,10 +11554,12 @@ func (e *EditRunMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunMetrics) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -10980,14 +11660,14 @@ func (e *EditRunMetrics) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The output of the edit run.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	editRunOutputFieldEditedFile   = big.NewInt(1 << 0)
 	editRunOutputFieldFilledValues = big.NewInt(1 << 1)
 )
 
+// The output of the edit run.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type EditRunOutput struct {
 	// Information about the edited output file.
 	EditedFile *EditRunOutputEditedFile `json:"editedFile" url:"editedFile"`
@@ -11023,10 +11703,12 @@ func (e *EditRunOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunOutput) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEditedFile sets the EditedFile field and marks it as non-optional;
@@ -11085,12 +11767,12 @@ func (e *EditRunOutput) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Information about the edited output file.
 var (
 	editRunOutputEditedFileFieldID           = big.NewInt(1 << 0)
 	editRunOutputEditedFileFieldPresignedURL = big.NewInt(1 << 1)
 )
 
+// Information about the edited output file.
 type EditRunOutputEditedFile struct {
 	// The ID of the edited output file.
 	ID string `json:"id" url:"id"`
@@ -11126,10 +11808,12 @@ func (e *EditRunOutputEditedFile) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditRunOutputEditedFile) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -11188,12 +11872,12 @@ func (e *EditRunOutputEditedFile) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Triggered after an API-created EditRun finishes filling the document's form fields. If no schema was provided, the EditRun first creates an internal FormDetectionRun; that internal run does not emit Form Detection webhooks.
 var (
 	editRunProcessedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	editRunProcessedWebhookEventFieldPayload = big.NewInt(1 << 1)
 )
 
+// Triggered after an API-created EditRun finishes filling the document's form fields. If no schema was provided, the EditRun first creates an internal FormDetectionRun; that internal run does not emit Form Detection webhooks.
 type EditRunProcessedWebhookEvent struct {
 	// Unique identifier for the event
 	EventID string   `json:"eventId" url:"eventId"`
@@ -11228,10 +11912,12 @@ func (e *EditRunProcessedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (e *EditRunProcessedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -11319,7 +12005,6 @@ func (e EditRunStatus) Ptr() *EditRunStatus {
 	return &e
 }
 
-// Configuration options for edit schema generation.
 var (
 	editSchemaGenerationConfigFieldEngineVersion   = big.NewInt(1 << 0)
 	editSchemaGenerationConfigFieldInputSchema     = big.NewInt(1 << 1)
@@ -11327,6 +12012,7 @@ var (
 	editSchemaGenerationConfigFieldAdvancedOptions = big.NewInt(1 << 3)
 )
 
+// Configuration options for edit schema generation.
 type EditSchemaGenerationConfig struct {
 	// The Edit engine version to use for form detection. Use an exact version for reproducible results, or `latest` to use the latest stable version. Defaults to `1.0.0` when omitted. Responses contain the resolved exact version.
 	EngineVersion *string `json:"engineVersion,omitempty" url:"engineVersion,omitempty"`
@@ -11381,10 +12067,12 @@ func (e *EditSchemaGenerationConfig) GetExtraProperties() map[string]interface{}
 }
 
 func (e *EditSchemaGenerationConfig) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEngineVersion sets the EngineVersion field and marks it as non-optional;
@@ -11457,14 +12145,15 @@ func (e *EditSchemaGenerationConfig) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Advanced options for schema generation.
 var (
-	editSchemaGenerationConfigAdvancedOptionsFieldTableParsingEnabled          = big.NewInt(1 << 0)
-	editSchemaGenerationConfigAdvancedOptionsFieldRadioEnumsEnabled            = big.NewInt(1 << 1)
-	editSchemaGenerationConfigAdvancedOptionsFieldNativeFieldsOnly             = big.NewInt(1 << 2)
-	editSchemaGenerationConfigAdvancedOptionsFieldConditionalGenerationEnabled = big.NewInt(1 << 3)
+	editSchemaGenerationConfigAdvancedOptionsFieldTableParsingEnabled             = big.NewInt(1 << 0)
+	editSchemaGenerationConfigAdvancedOptionsFieldRadioEnumsEnabled               = big.NewInt(1 << 1)
+	editSchemaGenerationConfigAdvancedOptionsFieldNativeFieldsOnly                = big.NewInt(1 << 2)
+	editSchemaGenerationConfigAdvancedOptionsFieldConditionalGenerationEnabled    = big.NewInt(1 << 3)
+	editSchemaGenerationConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled = big.NewInt(1 << 4)
 )
 
+// Advanced options for schema generation.
 type EditSchemaGenerationConfigAdvancedOptions struct {
 	// Whether to parse table regions as arrays of objects. Defaults to `false`.
 	TableParsingEnabled *bool `json:"tableParsingEnabled,omitempty" url:"tableParsingEnabled,omitempty"`
@@ -11474,6 +12163,12 @@ type EditSchemaGenerationConfigAdvancedOptions struct {
 	NativeFieldsOnly *bool `json:"nativeFieldsOnly,omitempty" url:"nativeFieldsOnly,omitempty"`
 	// When enabled, reads requirements explicitly stated in the form and adds supported root-level JSON Schema conditional validation rules to the generated schema. These rules validate form data when the schema is used for an edit; they do not add interactive UI behavior. If generated edit values do not satisfy the rules, the Edit run fails with `SCHEMA_VALIDATION_ERROR`. Defaults to `false`.
 	ConditionalGenerationEnabled *bool `json:"conditionalGenerationEnabled,omitempty" url:"conditionalGenerationEnabled,omitempty"`
+	// Refine generated field names and descriptions for consistency across the document. Custom instructions can nest related fields into objects and combine eligible checkbox or radio options into a single-choice enum. Adds processing latency.
+	//
+	// Requires Edit engine `1.0.0` or later; disabled on earlier engines, including `1.0.0-beta`. If omitted, uses the organization default (off unless enabled for the organization). Explicit `true` or `false` overrides that default on supported engines.
+	//
+	// Use `config.instructions` to guide refinement. When `config.inputSchema` is supplied, refinement applies to the detected fields before mapping them to the input schema.
+	AdvancedSchemaRefinementEnabled *bool `json:"advancedSchemaRefinementEnabled,omitempty" url:"advancedSchemaRefinementEnabled,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -11510,6 +12205,13 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) GetConditionalGenerationEnab
 	return e.ConditionalGenerationEnabled
 }
 
+func (e *EditSchemaGenerationConfigAdvancedOptions) GetAdvancedSchemaRefinementEnabled() *bool {
+	if e == nil {
+		return nil
+	}
+	return e.AdvancedSchemaRefinementEnabled
+}
+
 func (e *EditSchemaGenerationConfigAdvancedOptions) GetExtraProperties() map[string]interface{} {
 	if e == nil {
 		return nil
@@ -11518,10 +12220,12 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) GetExtraProperties() map[str
 }
 
 func (e *EditSchemaGenerationConfigAdvancedOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetTableParsingEnabled sets the TableParsingEnabled field and marks it as non-optional;
@@ -11550,6 +12254,13 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) SetNativeFieldsOnly(nativeFi
 func (e *EditSchemaGenerationConfigAdvancedOptions) SetConditionalGenerationEnabled(conditionalGenerationEnabled *bool) {
 	e.ConditionalGenerationEnabled = conditionalGenerationEnabled
 	e.require(editSchemaGenerationConfigAdvancedOptionsFieldConditionalGenerationEnabled)
+}
+
+// SetAdvancedSchemaRefinementEnabled sets the AdvancedSchemaRefinementEnabled field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (e *EditSchemaGenerationConfigAdvancedOptions) SetAdvancedSchemaRefinementEnabled(advancedSchemaRefinementEnabled *bool) {
+	e.AdvancedSchemaRefinementEnabled = advancedSchemaRefinementEnabled
+	e.require(editSchemaGenerationConfigAdvancedOptionsFieldAdvancedSchemaRefinementEnabled)
 }
 
 func (e *EditSchemaGenerationConfigAdvancedOptions) UnmarshalJSON(data []byte) error {
@@ -11594,12 +12305,12 @@ func (e *EditSchemaGenerationConfigAdvancedOptions) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// A successful mapping between an input schema path and a detected form field.
 var (
 	editSchemaGenerationMappingMatchFieldInputPath    = big.NewInt(1 << 0)
 	editSchemaGenerationMappingMatchFieldFormFieldKey = big.NewInt(1 << 1)
 )
 
+// A successful mapping between an input schema path and a detected form field.
 type EditSchemaGenerationMappingMatch struct {
 	// The path from the provided `inputSchema`.
 	InputPath string `json:"inputPath" url:"inputPath"`
@@ -11635,10 +12346,12 @@ func (e *EditSchemaGenerationMappingMatch) GetExtraProperties() map[string]inter
 }
 
 func (e *EditSchemaGenerationMappingMatch) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetInputPath sets the InputPath field and marks it as non-optional;
@@ -11697,13 +12410,13 @@ func (e *EditSchemaGenerationMappingMatch) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Mapping information between an input schema and the detected form fields.
 var (
 	editSchemaGenerationMappingResultFieldMatches             = big.NewInt(1 << 0)
 	editSchemaGenerationMappingResultFieldUnmatchedInputPaths = big.NewInt(1 << 1)
 	editSchemaGenerationMappingResultFieldUnusedFormFieldKeys = big.NewInt(1 << 2)
 )
 
+// Mapping information between an input schema and the detected form fields.
 type EditSchemaGenerationMappingResult struct {
 	// Fields from the input schema that were successfully mapped to detected form fields.
 	Matches []*EditSchemaGenerationMappingMatch `json:"matches" url:"matches"`
@@ -11748,10 +12461,12 @@ func (e *EditSchemaGenerationMappingResult) GetExtraProperties() map[string]inte
 }
 
 func (e *EditSchemaGenerationMappingResult) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetMatches sets the Matches field and marks it as non-optional;
@@ -11817,13 +12532,19 @@ func (e *EditSchemaGenerationMappingResult) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// The generated schema and optional mapping metadata.
 var (
 	editSchemaGenerationResponseFieldSchema          = big.NewInt(1 << 0)
 	editSchemaGenerationResponseFieldAnnotatedSchema = big.NewInt(1 << 1)
 	editSchemaGenerationResponseFieldMappingResult   = big.NewInt(1 << 2)
 )
 
+// editSchemaGenerationResponseNullableFields maps the wire names of EditSchemaGenerationResponse's nullable fields (required or optional) to their field bits.
+var editSchemaGenerationResponseNullableFields = map[string]*big.Int{
+	"annotatedSchema": editSchemaGenerationResponseFieldAnnotatedSchema,
+	"mappingResult":   editSchemaGenerationResponseFieldMappingResult,
+}
+
+// The generated schema and optional mapping metadata.
 type EditSchemaGenerationResponse struct {
 	// The final generated schema after mapping. If no input schema was provided this will be the same as the annotatedSchema.
 	Schema *EditRootJSON `json:"schema" url:"schema"`
@@ -11868,10 +12589,12 @@ func (e *EditSchemaGenerationResponse) GetExtraProperties() map[string]interface
 }
 
 func (e *EditSchemaGenerationResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetSchema sets the Schema field and marks it as non-optional;
@@ -11907,6 +12630,13 @@ func (e *EditSchemaGenerationResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, editSchemaGenerationResponseNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -11937,7 +12667,6 @@ func (e *EditSchemaGenerationResponse) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Details about the original PDF form field. When Detect Form returns this property, include it unchanged in Edit requests.
 var (
 	editSourceAcroFormFieldFieldName   = big.NewInt(1 << 0)
 	editSourceAcroFormFieldFieldType   = big.NewInt(1 << 1)
@@ -11945,6 +12674,7 @@ var (
 	editSourceAcroFormFieldOptionValue = big.NewInt(1 << 3)
 )
 
+// Details about the original PDF form field. When Detect Form returns this property, include it unchanged in Edit requests.
 type EditSourceAcroForm struct {
 	// Name of the PDF form field.
 	FieldName string `json:"fieldName" url:"fieldName"`
@@ -11998,10 +12728,12 @@ func (e *EditSourceAcroForm) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditSourceAcroForm) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFieldName sets the FieldName field and marks it as non-optional;
@@ -12109,13 +12841,13 @@ func (e EditSourceAcroFormFieldType) Ptr() *EditSourceAcroFormFieldType {
 	return &e
 }
 
-// A supported choice for a PDF form field.
 var (
 	editSourceAcroFormOptionFieldSchemaValue  = big.NewInt(1 << 0)
 	editSourceAcroFormOptionFieldExportValue  = big.NewInt(1 << 1)
 	editSourceAcroFormOptionFieldDisplayValue = big.NewInt(1 << 2)
 )
 
+// A supported choice for a PDF form field.
 type EditSourceAcroFormOption struct {
 	// Value used in the Edit schema.
 	SchemaValue string `json:"schemaValue" url:"schemaValue"`
@@ -12160,10 +12892,12 @@ func (e *EditSourceAcroFormOption) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditSourceAcroFormOption) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetSchemaValue sets the SchemaValue field and marks it as non-optional;
@@ -12229,7 +12963,6 @@ func (e *EditSourceAcroFormOption) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Text styling options for text fields
 var (
 	editTextOptionsFieldFontSize  = big.NewInt(1 << 0)
 	editTextOptionsFieldColor     = big.NewInt(1 << 1)
@@ -12241,6 +12974,7 @@ var (
 	editTextOptionsFieldMultiLine = big.NewInt(1 << 7)
 )
 
+// Text styling options for text fields
 type EditTextOptions struct {
 	// Font size in points
 	FontSize *float64 `json:"fontSize,omitempty" url:"fontSize,omitempty"`
@@ -12330,10 +13064,12 @@ func (e *EditTextOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EditTextOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFontSize sets the FontSize field and marks it as non-optional;
@@ -12477,10 +13213,12 @@ func (e *Enum) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *Enum) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -12579,10 +13317,12 @@ func (e *EnumOption) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EnumOption) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -12681,10 +13421,12 @@ func (e *ExcelSheetRange) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExcelSheetRange) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetStart sets the Start field and marks it as non-optional;
@@ -12743,15 +13485,15 @@ func (e *ExcelSheetRange) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Sends extraction data to an external HTTP endpoint for validation.
-//
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 var (
 	externalDataValidationStepDefinitionFieldName   = big.NewInt(1 << 0)
 	externalDataValidationStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	externalDataValidationStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Sends extraction data to an external HTTP endpoint for validation.
+//
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 type ExternalDataValidationStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -12795,10 +13537,12 @@ func (e *ExternalDataValidationStepDefinition) GetExtraProperties() map[string]i
 }
 
 func (e *ExternalDataValidationStepDefinition) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -12864,12 +13608,12 @@ func (e *ExternalDataValidationStepDefinition) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 var (
 	externalDataValidationStepDefinitionConfigFieldRequestOptions  = big.NewInt(1 << 0)
 	externalDataValidationStepDefinitionConfigFieldFailureBehavior = big.NewInt(1 << 1)
 )
 
+// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 type ExternalDataValidationStepDefinitionConfig struct {
 	// HTTP request configuration for the external validation call.
 	//
@@ -12909,10 +13653,12 @@ func (e *ExternalDataValidationStepDefinitionConfig) GetExtraProperties() map[st
 }
 
 func (e *ExternalDataValidationStepDefinitionConfig) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetRequestOptions sets the RequestOptions field and marks it as non-optional;
@@ -12996,9 +13742,6 @@ func (e ExternalDataValidationStepDefinitionConfigFailureBehavior) Ptr() *Extern
 	return &e
 }
 
-// HTTP request configuration for the external validation call.
-//
-// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 var (
 	externalDataValidationStepDefinitionConfigRequestOptionsFieldURL         = big.NewInt(1 << 0)
 	externalDataValidationStepDefinitionConfigRequestOptionsFieldMethod      = big.NewInt(1 << 1)
@@ -13006,6 +13749,9 @@ var (
 	externalDataValidationStepDefinitionConfigRequestOptionsFieldContentType = big.NewInt(1 << 3)
 )
 
+// HTTP request configuration for the external validation call.
+//
+// See the [External Data Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#external-data-validation).
 type ExternalDataValidationStepDefinitionConfigRequestOptions struct {
 	// The URL to send the validation request to.
 	URL    string                                                         `json:"url" url:"url"`
@@ -13062,10 +13808,12 @@ func (e *ExternalDataValidationStepDefinitionConfigRequestOptions) GetExtraPrope
 }
 
 func (e *ExternalDataValidationStepDefinitionConfigRequestOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetURL sets the URL field and marks it as non-optional;
@@ -13338,10 +14086,12 @@ func (e *ExtractAdvancedOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractAdvancedOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetModelReasoningInsightsEnabled sets the ModelReasoningInsightsEnabled field and marks it as non-optional;
@@ -13553,6 +14303,10 @@ func (e ExtractAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *ExtractAdvance
 	return &e
 }
 
+var (
+	extractAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
+)
+
 // Configuration for the review agent that analyzes extraction results.
 // When enabled, each field in the output metadata will include a `reviewAgentScore` (1-5)
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
@@ -13561,10 +14315,6 @@ func (e ExtractAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *ExtractAdvance
 // Enabling the review agent incurs additional credits.
 //
 // To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
-var (
-	extractAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
-)
-
 type ExtractAdvancedOptionsReviewAgent struct {
 	// Whether to enable the review agent.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -13591,10 +14341,12 @@ func (e *ExtractAdvancedOptionsReviewAgent) GetExtraProperties() map[string]inte
 }
 
 func (e *ExtractAdvancedOptionsReviewAgent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -13674,7 +14426,6 @@ func (e ExtractBaseProcessor) Ptr() *ExtractBaseProcessor {
 	return &e
 }
 
-// Options controlling how documents are chunked before extraction.
 var (
 	extractChunkingOptionsFieldChunkingStrategy            = big.NewInt(1 << 0)
 	extractChunkingOptionsFieldPageChunkSize               = big.NewInt(1 << 1)
@@ -13682,6 +14433,7 @@ var (
 	extractChunkingOptionsFieldCustomSemanticChunkingRules = big.NewInt(1 << 3)
 )
 
+// Options controlling how documents are chunked before extraction.
 type ExtractChunkingOptions struct {
 	// The strategy to use for chunking the document.
 	ChunkingStrategy *ExtractChunkingOptionsChunkingStrategy `json:"chunkingStrategy,omitempty" url:"chunkingStrategy,omitempty"`
@@ -13735,10 +14487,12 @@ func (e *ExtractChunkingOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractChunkingOptions) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetChunkingStrategy sets the ChunkingStrategy field and marks it as non-optional;
@@ -13888,6 +14642,30 @@ func (e *ExtractConfig) GetExtractConfigLegacy() *ExtractConfigLegacy {
 }
 
 func (e *ExtractConfig) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"baseProcessor", "baseVersion", "extractionRules", "schema", "advancedOptions", "parseConfig"}, []string{}) {
+		valueExtractConfigJSON := new(ExtractConfigJSON)
+		if err := json.Unmarshal(data, &valueExtractConfigJSON); err == nil {
+			e.typ = "ExtractConfigJSON"
+			e.ExtractConfigJSON = valueExtractConfigJSON
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"baseProcessor", "baseVersion", "extractionRules", "fields", "advancedOptions", "parseConfig"}, []string{"fields"}) {
+		valueExtractConfigLegacy := new(ExtractConfigLegacy)
+		if err := json.Unmarshal(data, &valueExtractConfigLegacy); err == nil {
+			e.typ = "ExtractConfigLegacy"
+			e.ExtractConfigLegacy = valueExtractConfigLegacy
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"fields"}) {
+		valueExtractConfigLegacy := new(ExtractConfigLegacy)
+		if err := json.Unmarshal(data, &valueExtractConfigLegacy); err == nil {
+			e.typ = "ExtractConfigLegacy"
+			e.ExtractConfigLegacy = valueExtractConfigLegacy
+			return nil
+		}
+	}
 	valueExtractConfigJSON := new(ExtractConfigJSON)
 	if err := json.Unmarshal(data, &valueExtractConfigJSON); err == nil {
 		e.typ = "ExtractConfigJSON"
@@ -14011,10 +14789,12 @@ func (e *ExtractConfigJSON) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractConfigJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -14185,10 +14965,12 @@ func (e *ExtractConfigLegacy) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractConfigLegacy) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -14322,16 +15104,32 @@ func (e *ExtractOutput) GetExtractOutputLegacy() ExtractOutputLegacy {
 }
 
 func (e *ExtractOutput) UnmarshalJSON(data []byte) error {
-	valueExtractOutputJSON := new(ExtractOutputJSON)
-	if err := json.Unmarshal(data, &valueExtractOutputJSON); err == nil {
-		e.typ = "ExtractOutputJSON"
-		e.ExtractOutputJSON = valueExtractOutputJSON
-		return nil
+	if internal.MatchesObjectKeys(data, []string{"value", "metadata"}, []string{"value", "metadata"}) {
+		valueExtractOutputJSON := new(ExtractOutputJSON)
+		if err := json.Unmarshal(data, &valueExtractOutputJSON); err == nil {
+			e.typ = "ExtractOutputJSON"
+			e.ExtractOutputJSON = valueExtractOutputJSON
+			return nil
+		}
 	}
 	var valueExtractOutputLegacy ExtractOutputLegacy
 	if err := json.Unmarshal(data, &valueExtractOutputLegacy); err == nil {
 		e.typ = "ExtractOutputLegacy"
 		e.ExtractOutputLegacy = valueExtractOutputLegacy
+		return nil
+	}
+	if internal.HasObjectKeys(data, []string{"value", "metadata"}) {
+		valueExtractOutputJSON := new(ExtractOutputJSON)
+		if err := json.Unmarshal(data, &valueExtractOutputJSON); err == nil {
+			e.typ = "ExtractOutputJSON"
+			e.ExtractOutputJSON = valueExtractOutputJSON
+			return nil
+		}
+	}
+	valueExtractOutputJSON := new(ExtractOutputJSON)
+	if err := json.Unmarshal(data, &valueExtractOutputJSON); err == nil {
+		e.typ = "ExtractOutputJSON"
+		e.ExtractOutputJSON = valueExtractOutputJSON
 		return nil
 	}
 	return fmt.Errorf("%s cannot be deserialized as a %T", data, e)
@@ -14362,7 +15160,6 @@ func (e *ExtractOutput) Accept(visitor ExtractOutputVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// A record of edits made to the processor output.
 var (
 	extractOutputEditsFieldOriginalValue = big.NewInt(1 << 0)
 	extractOutputEditsFieldEditedValue   = big.NewInt(1 << 1)
@@ -14371,6 +15168,7 @@ var (
 	extractOutputEditsFieldFieldType     = big.NewInt(1 << 4)
 )
 
+// A record of edits made to the processor output.
 type ExtractOutputEdits struct {
 	// The original value before editing.
 	OriginalValue any `json:"originalValue,omitempty" url:"originalValue,omitempty"`
@@ -14433,10 +15231,12 @@ func (e *ExtractOutputEdits) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractOutputEdits) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetOriginalValue sets the OriginalValue field and marks it as non-optional;
@@ -14555,10 +15355,12 @@ func (e *ExtractOutputJSON) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractOutputJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -14630,6 +15432,13 @@ var (
 	extractOutputMetadataValueFieldInsights           = big.NewInt(1 << 4)
 )
 
+// extractOutputMetadataValueNullableFields maps the wire names of ExtractOutputMetadataValue's nullable fields (required or optional) to their field bits.
+var extractOutputMetadataValueNullableFields = map[string]*big.Int{
+	"ocrConfidence":      extractOutputMetadataValueFieldOcrConfidence,
+	"logprobsConfidence": extractOutputMetadataValueFieldLogprobsConfidence,
+	"reviewAgentScore":   extractOutputMetadataValueFieldReviewAgentScore,
+}
+
 type ExtractOutputMetadataValue struct {
 	// Confidence score from OCR processing, if applicable
 	OcrConfidence *float64 `json:"ocrConfidence,omitempty" url:"ocrConfidence,omitempty"`
@@ -14699,10 +15508,12 @@ func (e *ExtractOutputMetadataValue) GetExtraProperties() map[string]interface{}
 }
 
 func (e *ExtractOutputMetadataValue) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetOcrConfidence sets the OcrConfidence field and marks it as non-optional;
@@ -14752,6 +15563,13 @@ func (e *ExtractOutputMetadataValue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, extractOutputMetadataValueNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -14782,8 +15600,6 @@ func (e *ExtractOutputMetadataValue) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Partial configuration override for an existing extractor. All fields are optional — only the fields you provide will override the extractor's saved configuration.
-// For example, you can pass only `advancedOptions` or `extractionRules` without providing a `schema`.
 var (
 	extractOverrideConfigJSONFieldBaseProcessor   = big.NewInt(1 << 0)
 	extractOverrideConfigJSONFieldBaseVersion     = big.NewInt(1 << 1)
@@ -14793,6 +15609,8 @@ var (
 	extractOverrideConfigJSONFieldParseConfig     = big.NewInt(1 << 5)
 )
 
+// Partial configuration override for an existing extractor. All fields are optional — only the fields you provide will override the extractor's saved configuration.
+// For example, you can pass only `advancedOptions` or `extractionRules` without providing a `schema`.
 type ExtractOverrideConfigJSON struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
 	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
@@ -14865,10 +15683,12 @@ func (e *ExtractOverrideConfigJSON) GetExtraProperties() map[string]interface{} 
 }
 
 func (e *ExtractOverrideConfigJSON) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -14955,13 +15775,13 @@ func (e *ExtractOverrideConfigJSON) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 var (
 	extractRequestExtractorFieldID             = big.NewInt(1 << 0)
 	extractRequestExtractorFieldVersion        = big.NewInt(1 << 1)
 	extractRequestExtractorFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 type ExtractRequestExtractor struct {
 	// The ID of the extractor to use.
 	ID      string                  `json:"id" url:"id"`
@@ -15005,10 +15825,12 @@ func (e *ExtractRequestExtractor) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractRequestExtractor) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -15107,6 +15929,54 @@ func (e *ExtractRequestFile) GetFileFromText() *FileFromText {
 }
 
 func (e *ExtractRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -15160,7 +16030,6 @@ func (e *ExtractRequestFile) Accept(visitor ExtractRequestFileVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// Extract run object.
 var (
 	extractRunFieldID               = big.NewInt(1 << 0)
 	extractRunFieldStatus           = big.NewInt(1 << 1)
@@ -15185,6 +16054,24 @@ var (
 	extractRunFieldUpdatedAt        = big.NewInt(1 << 20)
 )
 
+// extractRunNullableFields maps the wire names of ExtractRun's nullable fields (required or optional) to their field bits.
+var extractRunNullableFields = map[string]*big.Int{
+	"output":           extractRunFieldOutput,
+	"initialOutput":    extractRunFieldInitialOutput,
+	"reviewedOutput":   extractRunFieldReviewedOutput,
+	"failureReason":    extractRunFieldFailureReason,
+	"failureMessage":   extractRunFieldFailureMessage,
+	"metadata":         extractRunFieldMetadata,
+	"edits":            extractRunFieldEdits,
+	"extractor":        extractRunFieldExtractor,
+	"extractorVersion": extractRunFieldExtractorVersion,
+	"file":             extractRunFieldFile,
+	"files":            extractRunFieldFiles,
+	"parseRunId":       extractRunFieldParseRunID,
+	"usage":            extractRunFieldUsage,
+}
+
+// Extract run object.
 type ExtractRun struct {
 	// The unique identifier for this extract run.
 	//
@@ -15439,10 +16326,12 @@ func (e *ExtractRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractRun) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -15617,6 +16506,13 @@ func (e *ExtractRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, extractRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -15692,10 +16588,12 @@ func (e *ExtractRunFailedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (e *ExtractRunFailedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -15793,10 +16691,12 @@ func (e *ExtractRunProcessedWebhookEvent) GetExtraProperties() map[string]interf
 }
 
 func (e *ExtractRunProcessedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -15855,6 +16755,12 @@ func (e *ExtractRunProcessedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
+var (
+	extractStepDefinitionFieldName   = big.NewInt(1 << 0)
+	extractStepDefinitionFieldConfig = big.NewInt(1 << 1)
+	extractStepDefinitionFieldNext   = big.NewInt(1 << 2)
+)
+
 // Extracts structured data from parsed content using an extractor.
 //
 // The step's extractor can be specified in one of two ways:
@@ -15863,12 +16769,6 @@ func (e *ExtractRunProcessedWebhookEvent) String() string {
 // - **Inline config** (`extractorConfig`): embeds the full extractor configuration directly in the step. No saved extractor is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces.
 //
 // See the [Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#extract).
-var (
-	extractStepDefinitionFieldName   = big.NewInt(1 << 0)
-	extractStepDefinitionFieldConfig = big.NewInt(1 << 1)
-	extractStepDefinitionFieldNext   = big.NewInt(1 << 2)
-)
-
 type ExtractStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -15914,10 +16814,12 @@ func (e *ExtractStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractStepDefinition) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -15983,14 +16885,14 @@ func (e *ExtractStepDefinition) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
-//
-// When present, must contain exactly one of `extractor` (saved processor reference) or `extractorConfig` (inline configuration) — not both.
 var (
 	extractStepDefinitionConfigFieldExtractor       = big.NewInt(1 << 0)
 	extractStepDefinitionConfigFieldExtractorConfig = big.NewInt(1 << 1)
 )
 
+// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
+//
+// When present, must contain exactly one of `extractor` (saved processor reference) or `extractorConfig` (inline configuration) — not both.
 type ExtractStepDefinitionConfig struct {
 	// Reference to a saved extractor. Provide either this or `extractorConfig`, not both.
 	Extractor *ExtractorRef `json:"extractor,omitempty" url:"extractor,omitempty"`
@@ -16028,10 +16930,12 @@ func (e *ExtractStepDefinitionConfig) GetExtraProperties() map[string]interface{
 }
 
 func (e *ExtractStepDefinitionConfig) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtractor sets the Extractor field and marks it as non-optional;
@@ -16170,10 +17074,12 @@ func (e *ExtractionField) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractionField) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -16359,10 +17265,12 @@ func (e *ExtractionFieldResult) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractionFieldResult) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -16523,10 +17431,12 @@ func (e *ExtractionFieldResultReference) GetExtraProperties() map[string]interfa
 }
 
 func (e *ExtractionFieldResultReference) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -16659,10 +17569,12 @@ func (e *ExtractionFieldResultReferenceBoundingBoxesItem) GetExtraProperties() m
 }
 
 func (e *ExtractionFieldResultReferenceBoundingBoxesItem) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetTop sets the Top field and marks it as non-optional;
@@ -16862,10 +17774,12 @@ func (e *ExtractorCreatedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (e *ExtractorCreatedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -16963,10 +17877,12 @@ func (e *ExtractorDeletedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (e *ExtractorDeletedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -17064,10 +17980,12 @@ func (e *ExtractorDraftUpdatedWebhookEvent) GetExtraProperties() map[string]inte
 }
 
 func (e *ExtractorDraftUpdatedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -17126,12 +18044,12 @@ func (e *ExtractorDraftUpdatedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// A reference to an extractor.
 var (
 	extractorRefFieldID      = big.NewInt(1 << 0)
 	extractorRefFieldVersion = big.NewInt(1 << 1)
 )
 
+// A reference to an extractor.
 type ExtractorRef struct {
 	// The extractor ID.
 	ID string `json:"id" url:"id"`
@@ -17167,10 +18085,12 @@ func (e *ExtractorRef) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractorRef) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -17296,10 +18216,12 @@ func (e *ExtractorSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractorSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -17430,10 +18352,12 @@ func (e *ExtractorUpdatedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (e *ExtractorUpdatedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -17501,6 +18425,12 @@ var (
 	extractorVersionFieldCreatedAt   = big.NewInt(1 << 5)
 	extractorVersionFieldCreatedBy   = big.NewInt(1 << 6)
 )
+
+// extractorVersionNullableFields maps the wire names of ExtractorVersion's nullable fields (required or optional) to their field bits.
+var extractorVersionNullableFields = map[string]*big.Int{
+	"description": extractorVersionFieldDescription,
+	"createdBy":   extractorVersionFieldCreatedBy,
+}
 
 type ExtractorVersion struct {
 	// The unique identifier for this version of the extractor.
@@ -17596,10 +18526,12 @@ func (e *ExtractorVersion) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractorVersion) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -17674,6 +18606,13 @@ func (e *ExtractorVersion) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, extractorVersionNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -17747,10 +18686,12 @@ func (e *ExtractorVersionPublishedWebhookEvent) GetExtraProperties() map[string]
 }
 
 func (e *ExtractorVersionPublishedWebhookEvent) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -17817,6 +18758,12 @@ var (
 	extractorVersionSummaryFieldCreatedAt   = big.NewInt(1 << 4)
 	extractorVersionSummaryFieldCreatedBy   = big.NewInt(1 << 5)
 )
+
+// extractorVersionSummaryNullableFields maps the wire names of ExtractorVersionSummary's nullable fields (required or optional) to their field bits.
+var extractorVersionSummaryNullableFields = map[string]*big.Int{
+	"description": extractorVersionSummaryFieldDescription,
+	"createdBy":   extractorVersionSummaryFieldCreatedBy,
+}
 
 type ExtractorVersionSummary struct {
 	// The unique identifier for this version of the extractor.
@@ -17900,10 +18847,12 @@ func (e *ExtractorVersionSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractorVersionSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -17971,6 +18920,13 @@ func (e *ExtractorVersionSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, extractorVersionSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -18005,12 +18961,12 @@ func (e *ExtractorVersionSummary) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Details for figure blocks
 var (
 	figureDetailsFieldImageURL   = big.NewInt(1 << 0)
 	figureDetailsFieldFigureType = big.NewInt(1 << 1)
 )
 
+// Details for figure blocks
 type FigureDetails struct {
 	// URL to the clipped/segmented figure image. Only set if the option `figureImageClippingEnabled` in the input is `true`, which it is by default.
 	ImageURL *string `json:"imageUrl,omitempty" url:"imageUrl,omitempty"`
@@ -18057,10 +19013,12 @@ func (f *FigureDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FigureDetails) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetImageURL sets the ImageURL field and marks it as non-optional;
@@ -18169,16 +19127,25 @@ func (f FigureDetailsFigureType) Ptr() *FigureDetailsFigureType {
 }
 
 var (
-	fileFieldID           = big.NewInt(1 << 0)
-	fileFieldName         = big.NewInt(1 << 1)
-	fileFieldType         = big.NewInt(1 << 2)
-	fileFieldPresignedURL = big.NewInt(1 << 3)
-	fileFieldParentFileID = big.NewInt(1 << 4)
-	fileFieldContents     = big.NewInt(1 << 5)
-	fileFieldMetadata     = big.NewInt(1 << 6)
-	fileFieldCreatedAt    = big.NewInt(1 << 7)
-	fileFieldUpdatedAt    = big.NewInt(1 << 8)
+	fileFieldID            = big.NewInt(1 << 0)
+	fileFieldName          = big.NewInt(1 << 1)
+	fileFieldType          = big.NewInt(1 << 2)
+	fileFieldPresignedURL  = big.NewInt(1 << 3)
+	fileFieldParentFileID  = big.NewInt(1 << 4)
+	fileFieldContents      = big.NewInt(1 << 5)
+	fileFieldMetadata      = big.NewInt(1 << 6)
+	fileFieldDataRetention = big.NewInt(1 << 7)
+	fileFieldCreatedAt     = big.NewInt(1 << 8)
+	fileFieldUpdatedAt     = big.NewInt(1 << 9)
 )
+
+// fileNullableFields maps the wire names of File's nullable fields (required or optional) to their field bits.
+var fileNullableFields = map[string]*big.Int{
+	"type":         fileFieldType,
+	"presignedUrl": fileFieldPresignedURL,
+	"parentFileId": fileFieldParentFileID,
+	"contents":     fileFieldContents,
+}
 
 type File struct {
 	// ID for the file.
@@ -18206,10 +19173,11 @@ type File struct {
 	// The parsed content of the file. This field will only contain data after the file has been parsed via a parse run, extract run, classify run, split run, edit run, or workflow run.
 	//
 	// **Availability:** Only present and populated on `GET /files/{id}` when the file has been previously parsed and the corresponding query parameters are set to true. Will be `null` on `POST /files/upload` and for files that haven't been parsed. The structure varies based on file type.
-	Contents  *FileContents `json:"contents,omitempty" url:"contents,omitempty"`
-	Metadata  *FileMetadata `json:"metadata" url:"metadata"`
-	CreatedAt CreatedAt     `json:"createdAt" url:"createdAt"`
-	UpdatedAt UpdatedAt     `json:"updatedAt" url:"updatedAt"`
+	Contents      *FileContents       `json:"contents,omitempty" url:"contents,omitempty"`
+	Metadata      *FileMetadata       `json:"metadata" url:"metadata"`
+	DataRetention *DataRetentionState `json:"dataRetention,omitempty" url:"dataRetention,omitempty"`
+	CreatedAt     CreatedAt           `json:"createdAt" url:"createdAt"`
+	UpdatedAt     UpdatedAt           `json:"updatedAt" url:"updatedAt"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -18268,6 +19236,13 @@ func (f *File) GetMetadata() *FileMetadata {
 	return f.Metadata
 }
 
+func (f *File) GetDataRetention() *DataRetentionState {
+	if f == nil {
+		return nil
+	}
+	return f.DataRetention
+}
+
 func (f *File) GetCreatedAt() CreatedAt {
 	if f == nil {
 		return time.Time{}
@@ -18294,10 +19269,12 @@ func (f *File) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *File) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -18349,6 +19326,13 @@ func (f *File) SetMetadata(metadata *FileMetadata) {
 	f.require(fileFieldMetadata)
 }
 
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *File) SetDataRetention(dataRetention *DataRetentionState) {
+	f.DataRetention = dataRetention
+	f.require(fileFieldDataRetention)
+}
+
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
 // this prevents an empty or null value for this field from being omitted during serialization.
 func (f *File) SetCreatedAt(createdAt CreatedAt) {
@@ -18388,6 +19372,13 @@ func (f *File) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	f.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, fileNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		f.require(presentFields)
+	}
 	f.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -18424,11 +19415,6 @@ func (f *File) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// **Deprecated:** Use the `POST /parse_runs` endpoint instead to parse and retrieve file contents. The parse runs endpoint provides more control over parsing configuration and better performance.
-//
-// The parsed content of the file. This field will only contain data after the file has been parsed via a parse run, extract run, classify run, split run, edit run, or workflow run.
-//
-// **Availability:** Only present and populated on `GET /files/{id}` when the file has been previously parsed and the corresponding query parameters are set to true. Will be `null` on `POST /files/upload` and for files that haven't been parsed. The structure varies based on file type.
 var (
 	fileContentsFieldRawText  = big.NewInt(1 << 0)
 	fileContentsFieldPages    = big.NewInt(1 << 1)
@@ -18436,6 +19422,11 @@ var (
 	fileContentsFieldSheets   = big.NewInt(1 << 3)
 )
 
+// **Deprecated:** Use the `POST /parse_runs` endpoint instead to parse and retrieve file contents. The parse runs endpoint provides more control over parsing configuration and better performance.
+//
+// The parsed content of the file. This field will only contain data after the file has been parsed via a parse run, extract run, classify run, split run, edit run, or workflow run.
+//
+// **Availability:** Only present and populated on `GET /files/{id}` when the file has been previously parsed and the corresponding query parameters are set to true. Will be `null` on `POST /files/upload` and for files that haven't been parsed. The structure varies based on file type.
 type FileContents struct {
 	// The raw text content of the file. Available for all file types when the `rawText` query parameter is set to true.
 	//
@@ -18499,10 +19490,12 @@ func (f *FileContents) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileContents) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetRawText sets the RawText field and marks it as non-optional;
@@ -18645,10 +19638,12 @@ func (f *FileContentsPagesItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileContentsPagesItem) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetPageNumber sets the PageNumber field and marks it as non-optional;
@@ -18778,10 +19773,12 @@ func (f *FileContentsSectionsItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileContentsSectionsItem) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetStartPageNumber sets the StartPageNumber field and marks it as non-optional;
@@ -18887,10 +19884,12 @@ func (f *FileContentsSheetsItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileContentsSheetsItem) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetSheetName sets the SheetName field and marks it as non-optional;
@@ -18949,15 +19948,15 @@ func (f *FileContentsSheetsItem) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Converts files to a different format.
-//
-// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#file-conversion).
 var (
 	fileConversionStepDefinitionFieldName   = big.NewInt(1 << 0)
 	fileConversionStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	fileConversionStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Converts files to a different format.
+//
+// See the [File Conversion step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#file-conversion).
 type FileConversionStepDefinition struct {
 	Name   string                              `json:"name" url:"name"`
 	Config *FileConversionStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
@@ -18999,10 +19998,12 @@ func (f *FileConversionStepDefinition) GetExtraProperties() map[string]interface
 }
 
 func (f *FileConversionStepDefinition) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -19100,10 +20101,12 @@ func (f *FileConversionStepDefinitionConfig) GetExtraProperties() map[string]int
 }
 
 func (f *FileConversionStepDefinitionConfig) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetFailureBehavior sets the FailureBehavior field and marks it as non-optional;
@@ -19180,11 +20183,11 @@ func (f FileConversionStepDefinitionConfigFailureBehavior) Ptr() *FileConversion
 	return &f
 }
 
-// An Extend file ID (for instance from another run or a previous file upload).
 var (
 	fileFromIDFieldID = big.NewInt(1 << 0)
 )
 
+// An Extend file ID (for instance from another run or a previous file upload).
 type FileFromID struct {
 	// An Extend file ID.
 	//
@@ -19213,10 +20216,12 @@ func (f *FileFromID) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileFromID) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -19268,12 +20273,12 @@ func (f *FileFromID) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Raw text data to be processed. This will be used to create a `.txt` file.
 var (
 	fileFromTextFieldText = big.NewInt(1 << 0)
 	fileFromTextFieldName = big.NewInt(1 << 1)
 )
 
+// Raw text data to be processed. This will be used to create a `.txt` file.
 type FileFromText struct {
 	// A string containing raw text data to be processed.
 	Text string `json:"text" url:"text"`
@@ -19309,10 +20314,12 @@ func (f *FileFromText) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileFromText) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetText sets the Text field and marks it as non-optional;
@@ -19423,10 +20430,12 @@ func (f *FileFromURL) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileFromURL) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetURL sets the URL field and marks it as non-optional;
@@ -19492,11 +20501,11 @@ func (f *FileFromURL) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Optional settings for the file, such as a password for password-protected PDFs.
 var (
 	fileFromURLSettingsFieldPassword = big.NewInt(1 << 0)
 )
 
+// Optional settings for the file, such as a password for password-protected PDFs.
 type FileFromURLSettings struct {
 	// The password to unlock a password-protected PDF.
 	Password *string `json:"password,omitempty" url:"password,omitempty"`
@@ -19523,10 +20532,12 @@ func (f *FileFromURLSettings) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileFromURLSettings) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetPassword sets the Password field and marks it as non-optional;
@@ -19617,10 +20628,12 @@ func (f *FileMetadata) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileMetadata) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetPageCount sets the PageCount field and marks it as non-optional;
@@ -19680,14 +20693,21 @@ func (f *FileMetadata) String() string {
 }
 
 var (
-	fileSummaryFieldID           = big.NewInt(1 << 0)
-	fileSummaryFieldName         = big.NewInt(1 << 1)
-	fileSummaryFieldType         = big.NewInt(1 << 2)
-	fileSummaryFieldParentFileID = big.NewInt(1 << 3)
-	fileSummaryFieldMetadata     = big.NewInt(1 << 4)
-	fileSummaryFieldCreatedAt    = big.NewInt(1 << 5)
-	fileSummaryFieldUpdatedAt    = big.NewInt(1 << 6)
+	fileSummaryFieldID            = big.NewInt(1 << 0)
+	fileSummaryFieldName          = big.NewInt(1 << 1)
+	fileSummaryFieldType          = big.NewInt(1 << 2)
+	fileSummaryFieldParentFileID  = big.NewInt(1 << 3)
+	fileSummaryFieldMetadata      = big.NewInt(1 << 4)
+	fileSummaryFieldDataRetention = big.NewInt(1 << 5)
+	fileSummaryFieldCreatedAt     = big.NewInt(1 << 6)
+	fileSummaryFieldUpdatedAt     = big.NewInt(1 << 7)
 )
+
+// fileSummaryNullableFields maps the wire names of FileSummary's nullable fields (required or optional) to their field bits.
+var fileSummaryNullableFields = map[string]*big.Int{
+	"type":         fileSummaryFieldType,
+	"parentFileId": fileSummaryFieldParentFileID,
+}
 
 type FileSummary struct {
 	// ID for the file.
@@ -19705,10 +20725,11 @@ type FileSummary struct {
 	// ID of the parent file.
 	//
 	// **Availability:** Present for files created via a Splitter in a workflow.
-	ParentFileID *string       `json:"parentFileId,omitempty" url:"parentFileId,omitempty"`
-	Metadata     *FileMetadata `json:"metadata" url:"metadata"`
-	CreatedAt    CreatedAt     `json:"createdAt" url:"createdAt"`
-	UpdatedAt    UpdatedAt     `json:"updatedAt" url:"updatedAt"`
+	ParentFileID  *string             `json:"parentFileId,omitempty" url:"parentFileId,omitempty"`
+	Metadata      *FileMetadata       `json:"metadata" url:"metadata"`
+	DataRetention *DataRetentionState `json:"dataRetention,omitempty" url:"dataRetention,omitempty"`
+	CreatedAt     CreatedAt           `json:"createdAt" url:"createdAt"`
+	UpdatedAt     UpdatedAt           `json:"updatedAt" url:"updatedAt"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -19753,6 +20774,13 @@ func (f *FileSummary) GetMetadata() *FileMetadata {
 	return f.Metadata
 }
 
+func (f *FileSummary) GetDataRetention() *DataRetentionState {
+	if f == nil {
+		return nil
+	}
+	return f.DataRetention
+}
+
 func (f *FileSummary) GetCreatedAt() CreatedAt {
 	if f == nil {
 		return time.Time{}
@@ -19779,10 +20807,12 @@ func (f *FileSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FileSummary) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -19818,6 +20848,13 @@ func (f *FileSummary) SetParentFileID(parentFileID *string) {
 func (f *FileSummary) SetMetadata(metadata *FileMetadata) {
 	f.Metadata = metadata
 	f.require(fileSummaryFieldMetadata)
+}
+
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (f *FileSummary) SetDataRetention(dataRetention *DataRetentionState) {
+	f.DataRetention = dataRetention
+	f.require(fileSummaryFieldDataRetention)
 }
 
 // SetCreatedAt sets the CreatedAt field and marks it as non-optional;
@@ -19859,6 +20896,13 @@ func (f *FileSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	f.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, fileSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		f.require(presentFields)
+	}
 	f.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -19936,7 +20980,6 @@ func (f FileType) Ptr() *FileType {
 	return &f
 }
 
-// A run that detects fields in a PDF form and generates an edit schema.
 var (
 	formDetectionRunFieldID             = big.NewInt(1 << 0)
 	formDetectionRunFieldFile           = big.NewInt(1 << 1)
@@ -19949,6 +20992,16 @@ var (
 	formDetectionRunFieldUsage          = big.NewInt(1 << 8)
 )
 
+// formDetectionRunNullableFields maps the wire names of FormDetectionRun's nullable fields (required or optional) to their field bits.
+var formDetectionRunNullableFields = map[string]*big.Int{
+	"failureReason":  formDetectionRunFieldFailureReason,
+	"failureMessage": formDetectionRunFieldFailureMessage,
+	"output":         formDetectionRunFieldOutput,
+	"metrics":        formDetectionRunFieldMetrics,
+	"usage":          formDetectionRunFieldUsage,
+}
+
+// A run that detects fields in a PDF form and generates an edit schema.
 type FormDetectionRun struct {
 	// A unique identifier for the form detection run.
 	//
@@ -20080,10 +21133,12 @@ func (f *FormDetectionRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FormDetectionRun) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -20170,6 +21225,13 @@ func (f *FormDetectionRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	f.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, formDetectionRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		f.require(presentFields)
+	}
 	f.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -20202,12 +21264,12 @@ func (f *FormDetectionRun) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Triggered when a FormDetectionRun created directly through the Form Detection API fails. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
 var (
 	formDetectionRunFailedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	formDetectionRunFailedWebhookEventFieldPayload = big.NewInt(1 << 1)
 )
 
+// Triggered when a FormDetectionRun created directly through the Form Detection API fails. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
 type FormDetectionRunFailedWebhookEvent struct {
 	// Unique identifier for the event
 	EventID string            `json:"eventId" url:"eventId"`
@@ -20242,10 +21304,12 @@ func (f *FormDetectionRunFailedWebhookEvent) GetExtraProperties() map[string]int
 }
 
 func (f *FormDetectionRunFailedWebhookEvent) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -20304,9 +21368,6 @@ func (f *FormDetectionRunFailedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Metrics about the form detection process.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	formDetectionRunMetricsFieldProcessingTimeMs      = big.NewInt(1 << 0)
 	formDetectionRunMetricsFieldPageCount             = big.NewInt(1 << 1)
@@ -20317,6 +21378,9 @@ var (
 	formDetectionRunMetricsFieldFieldAnnotationTimeMs = big.NewInt(1 << 6)
 )
 
+// Metrics about the form detection process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type FormDetectionRunMetrics struct {
 	// Total processing time in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -20397,10 +21461,12 @@ func (f *FormDetectionRunMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FormDetectionRunMetrics) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -20494,12 +21560,12 @@ func (f *FormDetectionRunMetrics) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Triggered after a FormDetectionRun created directly through the Form Detection API finishes detecting and annotating form fields and generating the edit schema. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
 var (
 	formDetectionRunProcessedWebhookEventFieldEventID = big.NewInt(1 << 0)
 	formDetectionRunProcessedWebhookEventFieldPayload = big.NewInt(1 << 1)
 )
 
+// Triggered after a FormDetectionRun created directly through the Form Detection API finishes detecting and annotating form fields and generating the edit schema. Internal FormDetectionRuns created by EditRuns do not emit this webhook.
 type FormDetectionRunProcessedWebhookEvent struct {
 	// Unique identifier for the event
 	EventID string            `json:"eventId" url:"eventId"`
@@ -20534,10 +21600,12 @@ func (f *FormDetectionRunProcessedWebhookEvent) GetExtraProperties() map[string]
 }
 
 func (f *FormDetectionRunProcessedWebhookEvent) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -20625,11 +21693,11 @@ func (f FormDetectionRunStatus) Ptr() *FormDetectionRunStatus {
 	return &f
 }
 
-// Details for formula blocks
 var (
 	formulaDetailsFieldLatex = big.NewInt(1 << 0)
 )
 
+// Details for formula blocks
 type FormulaDetails struct {
 	// The LaTeX representation of the detected formula.
 	Latex *string `json:"latex,omitempty" url:"latex,omitempty"`
@@ -20661,10 +21729,12 @@ func (f *FormulaDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (f *FormulaDetails) require(field *big.Int) {
-	if f.explicitFields == nil {
-		f.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if f.explicitFields != nil {
+		next.Set(f.explicitFields)
 	}
-	f.explicitFields.Or(f.explicitFields, field)
+	next.Or(next, field)
+	f.explicitFields = next
 }
 
 // SetLatex sets the Latex field and marks it as non-optional;
@@ -20727,14 +21797,14 @@ func (f *FormulaDetails) String() string {
 	return fmt.Sprintf("%#v", f)
 }
 
-// Pauses the workflow for human review in the dashboard.
-//
-// See the [Human Review step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#human-review).
 var (
 	humanReviewStepDefinitionFieldName = big.NewInt(1 << 0)
 	humanReviewStepDefinitionFieldNext = big.NewInt(1 << 1)
 )
 
+// Pauses the workflow for human review in the dashboard.
+//
+// See the [Human Review step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#human-review).
 type HumanReviewStepDefinition struct {
 	Name string             `json:"name" url:"name"`
 	Next []*SimpleNextEntry `json:"next,omitempty" url:"next,omitempty"`
@@ -20768,10 +21838,12 @@ func (h *HumanReviewStepDefinition) GetExtraProperties() map[string]interface{} 
 }
 
 func (h *HumanReviewStepDefinition) require(field *big.Int) {
-	if h.explicitFields == nil {
-		h.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if h.explicitFields != nil {
+		next.Set(h.explicitFields)
 	}
-	h.explicitFields.Or(h.explicitFields, field)
+	next.Or(next, field)
+	h.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -20865,10 +21937,12 @@ func (i *Insight) GetExtraProperties() map[string]interface{} {
 }
 
 func (i *Insight) require(field *big.Int) {
-	if i.explicitFields == nil {
-		i.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if i.explicitFields != nil {
+		next.Set(i.explicitFields)
 	}
-	i.explicitFields.Or(i.explicitFields, field)
+	next.Or(next, field)
+	i.explicitFields = next
 }
 
 // SetContent sets the Content field and marks it as non-optional;
@@ -20934,11 +22008,11 @@ func (i *Insight) String() string {
 // A flexible object that can hold any arbitrary JSON key-value structure.
 type JSONObject = map[string]any
 
-// Details for key-value pair blocks
 var (
 	keyValueDetailsFieldForm = big.NewInt(1 << 0)
 )
 
+// Details for key-value pair blocks
 type KeyValueDetails struct {
 	// The form region as a tree of nodes in reading order. Only set when `blockOptions.keyValue.structuredOutputEnabled` is `true`.
 	Form []*KeyValueFormNode `json:"form,omitempty" url:"form,omitempty"`
@@ -20970,10 +22044,12 @@ func (k *KeyValueDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (k *KeyValueDetails) require(field *big.Int) {
-	if k.explicitFields == nil {
-		k.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if k.explicitFields != nil {
+		next.Set(k.explicitFields)
 	}
-	k.explicitFields.Or(k.explicitFields, field)
+	next.Or(next, field)
+	k.explicitFields = next
 }
 
 // SetForm sets the Form field and marks it as non-optional;
@@ -21036,7 +22112,6 @@ func (k *KeyValueDetails) String() string {
 	return fmt.Sprintf("%#v", k)
 }
 
-// One node of a structured form. A node's answers and sub-labels are its `children`: a filled value is a `text_field` child of its `key`, and a printed checkbox option is a `key` whose first child is its `selection`.
 var (
 	keyValueFormNodeFieldID          = big.NewInt(1 << 0)
 	keyValueFormNodeFieldType        = big.NewInt(1 << 1)
@@ -21046,6 +22121,13 @@ var (
 	keyValueFormNodeFieldChildren    = big.NewInt(1 << 5)
 )
 
+// keyValueFormNodeNullableFields maps the wire names of KeyValueFormNode's nullable fields (required or optional) to their field bits.
+var keyValueFormNodeNullableFields = map[string]*big.Int{
+	"boundingBox": keyValueFormNodeFieldBoundingBox,
+	"selected":    keyValueFormNodeFieldSelected,
+}
+
+// One node of a structured form. A node's answers and sub-labels are its `children`: a filled value is a `text_field` child of its `key`, and a printed checkbox option is a `key` whose first child is its `selection`.
 type KeyValueFormNode struct {
 	// Identifier for the node, stable for a given block and position in the form.
 	ID string `json:"id" url:"id"`
@@ -21124,10 +22206,12 @@ func (k *KeyValueFormNode) GetExtraProperties() map[string]interface{} {
 }
 
 func (k *KeyValueFormNode) require(field *big.Int) {
-	if k.explicitFields == nil {
-		k.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if k.explicitFields != nil {
+		next.Set(k.explicitFields)
 	}
-	k.explicitFields.Or(k.explicitFields, field)
+	next.Or(next, field)
+	k.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -21184,6 +22268,13 @@ func (k *KeyValueFormNode) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	k.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, keyValueFormNodeNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		k.require(presentFields)
+	}
 	k.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -21309,10 +22400,12 @@ func (l *LegacyClassification) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyClassification) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -21437,10 +22530,12 @@ func (l *LegacyClassificationAdvancedOptions) GetExtraProperties() map[string]in
 }
 
 func (l *LegacyClassificationAdvancedOptions) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetContext sets the Context field and marks it as non-optional;
@@ -21616,10 +22711,12 @@ func (l *LegacyClassificationConfig) GetExtraProperties() map[string]interface{}
 }
 
 func (l *LegacyClassificationConfig) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -21768,10 +22865,12 @@ func (l *LegacyError) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyError) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetSuccess sets the Success field and marks it as non-optional;
@@ -21890,10 +22989,12 @@ func (l *LegacyExtendError) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyExtendError) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -22026,10 +23127,12 @@ func (l *LegacyExtractChunkingOptions) GetExtraProperties() map[string]interface
 }
 
 func (l *LegacyExtractChunkingOptions) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetChunkingStrategy sets the ChunkingStrategy field and marks it as non-optional;
@@ -22319,10 +23422,12 @@ func (l *LegacyExtractionAdvancedOptions) GetExtraProperties() map[string]interf
 }
 
 func (l *LegacyExtractionAdvancedOptions) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetDocumentKind sets the DocumentKind field and marks it as non-optional;
@@ -22517,6 +23622,10 @@ func (l LegacyExtractionAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *Legac
 	return &l
 }
 
+var (
+	legacyExtractionAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
+)
+
 // Configuration for the review agent that analyzes extraction results.
 // When enabled, each field in the output metadata will include a `reviewAgentScore` (1-5)
 // and may include additional `insights` of type `issue` or `review_summary` to help identify
@@ -22525,10 +23634,6 @@ func (l LegacyExtractionAdvancedOptionsExcelSheetSelectionStrategy) Ptr() *Legac
 // Enabling the review agent incurs additional credits.
 //
 // To learn more, view the [Review Agent Documentation](https://docs.extend.ai/2026-02-09/extraction/review-agent)
-var (
-	legacyExtractionAdvancedOptionsReviewAgentFieldEnabled = big.NewInt(1 << 0)
-)
-
 type LegacyExtractionAdvancedOptionsReviewAgent struct {
 	// Whether to enable the review agent for the extraction output.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -22555,10 +23660,12 @@ func (l *LegacyExtractionAdvancedOptionsReviewAgent) GetExtraProperties() map[st
 }
 
 func (l *LegacyExtractionAdvancedOptionsReviewAgent) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -22704,10 +23811,12 @@ func (l *LegacyExtractionConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyExtractionConfig) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -22907,10 +24016,12 @@ func (l *LegacyExtractionField) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyExtractionField) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -23205,10 +24316,12 @@ func (l *LegacyProcessorVersion) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyProcessorVersion) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetObject sets the Object field and marks it as non-optional;
@@ -23538,10 +24651,12 @@ func (l *LegacyProvidedClassifierOutput) GetExtraProperties() map[string]interfa
 }
 
 func (l *LegacyProvidedClassifierOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -23615,6 +24730,11 @@ var (
 	legacyProvidedExtractionFieldResultFieldPage       = big.NewInt(1 << 4)
 )
 
+// legacyProvidedExtractionFieldResultNullableFields maps the wire names of LegacyProvidedExtractionFieldResult's nullable fields (required or optional) to their field bits.
+var legacyProvidedExtractionFieldResultNullableFields = map[string]*big.Int{
+	"page": legacyProvidedExtractionFieldResultFieldPage,
+}
+
 type LegacyProvidedExtractionFieldResult struct {
 	// The unique identifier for this field
 	ID    string `json:"id" url:"id"`
@@ -23676,10 +24796,12 @@ func (l *LegacyProvidedExtractionFieldResult) GetExtraProperties() map[string]in
 }
 
 func (l *LegacyProvidedExtractionFieldResult) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -23729,6 +24851,13 @@ func (l *LegacyProvidedExtractionFieldResult) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	l.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, legacyProvidedExtractionFieldResultNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		l.require(presentFields)
+	}
 	l.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -23825,16 +24954,32 @@ func (l *LegacyProvidedExtractionOutput) GetLegacyProvidedFieldsArrayOutput() Le
 }
 
 func (l *LegacyProvidedExtractionOutput) UnmarshalJSON(data []byte) error {
-	valueLegacyProvidedJSONOutput := new(LegacyProvidedJSONOutput)
-	if err := json.Unmarshal(data, &valueLegacyProvidedJSONOutput); err == nil {
-		l.typ = "LegacyProvidedJSONOutput"
-		l.LegacyProvidedJSONOutput = valueLegacyProvidedJSONOutput
-		return nil
+	if internal.MatchesObjectKeys(data, []string{"value"}, []string{"value"}) {
+		valueLegacyProvidedJSONOutput := new(LegacyProvidedJSONOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedJSONOutput); err == nil {
+			l.typ = "LegacyProvidedJSONOutput"
+			l.LegacyProvidedJSONOutput = valueLegacyProvidedJSONOutput
+			return nil
+		}
 	}
 	var valueLegacyProvidedFieldsArrayOutput LegacyProvidedFieldsArrayOutput
 	if err := json.Unmarshal(data, &valueLegacyProvidedFieldsArrayOutput); err == nil {
 		l.typ = "LegacyProvidedFieldsArrayOutput"
 		l.LegacyProvidedFieldsArrayOutput = valueLegacyProvidedFieldsArrayOutput
+		return nil
+	}
+	if internal.HasObjectKeys(data, []string{"value"}) {
+		valueLegacyProvidedJSONOutput := new(LegacyProvidedJSONOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedJSONOutput); err == nil {
+			l.typ = "LegacyProvidedJSONOutput"
+			l.LegacyProvidedJSONOutput = valueLegacyProvidedJSONOutput
+			return nil
+		}
+	}
+	valueLegacyProvidedJSONOutput := new(LegacyProvidedJSONOutput)
+	if err := json.Unmarshal(data, &valueLegacyProvidedJSONOutput); err == nil {
+		l.typ = "LegacyProvidedJSONOutput"
+		l.LegacyProvidedJSONOutput = valueLegacyProvidedJSONOutput
 		return nil
 	}
 	return fmt.Errorf("%s cannot be deserialized as a %T", data, l)
@@ -23868,11 +25013,11 @@ func (l *LegacyProvidedExtractionOutput) Accept(visitor LegacyProvidedExtraction
 // A mapping of field names to their extracted values
 type LegacyProvidedFieldsArrayOutput = map[string]*LegacyProvidedExtractionFieldResult
 
-// The output from a JSON Schema processor
 var (
 	legacyProvidedJSONOutputFieldValue = big.NewInt(1 << 0)
 )
 
+// The output from a JSON Schema processor
 type LegacyProvidedJSONOutput struct {
 	Value map[string]any `json:"value" url:"value"`
 
@@ -23898,10 +25043,12 @@ func (l *LegacyProvidedJSONOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacyProvidedJSONOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -23989,6 +25136,38 @@ func (l *LegacyProvidedProcessorOutput) UnmarshalJSON(data []byte) error {
 		l.LegacyProvidedExtractionOutput = valueLegacyProvidedExtractionOutput
 		return nil
 	}
+	if internal.MatchesObjectKeys(data, []string{"id", "type", "confidence"}, []string{"id", "type"}) {
+		valueLegacyProvidedClassifierOutput := new(LegacyProvidedClassifierOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedClassifierOutput); err == nil {
+			l.typ = "LegacyProvidedClassifierOutput"
+			l.LegacyProvidedClassifierOutput = valueLegacyProvidedClassifierOutput
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"splits"}, []string{"splits"}) {
+		valueLegacyProvidedSplitterOutput := new(LegacyProvidedSplitterOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedSplitterOutput); err == nil {
+			l.typ = "LegacyProvidedSplitterOutput"
+			l.LegacyProvidedSplitterOutput = valueLegacyProvidedSplitterOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id", "type"}) {
+		valueLegacyProvidedClassifierOutput := new(LegacyProvidedClassifierOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedClassifierOutput); err == nil {
+			l.typ = "LegacyProvidedClassifierOutput"
+			l.LegacyProvidedClassifierOutput = valueLegacyProvidedClassifierOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"splits"}) {
+		valueLegacyProvidedSplitterOutput := new(LegacyProvidedSplitterOutput)
+		if err := json.Unmarshal(data, &valueLegacyProvidedSplitterOutput); err == nil {
+			l.typ = "LegacyProvidedSplitterOutput"
+			l.LegacyProvidedSplitterOutput = valueLegacyProvidedSplitterOutput
+			return nil
+		}
+	}
 	valueLegacyProvidedClassifierOutput := new(LegacyProvidedClassifierOutput)
 	if err := json.Unmarshal(data, &valueLegacyProvidedClassifierOutput); err == nil {
 		l.typ = "LegacyProvidedClassifierOutput"
@@ -24065,10 +25244,12 @@ func (l *LegacyProvidedSplitterOutput) GetExtraProperties() map[string]interface
 }
 
 func (l *LegacyProvidedSplitterOutput) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetSplits sets the Splits field and marks it as non-optional;
@@ -24210,10 +25391,12 @@ func (l *LegacyProvidedSplitterOutputSplitsItem) GetExtraProperties() map[string
 }
 
 func (l *LegacyProvidedSplitterOutputSplitsItem) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -24378,10 +25561,12 @@ func (l *LegacySplitterAdvancedOptions) GetExtraProperties() map[string]interfac
 }
 
 func (l *LegacySplitterAdvancedOptions) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetSplitIdentifierRules sets the SplitIdentifierRules field and marks it as non-optional;
@@ -24566,10 +25751,12 @@ func (l *LegacySplitterConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (l *LegacySplitterConfig) require(field *big.Int) {
-	if l.explicitFields == nil {
-		l.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if l.explicitFields != nil {
+		next.Set(l.explicitFields)
 	}
-	l.explicitFields.Or(l.explicitFields, field)
+	next.Or(next, field)
+	l.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -24682,15 +25869,15 @@ func (l LegacySplitterConfigBaseProcessor) Ptr() *LegacySplitterConfigBaseProces
 // The maximum number of results to return in the response. You may receive less than this number if there are fewer results than the maximum.
 type MaxPageSize = int
 
-// Merges extraction outputs from multiple upstream extract steps.
-//
-// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#merge-extract).
 var (
 	mergeExtractStepDefinitionFieldName   = big.NewInt(1 << 0)
 	mergeExtractStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	mergeExtractStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Merges extraction outputs from multiple upstream extract steps.
+//
+// See the [Merge Extract step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#merge-extract).
 type MergeExtractStepDefinition struct {
 	Name   string                            `json:"name" url:"name"`
 	Config *MergeExtractStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
@@ -24732,10 +25919,12 @@ func (m *MergeExtractStepDefinition) GetExtraProperties() map[string]interface{}
 }
 
 func (m *MergeExtractStepDefinition) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if m.explicitFields != nil {
+		next.Set(m.explicitFields)
 	}
-	m.explicitFields.Or(m.explicitFields, field)
+	next.Or(next, field)
+	m.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -24833,10 +26022,12 @@ func (m *MergeExtractStepDefinitionConfig) GetExtraProperties() map[string]inter
 }
 
 func (m *MergeExtractStepDefinitionConfig) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if m.explicitFields != nil {
+		next.Set(m.explicitFields)
 	}
-	m.explicitFields.Or(m.explicitFields, field)
+	next.Or(next, field)
+	m.explicitFields = next
 }
 
 // SetMergeOrder sets the MergeOrder field and marks it as non-optional;
@@ -24919,13 +26110,13 @@ func (m MergeExtractStepDefinitionConfigMergeOrder) Ptr() *MergeExtractStepDefin
 	return &m
 }
 
-// An ordered collection of files to extract from together in a single run. Use this instead of `file` when you want to run extraction across multiple documents at once.
-//
-// Exactly one of `file` or `package` must be provided on a request — they are mutually exclusive.
 var (
 	multiFileRunPackageFieldFiles = big.NewInt(1 << 0)
 )
 
+// An ordered collection of files to extract from together in a single run. Use this instead of `file` when you want to run extraction across multiple documents at once.
+//
+// Exactly one of `file` or `package` must be provided on a request — they are mutually exclusive.
 type MultiFileRunPackage struct {
 	// The files to extract from. Each entry can be a URL or an existing Extend file ID.
 	Files []*MultiFileRunPackageFilesItem `json:"files" url:"files"`
@@ -24952,10 +26143,12 @@ func (m *MultiFileRunPackage) GetExtraProperties() map[string]interface{} {
 }
 
 func (m *MultiFileRunPackage) require(field *big.Int) {
-	if m.explicitFields == nil {
-		m.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if m.explicitFields != nil {
+		next.Set(m.explicitFields)
 	}
-	m.explicitFields.Or(m.explicitFields, field)
+	next.Or(next, field)
+	m.explicitFields = next
 }
 
 // SetFiles sets the Files field and marks it as non-optional;
@@ -25029,6 +26222,38 @@ func (m *MultiFileRunPackageFilesItem) GetFileFromID() *FileFromID {
 }
 
 func (m *MultiFileRunPackageFilesItem) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			m.typ = "FileFromURL"
+			m.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			m.typ = "FileFromID"
+			m.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			m.typ = "FileFromURL"
+			m.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			m.typ = "FileFromID"
+			m.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		m.typ = "FileFromURL"
@@ -25117,10 +26342,12 @@ func (p *PageRangesItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *PageRangesItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetStart sets the Start field and marks it as non-optional;
@@ -25179,9 +26406,6 @@ func (p *PageRangesItem) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The split metadata details for a derivative file.
-//
-// **Availability:** Only included if this file is a derivative of another file, for instance if it was created via a Splitter in a workflow.
 var (
 	parentSplitFieldID         = big.NewInt(1 << 0)
 	parentSplitFieldType       = big.NewInt(1 << 1)
@@ -25190,6 +26414,9 @@ var (
 	parentSplitFieldEndPage    = big.NewInt(1 << 4)
 )
 
+// The split metadata details for a derivative file.
+//
+// **Availability:** Only included if this file is a derivative of another file, for instance if it was created via a Splitter in a workflow.
 type ParentSplit struct {
 	// The ID of the split.
 	ID string `json:"id" url:"id"`
@@ -25252,10 +26479,12 @@ func (p *ParentSplit) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParentSplit) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -25335,7 +26564,6 @@ func (p *ParentSplit) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Configuration options for the parsing process. Defaults depend on the selected parser engine and version.
 var (
 	parseConfigFieldTarget           = big.NewInt(1 << 0)
 	parseConfigFieldChunkingStrategy = big.NewInt(1 << 1)
@@ -25345,6 +26573,7 @@ var (
 	parseConfigFieldAdvancedOptions  = big.NewInt(1 << 5)
 )
 
+// Configuration options for the parsing process. Defaults depend on the selected parser engine and version.
 type ParseConfig struct {
 	// The target format for the parsed content.
 	//
@@ -25430,10 +26659,12 @@ func (p *ParseConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseConfig) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetTarget sets the Target field and marks it as non-optional;
@@ -25746,10 +26977,12 @@ func (p *ParseConfigAdvancedOptions) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ParseConfigAdvancedOptions) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetPageRotationEnabled sets the PageRotationEnabled field and marks it as non-optional;
@@ -25996,10 +27229,12 @@ func (p *ParseConfigAdvancedOptionsFormattingDetectionItem) GetExtraProperties()
 }
 
 func (p *ParseConfigAdvancedOptionsFormattingDetectionItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 func (p *ParseConfigAdvancedOptionsFormattingDetectionItem) UnmarshalJSON(data []byte) error {
@@ -26085,12 +27320,12 @@ func (p ParseConfigAdvancedOptionsImageConversionQuality) Ptr() *ParseConfigAdva
 	return &p
 }
 
-// Options for returning raw OCR data in the response. Words and lines are independent opt-ins and both default to false.
 var (
 	parseConfigAdvancedOptionsReturnOcrFieldWords = big.NewInt(1 << 0)
 	parseConfigAdvancedOptionsReturnOcrFieldLines = big.NewInt(1 << 1)
 )
 
+// Options for returning raw OCR data in the response. Words and lines are independent opt-ins and both default to false.
 type ParseConfigAdvancedOptionsReturnOcr struct {
 	// Whether to include word-level OCR data in the response, including word bounding boxes and confidence scores. This meaningfully impacts the response size, consider using the signed url return format.
 	Words *bool `json:"words,omitempty" url:"words,omitempty"`
@@ -26126,10 +27361,12 @@ func (p *ParseConfigAdvancedOptionsReturnOcr) GetExtraProperties() map[string]in
 }
 
 func (p *ParseConfigAdvancedOptionsReturnOcr) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetWords sets the Words field and marks it as non-optional;
@@ -26216,7 +27453,6 @@ func (p ParseConfigAdvancedOptionsTextExtractionMethod) Ptr() *ParseConfigAdvanc
 	return &p
 }
 
-// Options for controlling how different block types are processed.
 var (
 	parseConfigBlockOptionsFieldFigures  = big.NewInt(1 << 0)
 	parseConfigBlockOptionsFieldTables   = big.NewInt(1 << 1)
@@ -26226,6 +27462,7 @@ var (
 	parseConfigBlockOptionsFieldFormulas = big.NewInt(1 << 5)
 )
 
+// Options for controlling how different block types are processed.
 type ParseConfigBlockOptions struct {
 	// Options for figure blocks.
 	Figures *ParseConfigBlockOptionsFigures `json:"figures,omitempty" url:"figures,omitempty"`
@@ -26297,10 +27534,12 @@ func (p *ParseConfigBlockOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseConfigBlockOptions) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetFigures sets the Figures field and marks it as non-optional;
@@ -26387,12 +27626,12 @@ func (p *ParseConfigBlockOptions) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for barcode blocks.
 var (
 	parseConfigBlockOptionsBarcodesFieldImageClippingEnabled = big.NewInt(1 << 0)
 	parseConfigBlockOptionsBarcodesFieldReadingEnabled       = big.NewInt(1 << 1)
 )
 
+// Options for barcode blocks.
 type ParseConfigBlockOptionsBarcodes struct {
 	// Whether to clip and extract images of barcodes. When enabled, barcode images will be available in the `imageUrl` field of BarcodeDetails.
 	ImageClippingEnabled *bool `json:"imageClippingEnabled,omitempty" url:"imageClippingEnabled,omitempty"`
@@ -26428,10 +27667,12 @@ func (p *ParseConfigBlockOptionsBarcodes) GetExtraProperties() map[string]interf
 }
 
 func (p *ParseConfigBlockOptionsBarcodes) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetImageClippingEnabled sets the ImageClippingEnabled field and marks it as non-optional;
@@ -26490,7 +27731,6 @@ func (p *ParseConfigBlockOptionsBarcodes) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for figure blocks.
 var (
 	parseConfigBlockOptionsFiguresFieldEnabled                        = big.NewInt(1 << 0)
 	parseConfigBlockOptionsFiguresFieldFigureImageClippingEnabled     = big.NewInt(1 << 1)
@@ -26498,6 +27738,7 @@ var (
 	parseConfigBlockOptionsFiguresFieldCustomInstructions             = big.NewInt(1 << 3)
 )
 
+// Options for figure blocks.
 type ParseConfigBlockOptionsFigures struct {
 	// Whether to include figures in the output.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -26551,10 +27792,12 @@ func (p *ParseConfigBlockOptionsFigures) GetExtraProperties() map[string]interfa
 }
 
 func (p *ParseConfigBlockOptionsFigures) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -26627,11 +27870,11 @@ func (p *ParseConfigBlockOptionsFigures) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for formula blocks.
 var (
 	parseConfigBlockOptionsFormulasFieldEnabled = big.NewInt(1 << 0)
 )
 
+// Options for formula blocks.
 type ParseConfigBlockOptionsFormulas struct {
 	// Whether to enable formula detection and parsing. When enabled, mathematical formulas and equations are detected and their LaTeX representations are included in the output. When disabled, formulas will be detected as text blocks and may not be accurately parsed.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -26658,10 +27901,12 @@ func (p *ParseConfigBlockOptionsFormulas) GetExtraProperties() map[string]interf
 }
 
 func (p *ParseConfigBlockOptionsFormulas) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -26713,12 +27958,12 @@ func (p *ParseConfigBlockOptionsFormulas) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for key-value pair blocks.
 var (
 	parseConfigBlockOptionsKeyValueFieldBlankFieldFormattingEnabled = big.NewInt(1 << 0)
 	parseConfigBlockOptionsKeyValueFieldStructuredOutputEnabled     = big.NewInt(1 << 1)
 )
 
+// Options for key-value pair blocks.
 type ParseConfigBlockOptionsKeyValue struct {
 	// Whether to preserve blank field formatting for key-value pairs with empty values.
 	BlankFieldFormattingEnabled *bool `json:"blankFieldFormattingEnabled,omitempty" url:"blankFieldFormattingEnabled,omitempty"`
@@ -26754,10 +27999,12 @@ func (p *ParseConfigBlockOptionsKeyValue) GetExtraProperties() map[string]interf
 }
 
 func (p *ParseConfigBlockOptionsKeyValue) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetBlankFieldFormattingEnabled sets the BlankFieldFormattingEnabled field and marks it as non-optional;
@@ -26816,7 +28063,6 @@ func (p *ParseConfigBlockOptionsKeyValue) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for table blocks.
 var (
 	parseConfigBlockOptionsTablesFieldEnabled                        = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTablesFieldTargetFormat                   = big.NewInt(1 << 1)
@@ -26825,6 +28071,7 @@ var (
 	parseConfigBlockOptionsTablesFieldAgentic                        = big.NewInt(1 << 4)
 )
 
+// Options for table blocks.
 type ParseConfigBlockOptionsTables struct {
 	// This option is deprecated and will have no effect. It will be removed in the next API version.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -26889,10 +28136,12 @@ func (p *ParseConfigBlockOptionsTables) GetExtraProperties() map[string]interfac
 }
 
 func (p *ParseConfigBlockOptionsTables) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -26972,12 +28221,12 @@ func (p *ParseConfigBlockOptionsTables) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for agentic table processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic table correction is triggered.
 var (
 	parseConfigBlockOptionsTablesAgenticFieldEnabled            = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTablesAgenticFieldCustomInstructions = big.NewInt(1 << 1)
 )
 
+// Options for agentic table processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic table correction is triggered.
 type ParseConfigBlockOptionsTablesAgentic struct {
 	// Whether to enable agentic table processing.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -27013,10 +28262,12 @@ func (p *ParseConfigBlockOptionsTablesAgentic) GetExtraProperties() map[string]i
 }
 
 func (p *ParseConfigBlockOptionsTablesAgentic) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -27100,12 +28351,12 @@ func (p ParseConfigBlockOptionsTablesTargetFormat) Ptr() *ParseConfigBlockOption
 	return &p
 }
 
-// Options for text blocks.
 var (
 	parseConfigBlockOptionsTextFieldSignatureDetectionEnabled = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTextFieldAgentic                   = big.NewInt(1 << 1)
 )
 
+// Options for text blocks.
 type ParseConfigBlockOptionsText struct {
 	// Whether an additional vision model will be utilized for advanced signature detection. Recommended for most use cases, but should be disabled if signature detection is not necessary and latency is a concern.
 	SignatureDetectionEnabled *bool `json:"signatureDetectionEnabled,omitempty" url:"signatureDetectionEnabled,omitempty"`
@@ -27141,10 +28392,12 @@ func (p *ParseConfigBlockOptionsText) GetExtraProperties() map[string]interface{
 }
 
 func (p *ParseConfigBlockOptionsText) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSignatureDetectionEnabled sets the SignatureDetectionEnabled field and marks it as non-optional;
@@ -27203,12 +28456,12 @@ func (p *ParseConfigBlockOptionsText) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Options for agentic text processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic text correction is triggered.
 var (
 	parseConfigBlockOptionsTextAgenticFieldEnabled            = big.NewInt(1 << 0)
 	parseConfigBlockOptionsTextAgenticFieldCustomInstructions = big.NewInt(1 << 1)
 )
 
+// Options for agentic text processing using VLM-based review and correction. Enabling this incurs additional credits on pages where agentic text correction is triggered.
 type ParseConfigBlockOptionsTextAgentic struct {
 	// Whether to enable agentic text processing for OCR corrections.
 	Enabled *bool `json:"enabled,omitempty" url:"enabled,omitempty"`
@@ -27244,10 +28497,12 @@ func (p *ParseConfigBlockOptionsTextAgentic) GetExtraProperties() map[string]int
 }
 
 func (p *ParseConfigBlockOptionsTextAgentic) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEnabled sets the Enabled field and marks it as non-optional;
@@ -27306,12 +28561,12 @@ func (p *ParseConfigBlockOptionsTextAgentic) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Strategy for dividing the document into chunks.
 var (
 	parseConfigChunkingStrategyFieldType    = big.NewInt(1 << 0)
 	parseConfigChunkingStrategyFieldOptions = big.NewInt(1 << 1)
 )
 
+// Strategy for dividing the document into chunks.
 type ParseConfigChunkingStrategy struct {
 	// The type of chunking strategy. Supported values:
 	//
@@ -27351,10 +28606,12 @@ func (p *ParseConfigChunkingStrategy) GetExtraProperties() map[string]interface{
 }
 
 func (p *ParseConfigChunkingStrategy) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -27413,12 +28670,12 @@ func (p *ParseConfigChunkingStrategy) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Additional options for the chunking strategy.
 var (
 	parseConfigChunkingStrategyOptionsFieldMinCharacters = big.NewInt(1 << 0)
 	parseConfigChunkingStrategyOptionsFieldMaxCharacters = big.NewInt(1 << 1)
 )
 
+// Additional options for the chunking strategy.
 type ParseConfigChunkingStrategyOptions struct {
 	// Specify a minimum number of characters per chunk.
 	MinCharacters *int `json:"minCharacters,omitempty" url:"minCharacters,omitempty"`
@@ -27454,10 +28711,12 @@ func (p *ParseConfigChunkingStrategyOptions) GetExtraProperties() map[string]int
 }
 
 func (p *ParseConfigChunkingStrategyOptions) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetMinCharacters sets the MinCharacters field and marks it as non-optional;
@@ -27633,6 +28892,38 @@ func (p *ParseRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (p *ParseRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			p.typ = "FileFromURL"
+			p.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			p.typ = "FileFromID"
+			p.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		p.typ = "FileFromURL"
@@ -27695,7 +28986,6 @@ func (p ParseRequestResponseType) Ptr() *ParseRequestResponseType {
 	return &p
 }
 
-// Parse run object.
 var (
 	parseRunFieldID             = big.NewInt(1 << 0)
 	parseRunFieldBatchID        = big.NewInt(1 << 1)
@@ -27709,8 +28999,22 @@ var (
 	parseRunFieldMetrics        = big.NewInt(1 << 9)
 	parseRunFieldConfig         = big.NewInt(1 << 10)
 	parseRunFieldUsage          = big.NewInt(1 << 11)
+	parseRunFieldDataRetention  = big.NewInt(1 << 12)
 )
 
+// parseRunNullableFields maps the wire names of ParseRun's nullable fields (required or optional) to their field bits.
+var parseRunNullableFields = map[string]*big.Int{
+	"batchId":        parseRunFieldBatchID,
+	"failureReason":  parseRunFieldFailureReason,
+	"failureMessage": parseRunFieldFailureMessage,
+	"metadata":       parseRunFieldMetadata,
+	"output":         parseRunFieldOutput,
+	"outputUrl":      parseRunFieldOutputURL,
+	"metrics":        parseRunFieldMetrics,
+	"usage":          parseRunFieldUsage,
+}
+
+// Parse run object.
 type ParseRun struct {
 	// A unique identifier for the parse run.
 	//
@@ -27729,6 +29033,7 @@ type ParseRun struct {
 	// * `"PROCESSING"` - The file is still being processed
 	// * `"PROCESSED"` - The file was successfully processed
 	// * `"FAILED"` - The processing failed (see `failureReason` for details)
+	// * `"CANCELLED"` - The run was cancelled with `POST /parse_runs/{id}/cancel`
 	Status ParseRunStatusEnum `json:"status" url:"status"`
 	// The reason for failure.
 	//
@@ -27777,7 +29082,8 @@ type ParseRun struct {
 	// Usage credits consumed by this parse run.
 	//
 	// **Availability:** Present when `status` is `"PROCESSED"`, the run was created after October 7, 2025, and the customer is on the current billing system.
-	Usage *RunUsage `json:"usage,omitempty" url:"usage,omitempty"`
+	Usage         *RunUsage           `json:"usage,omitempty" url:"usage,omitempty"`
+	DataRetention *DataRetentionState `json:"dataRetention,omitempty" url:"dataRetention,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -27871,6 +29177,13 @@ func (p *ParseRun) GetUsage() *RunUsage {
 	return p.Usage
 }
 
+func (p *ParseRun) GetDataRetention() *DataRetentionState {
+	if p == nil {
+		return nil
+	}
+	return p.DataRetention
+}
+
 func (p *ParseRun) Object() string {
 	return p.object
 }
@@ -27883,10 +29196,12 @@ func (p *ParseRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRun) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -27973,6 +29288,13 @@ func (p *ParseRun) SetUsage(usage *RunUsage) {
 	p.require(parseRunFieldUsage)
 }
 
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRun) SetDataRetention(dataRetention *DataRetentionState) {
+	p.DataRetention = dataRetention
+	p.require(parseRunFieldDataRetention)
+}
+
 func (p *ParseRun) UnmarshalJSON(data []byte) error {
 	type embed ParseRun
 	var unmarshaler = struct {
@@ -27994,6 +29316,13 @@ func (p *ParseRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -28065,10 +29394,12 @@ func (p *ParseRunFailedWebhookEvent) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ParseRunFailedWebhookEvent) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -28127,14 +29458,14 @@ func (p *ParseRunFailedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Metrics about the parsing process.
-//
-// **Availability:** Present when `status` is `"PROCESSED"`.
 var (
 	parseRunMetricsFieldProcessingTimeMs = big.NewInt(1 << 0)
 	parseRunMetricsFieldPageCount        = big.NewInt(1 << 1)
 )
 
+// Metrics about the parsing process.
+//
+// **Availability:** Present when `status` is `"PROCESSED"`.
 type ParseRunMetrics struct {
 	// The time taken to process the document in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -28170,10 +29501,12 @@ func (p *ParseRunMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunMetrics) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -28232,9 +29565,6 @@ func (p *ParseRunMetrics) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The parse run output.
-//
-// **Availability:** Present when `status` is `"PROCESSED"` and the request was made without the `responseType=url` query parameter. Contains the parsed chunks.
 var (
 	parseRunOutputFieldChunks   = big.NewInt(1 << 0)
 	parseRunOutputFieldOcr      = big.NewInt(1 << 1)
@@ -28242,6 +29572,14 @@ var (
 	parseRunOutputFieldMetadata = big.NewInt(1 << 3)
 )
 
+// parseRunOutputNullableFields maps the wire names of ParseRunOutput's nullable fields (required or optional) to their field bits.
+var parseRunOutputNullableFields = map[string]*big.Int{
+	"metadata": parseRunOutputFieldMetadata,
+}
+
+// The parse run output.
+//
+// **Availability:** Present when `status` is `"PROCESSED"` and the request was made without the `responseType=url` query parameter. Contains the parsed chunks.
 type ParseRunOutput struct {
 	// An array of chunks that were parsed from the file.
 	Chunks []*Chunk `json:"chunks" url:"chunks"`
@@ -28295,10 +29633,12 @@ func (p *ParseRunOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunOutput) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetChunks sets the Chunks field and marks it as non-optional;
@@ -28341,6 +29681,13 @@ func (p *ParseRunOutput) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunOutputNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -28371,7 +29718,6 @@ func (p *ParseRunOutput) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Rotation, dimension, file-type, and detected-language metadata about the parse output. `null` for parse runs that completed before this field was introduced.
 var (
 	parseRunOutputMetadataFieldOriginalMimeType = big.NewInt(1 << 0)
 	parseRunOutputMetadataFieldFinalMimeType    = big.NewInt(1 << 1)
@@ -28380,6 +29726,15 @@ var (
 	parseRunOutputMetadataFieldLanguageDetected = big.NewInt(1 << 4)
 )
 
+// parseRunOutputMetadataNullableFields maps the wire names of ParseRunOutputMetadata's nullable fields (required or optional) to their field bits.
+var parseRunOutputMetadataNullableFields = map[string]*big.Int{
+	"originalMimeType": parseRunOutputMetadataFieldOriginalMimeType,
+	"finalMimeType":    parseRunOutputMetadataFieldFinalMimeType,
+	"pages":            parseRunOutputMetadataFieldPages,
+	"languageDetected": parseRunOutputMetadataFieldLanguageDetected,
+}
+
+// Rotation, dimension, file-type, and detected-language metadata about the parse output. `null` for parse runs that completed before this field was introduced.
 type ParseRunOutputMetadata struct {
 	// The file's media type before any format conversion.
 	OriginalMimeType *string `json:"originalMimeType,omitempty" url:"originalMimeType,omitempty"`
@@ -28444,10 +29799,12 @@ func (p *ParseRunOutputMetadata) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunOutputMetadata) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetOriginalMimeType sets the OriginalMimeType field and marks it as non-optional;
@@ -28497,6 +29854,13 @@ func (p *ParseRunOutputMetadata) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunOutputMetadataNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -28527,9 +29891,6 @@ func (p *ParseRunOutputMetadata) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The languages detected in the document. Set for every supported file type, regardless of how the file was parsed.
-//
-// `null` when no reliable detection was possible because the document did not contain enough characters for the detector to reach a conclusion. This can happen on numeric-only documents such as ledgers or forms of bare amounts and dates. Omitted when the parse run completed before language detection was introduced.
 var (
 	parseRunOutputMetadataLanguageDetectedFieldLanguageCode         = big.NewInt(1 << 0)
 	parseRunOutputMetadataLanguageDetectedFieldConfidence           = big.NewInt(1 << 1)
@@ -28537,6 +29898,9 @@ var (
 	parseRunOutputMetadataLanguageDetectedFieldUndeterminedCoverage = big.NewInt(1 << 3)
 )
 
+// The languages detected in the document. Set for every supported file type, regardless of how the file was parsed.
+//
+// `null` when no reliable detection was possible because the document did not contain enough characters for the detector to reach a conclusion. This can happen on numeric-only documents such as ledgers or forms of bare amounts and dates. Omitted when the parse run completed before language detection was introduced.
 type ParseRunOutputMetadataLanguageDetected struct {
 	// The language the majority of the document is written in. The `languageCode` of the entry in `languages` with the highest coverage.
 	//
@@ -28594,10 +29958,12 @@ func (p *ParseRunOutputMetadataLanguageDetected) GetExtraProperties() map[string
 }
 
 func (p *ParseRunOutputMetadataLanguageDetected) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetLanguageCode sets the LanguageCode field and marks it as non-optional;
@@ -28720,10 +30086,12 @@ func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) GetExtraProperties
 }
 
 func (p *ParseRunOutputMetadataLanguageDetectedLanguagesItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetLanguageCode sets the LanguageCode field and marks it as non-optional;
@@ -28797,6 +30165,11 @@ var (
 	parseRunOutputMetadataPagesItemFieldDpi                = big.NewInt(1 << 4)
 )
 
+// parseRunOutputMetadataPagesItemNullableFields maps the wire names of ParseRunOutputMetadataPagesItem's nullable fields (required or optional) to their field bits.
+var parseRunOutputMetadataPagesItemNullableFields = map[string]*big.Int{
+	"rotationApplied": parseRunOutputMetadataPagesItemFieldRotationApplied,
+}
+
 type ParseRunOutputMetadataPagesItem struct {
 	// The page number this entry describes.
 	Number int `json:"number" url:"number"`
@@ -28859,10 +30232,12 @@ func (p *ParseRunOutputMetadataPagesItem) GetExtraProperties() map[string]interf
 }
 
 func (p *ParseRunOutputMetadataPagesItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetNumber sets the Number field and marks it as non-optional;
@@ -28912,6 +30287,13 @@ func (p *ParseRunOutputMetadataPagesItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunOutputMetadataPagesItemNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -28965,12 +30347,12 @@ func (p ParseRunOutputMetadataSourceEncoding) Ptr() *ParseRunOutputMetadataSourc
 	return &p
 }
 
-// Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
 var (
 	parseRunOutputOcrFieldWords = big.NewInt(1 << 0)
 	parseRunOutputOcrFieldLines = big.NewInt(1 << 1)
 )
 
+// Raw OCR data from the parsing process. Words and lines are independently enabled with `returnOcr.words` and `returnOcr.lines`; either array may be omitted.
 type ParseRunOutputOcr struct {
 	// An array of individual words detected by OCR.
 	Words []*ParseRunOutputOcrWordsItem `json:"words,omitempty" url:"words,omitempty"`
@@ -29006,10 +30388,12 @@ func (p *ParseRunOutputOcr) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunOutputOcr) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetWords sets the Words field and marks it as non-optional;
@@ -29138,10 +30522,12 @@ func (p *ParseRunOutputOcrLinesItem) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ParseRunOutputOcrLinesItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetContent sets the Content field and marks it as non-optional;
@@ -29230,6 +30616,11 @@ var (
 	parseRunOutputOcrWordsItemFieldRotation    = big.NewInt(1 << 5)
 )
 
+// parseRunOutputOcrWordsItemNullableFields maps the wire names of ParseRunOutputOcrWordsItem's nullable fields (required or optional) to their field bits.
+var parseRunOutputOcrWordsItemNullableFields = map[string]*big.Int{
+	"rotation": parseRunOutputOcrWordsItemFieldRotation,
+}
+
 type ParseRunOutputOcrWordsItem struct {
 	// The text content of the word.
 	Content string `json:"content" url:"content"`
@@ -29305,10 +30696,12 @@ func (p *ParseRunOutputOcrWordsItem) GetExtraProperties() map[string]interface{}
 }
 
 func (p *ParseRunOutputOcrWordsItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetContent sets the Content field and marks it as non-optional;
@@ -29365,6 +30758,13 @@ func (p *ParseRunOutputOcrWordsItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunOutputOcrWordsItemNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -29395,11 +30795,11 @@ func (p *ParseRunOutputOcrWordsItem) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Word-level source anchors for text formats, the counterpart to `ocr` for documents parsed from markup rather than pixels. Only included when `advancedOptions.returnSourceNodes` is enabled and the file contains text.
 var (
 	parseRunOutputSourceFieldNodes = big.NewInt(1 << 0)
 )
 
+// Word-level source anchors for text formats, the counterpart to `ocr` for documents parsed from markup rather than pixels. Only included when `advancedOptions.returnSourceNodes` is enabled and the file contains text.
 type ParseRunOutputSource struct {
 	// An array of words located in the uploaded file.
 	Nodes []*ParseRunOutputSourceNodesItem `json:"nodes" url:"nodes"`
@@ -29426,10 +30826,12 @@ func (p *ParseRunOutputSource) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunOutputSource) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetNodes sets the Nodes field and marks it as non-optional;
@@ -29541,10 +30943,12 @@ func (p *ParseRunOutputSourceNodesItem) GetExtraProperties() map[string]interfac
 }
 
 func (p *ParseRunOutputSourceNodesItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetContent sets the Content field and marks it as non-optional;
@@ -29656,10 +31060,12 @@ func (p *ParseRunProcessedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (p *ParseRunProcessedWebhookEvent) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -29718,16 +31124,24 @@ func (p *ParseRunProcessedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// Minimal parse run status object sent in webhook notifications.
-// Contains only the essential status information, without the full output data.
 var (
 	parseRunStatusFieldID             = big.NewInt(1 << 0)
 	parseRunStatusFieldStatus         = big.NewInt(1 << 1)
 	parseRunStatusFieldFailureReason  = big.NewInt(1 << 2)
 	parseRunStatusFieldFailureMessage = big.NewInt(1 << 3)
 	parseRunStatusFieldMetadata       = big.NewInt(1 << 4)
+	parseRunStatusFieldDataRetention  = big.NewInt(1 << 5)
 )
 
+// parseRunStatusNullableFields maps the wire names of ParseRunStatus's nullable fields (required or optional) to their field bits.
+var parseRunStatusNullableFields = map[string]*big.Int{
+	"failureReason":  parseRunStatusFieldFailureReason,
+	"failureMessage": parseRunStatusFieldFailureMessage,
+	"metadata":       parseRunStatusFieldMetadata,
+}
+
+// Minimal parse run status object sent in webhook notifications.
+// Contains only the essential status information, without the full output data.
 type ParseRunStatus struct {
 	// A unique identifier for the parse run.
 	//
@@ -29749,7 +31163,8 @@ type ParseRunStatus struct {
 	// Any metadata that was provided when creating the parse run.
 	//
 	// **Availability:** Present when metadata was provided during creation.
-	Metadata *RunMetadata `json:"metadata,omitempty" url:"metadata,omitempty"`
+	Metadata      *RunMetadata        `json:"metadata,omitempty" url:"metadata,omitempty"`
+	DataRetention *DataRetentionState `json:"dataRetention,omitempty" url:"dataRetention,omitempty"`
 
 	// Private bitmask of fields set to an explicit value and therefore not to be omitted
 	explicitFields *big.Int `json:"-" url:"-"`
@@ -29794,6 +31209,13 @@ func (p *ParseRunStatus) GetMetadata() *RunMetadata {
 	return p.Metadata
 }
 
+func (p *ParseRunStatus) GetDataRetention() *DataRetentionState {
+	if p == nil {
+		return nil
+	}
+	return p.DataRetention
+}
+
 func (p *ParseRunStatus) Object() string {
 	return p.object
 }
@@ -29806,10 +31228,12 @@ func (p *ParseRunStatus) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseRunStatus) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -29847,6 +31271,13 @@ func (p *ParseRunStatus) SetMetadata(metadata *RunMetadata) {
 	p.require(parseRunStatusFieldMetadata)
 }
 
+// SetDataRetention sets the DataRetention field and marks it as non-optional;
+// this prevents an empty or null value for this field from being omitted during serialization.
+func (p *ParseRunStatus) SetDataRetention(dataRetention *DataRetentionState) {
+	p.DataRetention = dataRetention
+	p.require(parseRunStatusFieldDataRetention)
+}
+
 func (p *ParseRunStatus) UnmarshalJSON(data []byte) error {
 	type embed ParseRunStatus
 	var unmarshaler = struct {
@@ -29868,6 +31299,13 @@ func (p *ParseRunStatus) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	p.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, parseRunStatusNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		p.require(presentFields)
+	}
 	p.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -29905,6 +31343,7 @@ func (p *ParseRunStatus) String() string {
 // * `"PROCESSING"` - The file is still being processed
 // * `"PROCESSED"` - The file was successfully processed
 // * `"FAILED"` - The processing failed (see `failureReason` for details)
+// * `"CANCELLED"` - The run was cancelled with `POST /parse_runs/{id}/cancel`
 type ParseRunStatusEnum string
 
 const (
@@ -29912,6 +31351,7 @@ const (
 	ParseRunStatusEnumProcessing ParseRunStatusEnum = "PROCESSING"
 	ParseRunStatusEnumProcessed  ParseRunStatusEnum = "PROCESSED"
 	ParseRunStatusEnumFailed     ParseRunStatusEnum = "FAILED"
+	ParseRunStatusEnumCancelled  ParseRunStatusEnum = "CANCELLED"
 )
 
 func NewParseRunStatusEnumFromString(s string) (ParseRunStatusEnum, error) {
@@ -29924,6 +31364,8 @@ func NewParseRunStatusEnumFromString(s string) (ParseRunStatusEnum, error) {
 		return ParseRunStatusEnumProcessed, nil
 	case "FAILED":
 		return ParseRunStatusEnumFailed, nil
+	case "CANCELLED":
+		return ParseRunStatusEnumCancelled, nil
 	}
 	var t ParseRunStatusEnum
 	return "", fmt.Errorf("%s is not a valid %T", s, t)
@@ -29962,15 +31404,15 @@ func (p ParseRunStatusStatus) Ptr() *ParseRunStatusStatus {
 	return &p
 }
 
-// Parses file content (OCR, text extraction). Every workflow should have exactly one parse step immediately after the trigger.
-//
-// See the [Parse step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#parse).
 var (
 	parseStepDefinitionFieldName   = big.NewInt(1 << 0)
 	parseStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	parseStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Parses file content (OCR, text extraction). Every workflow should have exactly one parse step immediately after the trigger.
+//
+// See the [Parse step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#parse).
 type ParseStepDefinition struct {
 	Name   string                     `json:"name" url:"name"`
 	Config *ParseStepDefinitionConfig `json:"config,omitempty" url:"config,omitempty"`
@@ -30012,10 +31454,12 @@ func (p *ParseStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ParseStepDefinition) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -30110,10 +31554,12 @@ func (p *ParseStepDefinitionConfig) GetExtraProperties() map[string]interface{} 
 }
 
 func (p *ParseStepDefinitionConfig) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetParseConfig sets the ParseConfig field and marks it as non-optional;
@@ -30205,10 +31651,12 @@ func (p *Polygon) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *Polygon) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetX sets the X field and marks it as non-optional;
@@ -30350,10 +31798,12 @@ func (p *ProvidedClassifyOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProvidedClassifyOutput) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -30412,13 +31862,13 @@ func (p *ProvidedClassifyOutput) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-// The expected extraction output.
-//
-// **Important:** Make sure to nest the JSON object conforming to the schema in a `value` object, and include all properties defined in the schema.
 var (
 	providedExtractOutputFieldValue = big.NewInt(1 << 0)
 )
 
+// The expected extraction output.
+//
+// **Important:** Make sure to nest the JSON object conforming to the schema in a `value` object, and include all properties defined in the schema.
 type ProvidedExtractOutput struct {
 	// The expected extraction output, provided as a JSON object that conforms to the schema defined in the extractor config
 	Value *JSONObject `json:"value,omitempty" url:"value,omitempty"`
@@ -30445,10 +31895,12 @@ func (p *ProvidedExtractOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProvidedExtractOutput) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetValue sets the Value field and marks it as non-optional;
@@ -30530,6 +31982,46 @@ func (p *ProvidedProcessorOutput) GetProvidedSplitOutput() *ProvidedSplitOutput 
 }
 
 func (p *ProvidedProcessorOutput) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"value"}, []string{}) {
+		valueProvidedExtractOutput := new(ProvidedExtractOutput)
+		if err := json.Unmarshal(data, &valueProvidedExtractOutput); err == nil {
+			p.typ = "ProvidedExtractOutput"
+			p.ProvidedExtractOutput = valueProvidedExtractOutput
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id", "type"}, []string{"id", "type"}) {
+		valueProvidedClassifyOutput := new(ProvidedClassifyOutput)
+		if err := json.Unmarshal(data, &valueProvidedClassifyOutput); err == nil {
+			p.typ = "ProvidedClassifyOutput"
+			p.ProvidedClassifyOutput = valueProvidedClassifyOutput
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"splits"}, []string{"splits"}) {
+		valueProvidedSplitOutput := new(ProvidedSplitOutput)
+		if err := json.Unmarshal(data, &valueProvidedSplitOutput); err == nil {
+			p.typ = "ProvidedSplitOutput"
+			p.ProvidedSplitOutput = valueProvidedSplitOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id", "type"}) {
+		valueProvidedClassifyOutput := new(ProvidedClassifyOutput)
+		if err := json.Unmarshal(data, &valueProvidedClassifyOutput); err == nil {
+			p.typ = "ProvidedClassifyOutput"
+			p.ProvidedClassifyOutput = valueProvidedClassifyOutput
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"splits"}) {
+		valueProvidedSplitOutput := new(ProvidedSplitOutput)
+		if err := json.Unmarshal(data, &valueProvidedSplitOutput); err == nil {
+			p.typ = "ProvidedSplitOutput"
+			p.ProvidedSplitOutput = valueProvidedSplitOutput
+			return nil
+		}
+	}
 	valueProvidedExtractOutput := new(ProvidedExtractOutput)
 	if err := json.Unmarshal(data, &valueProvidedExtractOutput); err == nil {
 		p.typ = "ProvidedExtractOutput"
@@ -30612,10 +32104,12 @@ func (p *ProvidedSplitOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (p *ProvidedSplitOutput) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetSplits sets the Splits field and marks it as non-optional;
@@ -30727,10 +32221,12 @@ func (p *ProvidedSplitOutputSplitsItem) GetExtraProperties() map[string]interfac
 }
 
 func (p *ProvidedSplitOutputSplitsItem) require(field *big.Int) {
-	if p.explicitFields == nil {
-		p.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if p.explicitFields != nil {
+		next.Set(p.explicitFields)
 	}
-	p.explicitFields.Or(p.explicitFields, field)
+	next.Or(next, field)
+	p.explicitFields = next
 }
 
 // SetClassificationID sets the ClassificationID field and marks it as non-optional;
@@ -30826,12 +32322,12 @@ func (r ReleaseType) Ptr() *ReleaseType {
 	return &r
 }
 
-// A next entry for `ROUTER` steps. Routes based on the first matching branch.
 var (
 	routerNextEntryFieldStep     = big.NewInt(1 << 0)
 	routerNextEntryFieldBranchID = big.NewInt(1 << 1)
 )
 
+// A next entry for `ROUTER` steps. Routes based on the first matching branch.
 type RouterNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -30867,10 +32363,12 @@ func (r *RouterNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RouterNextEntry) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -30929,13 +32427,13 @@ func (r *RouterNextEntry) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Evaluates branch predicates in order and routes through the first matching branch. Uses the `"otherwise"` route when no branch matches.
 var (
 	routerStepDefinitionFieldName   = big.NewInt(1 << 0)
 	routerStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	routerStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Evaluates branch predicates in order and routes through the first matching branch. Uses the `"otherwise"` route when no branch matches.
 type RouterStepDefinition struct {
 	// Unique name for this step.
 	Name string `json:"name" url:"name"`
@@ -30980,10 +32478,12 @@ func (r *RouterStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RouterStepDefinition) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -31049,11 +32549,11 @@ func (r *RouterStepDefinition) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Optional. Omit on update to preserve the step's existing branches.
 var (
 	routerStepDefinitionConfigFieldBranches = big.NewInt(1 << 0)
 )
 
+// Optional. Omit on update to preserve the step's existing branches.
 type RouterStepDefinitionConfig struct {
 	// Branch predicates in evaluation order.
 	Branches []*RouterStepDefinitionConfigBranchesItem `json:"branches" url:"branches"`
@@ -31080,10 +32580,12 @@ func (r *RouterStepDefinitionConfig) GetExtraProperties() map[string]interface{}
 }
 
 func (r *RouterStepDefinitionConfig) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetBranches sets the Branches field and marks it as non-optional;
@@ -31185,10 +32687,12 @@ func (r *RouterStepDefinitionConfigBranchesItem) GetExtraProperties() map[string
 }
 
 func (r *RouterStepDefinitionConfigBranchesItem) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -31254,14 +32758,14 @@ func (r *RouterStepDefinitionConfigBranchesItem) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A next entry for `RULE_VALIDATION` steps. Routes based on whether all validation rules passed.
-//
-// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 var (
 	ruleValidationNextEntryFieldStep   = big.NewInt(1 << 0)
 	ruleValidationNextEntryFieldResult = big.NewInt(1 << 1)
 )
 
+// A next entry for `RULE_VALIDATION` steps. Routes based on whether all validation rules passed.
+//
+// See the [Configuring Workflows via API guide](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows) for end-to-end examples.
 type RuleValidationNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -31297,10 +32801,12 @@ func (r *RuleValidationNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RuleValidationNextEntry) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -31382,15 +32888,15 @@ func (r RuleValidationNextEntryResult) Ptr() *RuleValidationNextEntryResult {
 	return &r
 }
 
-// Validates extraction outputs against formula-based rules. Routes to pass/fail next steps.
-//
-// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation).
 var (
 	ruleValidationStepDefinitionFieldName   = big.NewInt(1 << 0)
 	ruleValidationStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	ruleValidationStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Validates extraction outputs against formula-based rules. Routes to pass/fail next steps.
+//
+// See the [Rule Validation step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#rule-validation).
 type RuleValidationStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -31436,10 +32942,12 @@ func (r *RuleValidationStepDefinition) GetExtraProperties() map[string]interface
 }
 
 func (r *RuleValidationStepDefinition) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -31505,11 +33013,11 @@ func (r *RuleValidationStepDefinition) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 var (
 	ruleValidationStepDefinitionConfigFieldRules = big.NewInt(1 << 0)
 )
 
+// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 type RuleValidationStepDefinitionConfig struct {
 	// Validation rules for this step. Each rule defines a name and a boolean formula.
 	//
@@ -31538,10 +33046,12 @@ func (r *RuleValidationStepDefinitionConfig) GetExtraProperties() map[string]int
 }
 
 func (r *RuleValidationStepDefinitionConfig) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetRules sets the Rules field and marks it as non-optional;
@@ -31643,10 +33153,12 @@ func (r *RuleValidationStepDefinitionConfigRulesItem) GetExtraProperties() map[s
 }
 
 func (r *RuleValidationStepDefinitionConfigRulesItem) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -31770,6 +33282,12 @@ func (r RunSource) Ptr() *RunSource {
 // Example: `"workflow_run_123"`
 type RunSourceID = string
 
+var (
+	runUsageFieldCredits      = big.NewInt(1 << 0)
+	runUsageFieldTotalCredits = big.NewInt(1 << 1)
+	runUsageFieldBreakdown    = big.NewInt(1 << 2)
+)
+
 // Usage credits consumed by a run.
 //
 // **Availability:** This field will not be returned for:
@@ -31777,12 +33295,6 @@ type RunSourceID = string
 // * Customers on legacy billing systems
 //
 // For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
-var (
-	runUsageFieldCredits      = big.NewInt(1 << 0)
-	runUsageFieldTotalCredits = big.NewInt(1 << 1)
-	runUsageFieldBreakdown    = big.NewInt(1 << 2)
-)
-
 type RunUsage struct {
 	// The credits consumed by this run. For most run types this is the line item for the run's own work; for `workflow_run` this is the aggregate across all child runs.
 	Credits float64 `json:"credits" url:"credits"`
@@ -31831,10 +33343,12 @@ func (r *RunUsage) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunUsage) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetCredits sets the Credits field and marks it as non-optional;
@@ -31900,7 +33414,6 @@ func (r *RunUsage) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A single cost driver within a breakdown entry's credit total. The per-unit rate is `credits / quantity`. Certain charges, such as `agent_usage`, have a unit of `usd`
 var (
 	runUsageBreakdownChargeFieldProduct  = big.NewInt(1 << 0)
 	runUsageBreakdownChargeFieldUnit     = big.NewInt(1 << 1)
@@ -31909,6 +33422,7 @@ var (
 	runUsageBreakdownChargeFieldPages    = big.NewInt(1 << 4)
 )
 
+// A single cost driver within a breakdown entry's credit total. The per-unit rate is `credits / quantity`. Certain charges, such as `agent_usage`, have a unit of `usd`
 type RunUsageBreakdownCharge struct {
 	// Identifier for the billable cost driver. Base charges use the processor and tier (e.g. `extraction_performance`, `extraction_light`, `parse_light`); add-ons use the feature code (e.g. `review_agent`, `large_array_max_context`, `extraction_schema_groups`, `priority_parsing`, `agentic_text_correction`, `advanced_excel_parsing`); `agent_usage` is an Operator overage for unusually high effort relative to document size.
 	Product string `json:"product" url:"product"`
@@ -31971,10 +33485,12 @@ func (r *RunUsageBreakdownCharge) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunUsageBreakdownCharge) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetProduct sets the Product field and marks it as non-optional;
@@ -32080,7 +33596,6 @@ func (r RunUsageBreakdownChargeUnit) Ptr() *RunUsageBreakdownChargeUnit {
 	return &r
 }
 
-// One line item in a run's `usage.breakdown`. Each entry corresponds to a concrete chargeable resource that contributed credits to the parent operation. When `charges` is present, it itemizes the cost drivers behind this entry's `credits`.
 var (
 	runUsageBreakdownEntryFieldObject  = big.NewInt(1 << 0)
 	runUsageBreakdownEntryFieldID      = big.NewInt(1 << 1)
@@ -32088,6 +33603,7 @@ var (
 	runUsageBreakdownEntryFieldCharges = big.NewInt(1 << 3)
 )
 
+// One line item in a run's `usage.breakdown`. Each entry corresponds to a concrete chargeable resource that contributed credits to the parent operation. When `charges` is present, it itemizes the cost drivers behind this entry's `credits`.
 type RunUsageBreakdownEntry struct {
 	// The public object type of the contributing resource. Mirrors the top-level `object` field on the corresponding endpoint so callers can fetch the underlying resource by id if they want more detail.
 	Object RunUsageBreakdownEntryObject `json:"object" url:"object"`
@@ -32143,10 +33659,12 @@ func (r *RunUsageBreakdownEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunUsageBreakdownEntry) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetObject sets the Object field and marks it as non-optional;
@@ -32254,6 +33772,11 @@ func (r RunUsageBreakdownEntryObject) Ptr() *RunUsageBreakdownEntryObject {
 	return &r
 }
 
+var (
+	runUsageSummaryFieldCredits      = big.NewInt(1 << 0)
+	runUsageSummaryFieldTotalCredits = big.NewInt(1 << 1)
+)
+
 // Usage credits consumed by a run. Omits `breakdown` - fetch the full resource by id when you need the breakdown.
 //
 // **Availability:** This field will not be returned for:
@@ -32261,11 +33784,6 @@ func (r RunUsageBreakdownEntryObject) Ptr() *RunUsageBreakdownEntryObject {
 // * Customers on legacy billing systems
 //
 // For more details on how credits work, see our [Credits Guide](https://docs.extend.ai/general/how-credits-work).
-var (
-	runUsageSummaryFieldCredits      = big.NewInt(1 << 0)
-	runUsageSummaryFieldTotalCredits = big.NewInt(1 << 1)
-)
-
 type RunUsageSummary struct {
 	// The credits consumed by this run. For most run types this is the line item for the run's own work; for `workflow_run` this is the aggregate across all child runs.
 	Credits float64 `json:"credits" url:"credits"`
@@ -32303,10 +33821,12 @@ func (r *RunUsageSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (r *RunUsageSummary) require(field *big.Int) {
-	if r.explicitFields == nil {
-		r.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if r.explicitFields != nil {
+		next.Set(r.explicitFields)
 	}
-	r.explicitFields.Or(r.explicitFields, field)
+	next.Or(next, field)
+	r.explicitFields = next
 }
 
 // SetCredits sets the Credits field and marks it as non-optional;
@@ -32365,11 +33885,11 @@ func (r *RunUsageSummary) String() string {
 	return fmt.Sprintf("%#v", r)
 }
 
-// A next entry for non-branching steps. Routes to the target step unconditionally.
 var (
 	simpleNextEntryFieldStep = big.NewInt(1 << 0)
 )
 
+// A next entry for non-branching steps. Routes to the target step unconditionally.
 type SimpleNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -32396,10 +33916,12 @@ func (s *SimpleNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SimpleNextEntry) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -32587,10 +34109,12 @@ func (s *SplitAdvancedOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitAdvancedOptions) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplitIdentifierRules sets the SplitIdentifierRules field and marks it as non-optional;
@@ -32725,7 +34249,6 @@ func (s SplitBaseProcessor) Ptr() *SplitBaseProcessor {
 	return &s
 }
 
-// A classification for document splitting. Extends the base Classification with an optional `identifierKey` field for per-type identifier extraction rules.
 var (
 	splitClassificationFieldID            = big.NewInt(1 << 0)
 	splitClassificationFieldType          = big.NewInt(1 << 1)
@@ -32733,6 +34256,7 @@ var (
 	splitClassificationFieldIdentifierKey = big.NewInt(1 << 3)
 )
 
+// A classification for document splitting. Extends the base Classification with an optional `identifierKey` field for per-type identifier extraction rules.
 type SplitClassification struct {
 	// Unique identifier for the classification. We recommend lowercase, underscore-separated format.
 	ID string `json:"id" url:"id"`
@@ -32790,10 +34314,12 @@ func (s *SplitClassification) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitClassification) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -32947,10 +34473,12 @@ func (s *SplitConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitConfig) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -33075,10 +34603,12 @@ func (s *SplitOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitOutput) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplits sets the Splits field and marks it as non-optional;
@@ -33247,10 +34777,12 @@ func (s *SplitOutputSplitsItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitOutputSplitsItem) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetType sets the Type field and marks it as non-optional;
@@ -33358,8 +34890,6 @@ func (s *SplitOutputSplitsItem) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Partial configuration override for an existing splitter. All fields are optional — only the fields you provide will override the splitter's saved configuration.
-// For example, you can pass only `splitRules` without providing `splitClassifications`.
 var (
 	splitOverrideConfigFieldBaseProcessor        = big.NewInt(1 << 0)
 	splitOverrideConfigFieldBaseVersion          = big.NewInt(1 << 1)
@@ -33369,6 +34899,8 @@ var (
 	splitOverrideConfigFieldParseConfig          = big.NewInt(1 << 5)
 )
 
+// Partial configuration override for an existing splitter. All fields are optional — only the fields you provide will override the splitter's saved configuration.
+// For example, you can pass only `splitRules` without providing `splitClassifications`.
 type SplitOverrideConfig struct {
 	BaseProcessor *SplitBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
 	// The version of the `"splitting_performance"` or `"splitting_light"` processor to use. If not provided, the latest stable version for the selected `baseProcessor` will be used automatically. See [Splitting Changelog](https://docs.extend.ai/2026-02-09/model-versioning/splitting/splitting-performance) for more details.
@@ -33438,10 +34970,12 @@ func (s *SplitOverrideConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitOverrideConfig) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -33551,6 +35085,38 @@ func (s *SplitRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (s *SplitRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			s.typ = "FileFromURL"
+			s.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			s.typ = "FileFromID"
+			s.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		s.typ = "FileFromURL"
@@ -33591,13 +35157,13 @@ func (s *SplitRequestFile) Accept(visitor SplitRequestFileVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", s)
 }
 
-// Reference to an existing splitter. One of `splitter` or `config` must be provided.
 var (
 	splitRequestSplitterFieldID             = big.NewInt(1 << 0)
 	splitRequestSplitterFieldVersion        = big.NewInt(1 << 1)
 	splitRequestSplitterFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing splitter. One of `splitter` or `config` must be provided.
 type SplitRequestSplitter struct {
 	// The ID of the splitter to use.
 	ID      string                  `json:"id" url:"id"`
@@ -33641,10 +35207,12 @@ func (s *SplitRequestSplitter) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitRequestSplitter) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -33710,7 +35278,6 @@ func (s *SplitRequestSplitter) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Split run object.
 var (
 	splitRunFieldID              = big.NewInt(1 << 0)
 	splitRunFieldStatus          = big.NewInt(1 << 1)
@@ -33733,6 +35300,22 @@ var (
 	splitRunFieldUpdatedAt       = big.NewInt(1 << 18)
 )
 
+// splitRunNullableFields maps the wire names of SplitRun's nullable fields (required or optional) to their field bits.
+var splitRunNullableFields = map[string]*big.Int{
+	"output":          splitRunFieldOutput,
+	"splitter":        splitRunFieldSplitter,
+	"splitterVersion": splitRunFieldSplitterVersion,
+	"initialOutput":   splitRunFieldInitialOutput,
+	"reviewedOutput":  splitRunFieldReviewedOutput,
+	"failureReason":   splitRunFieldFailureReason,
+	"failureMessage":  splitRunFieldFailureMessage,
+	"metadata":        splitRunFieldMetadata,
+	"file":            splitRunFieldFile,
+	"parseRunId":      splitRunFieldParseRunID,
+	"usage":           splitRunFieldUsage,
+}
+
+// Split run object.
 type SplitRun struct {
 	// The unique identifier for this split run.
 	//
@@ -33958,10 +35541,12 @@ func (s *SplitRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitRun) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -34122,6 +35707,13 @@ func (s *SplitRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, splitRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		s.require(presentFields)
+	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -34197,10 +35789,12 @@ func (s *SplitRunFailedWebhookEvent) GetExtraProperties() map[string]interface{}
 }
 
 func (s *SplitRunFailedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -34298,10 +35892,12 @@ func (s *SplitRunProcessedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (s *SplitRunProcessedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -34360,6 +35956,12 @@ func (s *SplitRunProcessedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
+var (
+	splitStepDefinitionFieldName   = big.NewInt(1 << 0)
+	splitStepDefinitionFieldConfig = big.NewInt(1 << 1)
+	splitStepDefinitionFieldNext   = big.NewInt(1 << 2)
+)
+
 // Splits a multi-document file into individual documents using a splitter. Routes to different next steps based on split type.
 //
 // The step's splitter can be specified in one of two ways:
@@ -34368,12 +35970,6 @@ func (s *SplitRunProcessedWebhookEvent) String() string {
 // - **Inline config** (`splitterConfig`): embeds the full splitter configuration directly in the step. No saved splitter is needed, so the workflow definition contains no workspace-specific processor IDs and is portable across workspaces. Routing (`next[].classificationId`) validates against the inline `splitClassifications` array.
 //
 // See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
-var (
-	splitStepDefinitionFieldName   = big.NewInt(1 << 0)
-	splitStepDefinitionFieldConfig = big.NewInt(1 << 1)
-	splitStepDefinitionFieldNext   = big.NewInt(1 << 2)
-)
-
 type SplitStepDefinition struct {
 	Name string `json:"name" url:"name"`
 	// Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
@@ -34425,10 +36021,12 @@ func (s *SplitStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitStepDefinition) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -34494,6 +36092,11 @@ func (s *SplitStepDefinition) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
+var (
+	splitStepDefinitionConfigFieldSplitter       = big.NewInt(1 << 0)
+	splitStepDefinitionConfigFieldSplitterConfig = big.NewInt(1 << 1)
+)
+
 // Optional on create/update. Required before the workflow can be deployed. Omitted in responses when the step is not yet configured.
 //
 // When present, must contain exactly one of `splitter` (saved processor reference) or `splitterConfig` (inline configuration) — not both.
@@ -34501,11 +36104,6 @@ func (s *SplitStepDefinition) String() string {
 // The `next[].classificationId` values must match split classification `id` values (not `type` strings) from the splitter's configuration — the referenced version's config for a saved reference, or the inline `splitClassifications` array for an inline config. For example, if the splitter defines `{ "id": "cls_receipt", "type": "receipt" }`, use `"cls_receipt"` as the `classificationId`.
 //
 // See the [Split step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#split).
-var (
-	splitStepDefinitionConfigFieldSplitter       = big.NewInt(1 << 0)
-	splitStepDefinitionConfigFieldSplitterConfig = big.NewInt(1 << 1)
-)
-
 type SplitStepDefinitionConfig struct {
 	// Reference to a saved splitter. Provide either this or `splitterConfig`, not both.
 	//
@@ -34545,10 +36143,12 @@ func (s *SplitStepDefinitionConfig) GetExtraProperties() map[string]interface{} 
 }
 
 func (s *SplitStepDefinitionConfig) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetSplitter sets the Splitter field and marks it as non-optional;
@@ -34646,10 +36246,12 @@ func (s *SplitterCreatedWebhookEvent) GetExtraProperties() map[string]interface{
 }
 
 func (s *SplitterCreatedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -34747,10 +36349,12 @@ func (s *SplitterDeletedWebhookEvent) GetExtraProperties() map[string]interface{
 }
 
 func (s *SplitterDeletedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -34848,10 +36452,12 @@ func (s *SplitterDraftUpdatedWebhookEvent) GetExtraProperties() map[string]inter
 }
 
 func (s *SplitterDraftUpdatedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -34910,12 +36516,12 @@ func (s *SplitterDraftUpdatedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// A reference to a splitter.
 var (
 	splitterRefFieldID      = big.NewInt(1 << 0)
 	splitterRefFieldVersion = big.NewInt(1 << 1)
 )
 
+// A reference to a splitter.
 type SplitterRef struct {
 	// The splitter ID.
 	ID string `json:"id" url:"id"`
@@ -34951,10 +36557,12 @@ func (s *SplitterRef) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitterRef) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -35080,10 +36688,12 @@ func (s *SplitterSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitterSummary) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -35214,10 +36824,12 @@ func (s *SplitterUpdatedWebhookEvent) GetExtraProperties() map[string]interface{
 }
 
 func (s *SplitterUpdatedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -35285,6 +36897,12 @@ var (
 	splitterVersionFieldCreatedAt   = big.NewInt(1 << 5)
 	splitterVersionFieldCreatedBy   = big.NewInt(1 << 6)
 )
+
+// splitterVersionNullableFields maps the wire names of SplitterVersion's nullable fields (required or optional) to their field bits.
+var splitterVersionNullableFields = map[string]*big.Int{
+	"description": splitterVersionFieldDescription,
+	"createdBy":   splitterVersionFieldCreatedBy,
+}
 
 type SplitterVersion struct {
 	// The unique identifier for this version of the splitter.
@@ -35377,10 +36995,12 @@ func (s *SplitterVersion) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitterVersion) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -35455,6 +37075,13 @@ func (s *SplitterVersion) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, splitterVersionNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		s.require(presentFields)
+	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -35528,10 +37155,12 @@ func (s *SplitterVersionPublishedWebhookEvent) GetExtraProperties() map[string]i
 }
 
 func (s *SplitterVersionPublishedWebhookEvent) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -35598,6 +37227,12 @@ var (
 	splitterVersionSummaryFieldCreatedAt   = big.NewInt(1 << 4)
 	splitterVersionSummaryFieldCreatedBy   = big.NewInt(1 << 5)
 )
+
+// splitterVersionSummaryNullableFields maps the wire names of SplitterVersionSummary's nullable fields (required or optional) to their field bits.
+var splitterVersionSummaryNullableFields = map[string]*big.Int{
+	"description": splitterVersionSummaryFieldDescription,
+	"createdBy":   splitterVersionSummaryFieldCreatedBy,
+}
 
 type SplitterVersionSummary struct {
 	// The unique identifier for this version of the splitter.
@@ -35681,10 +37316,12 @@ func (s *SplitterVersionSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (s *SplitterVersionSummary) require(field *big.Int) {
-	if s.explicitFields == nil {
-		s.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if s.explicitFields != nil {
+		next.Set(s.explicitFields)
 	}
-	s.explicitFields.Or(s.explicitFields, field)
+	next.Or(next, field)
+	s.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -35752,6 +37389,13 @@ func (s *SplitterVersionSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	s.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, splitterVersionSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		s.require(presentFields)
+	}
 	s.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -35786,7 +37430,6 @@ func (s *SplitterVersionSummary) String() string {
 	return fmt.Sprintf("%#v", s)
 }
 
-// Details for table cell blocks
 var (
 	tableCellDetailsFieldRowIndex      = big.NewInt(1 << 0)
 	tableCellDetailsFieldColumnIndex   = big.NewInt(1 << 1)
@@ -35795,6 +37438,7 @@ var (
 	tableCellDetailsFieldFormatting    = big.NewInt(1 << 4)
 )
 
+// Details for table cell blocks
 type TableCellDetails struct {
 	RowIndex    int `json:"rowIndex" url:"rowIndex"`
 	ColumnIndex int `json:"columnIndex" url:"columnIndex"`
@@ -35860,10 +37504,12 @@ func (t *TableCellDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (t *TableCellDetails) require(field *big.Int) {
-	if t.explicitFields == nil {
-		t.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if t.explicitFields != nil {
+		next.Set(t.explicitFields)
 	}
-	t.explicitFields.Or(t.explicitFields, field)
+	next.Or(next, field)
+	t.explicitFields = next
 }
 
 // SetRowIndex sets the RowIndex field and marks it as non-optional;
@@ -35954,12 +37600,12 @@ func (t *TableCellDetails) String() string {
 	return fmt.Sprintf("%#v", t)
 }
 
-// Details for table blocks
 var (
 	tableDetailsFieldRowCount    = big.NewInt(1 << 0)
 	tableDetailsFieldColumnCount = big.NewInt(1 << 1)
 )
 
+// Details for table blocks
 type TableDetails struct {
 	// The number of rows in the table
 	RowCount int `json:"rowCount" url:"rowCount"`
@@ -36000,10 +37646,12 @@ func (t *TableDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (t *TableDetails) require(field *big.Int) {
-	if t.explicitFields == nil {
-		t.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if t.explicitFields != nil {
+		next.Set(t.explicitFields)
 	}
-	t.explicitFields.Or(t.explicitFields, field)
+	next.Or(next, field)
+	t.explicitFields = next
 }
 
 // SetRowCount sets the RowCount field and marks it as non-optional;
@@ -36073,11 +37721,11 @@ func (t *TableDetails) String() string {
 	return fmt.Sprintf("%#v", t)
 }
 
-// Details for text and heading blocks
 var (
 	textDetailsFieldCellReference = big.NewInt(1 << 0)
 )
 
+// Details for text and heading blocks
 type TextDetails struct {
 	// Source spreadsheet cell or range in A1 notation for Excel-derived text or heading blocks. Only set when `advancedOptions.excelIncludeCellMetadata` is enabled.
 	CellReference *string `json:"cellReference,omitempty" url:"cellReference,omitempty"`
@@ -36109,10 +37757,12 @@ func (t *TextDetails) GetExtraProperties() map[string]interface{} {
 }
 
 func (t *TextDetails) require(field *big.Int) {
-	if t.explicitFields == nil {
-		t.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if t.explicitFields != nil {
+		next.Set(t.explicitFields)
 	}
-	t.explicitFields.Or(t.explicitFields, field)
+	next.Or(next, field)
+	t.explicitFields = next
 }
 
 // SetCellReference sets the CellReference field and marks it as non-optional;
@@ -36204,10 +37854,12 @@ func (t *TooManyRequestsErrorBody) GetExtraProperties() map[string]interface{} {
 }
 
 func (t *TooManyRequestsErrorBody) require(field *big.Int) {
-	if t.explicitFields == nil {
-		t.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if t.explicitFields != nil {
+		next.Set(t.explicitFields)
 	}
-	t.explicitFields.Or(t.explicitFields, field)
+	next.Or(next, field)
+	t.explicitFields = next
 }
 
 // SetError sets the Error field and marks it as non-optional;
@@ -36259,14 +37911,14 @@ func (t *TooManyRequestsErrorBody) String() string {
 	return fmt.Sprintf("%#v", t)
 }
 
-// The entry point of the workflow. Every workflow must have exactly one trigger step, and it must route to exactly one `PARSE` step.
-//
-// See the [Trigger step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#trigger).
 var (
 	triggerStepDefinitionFieldName = big.NewInt(1 << 0)
 	triggerStepDefinitionFieldNext = big.NewInt(1 << 1)
 )
 
+// The entry point of the workflow. Every workflow must have exactly one trigger step, and it must route to exactly one `PARSE` step.
+//
+// See the [Trigger step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#trigger).
 type TriggerStepDefinition struct {
 	// Unique name for this step.
 	Name string `json:"name" url:"name"`
@@ -36302,10 +37954,12 @@ func (t *TriggerStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (t *TriggerStepDefinition) require(field *big.Int) {
-	if t.explicitFields == nil {
-		t.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if t.explicitFields != nil {
+		next.Set(t.explicitFields)
 	}
-	t.explicitFields.Or(t.explicitFields, field)
+	next.Or(next, field)
+	t.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -36496,13 +38150,13 @@ func (v *ValidationBlockInput) validate() error {
 	return nil
 }
 
-// A validation block that evaluates code against the workflow context.
 var (
 	validationCodeBlockInputFieldID   = big.NewInt(1 << 0)
 	validationCodeBlockInputFieldName = big.NewInt(1 << 1)
 	validationCodeBlockInputFieldCode = big.NewInt(1 << 2)
 )
 
+// A validation block that evaluates code against the workflow context.
 type ValidationCodeBlockInput struct {
 	// The block ID. Generated when omitted.
 	ID *string `json:"id,omitempty" url:"id,omitempty"`
@@ -36546,10 +38200,12 @@ func (v *ValidationCodeBlockInput) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *ValidationCodeBlockInput) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -36655,10 +38311,12 @@ func (v *ValidationCodeBlockInputCode) GetExtraProperties() map[string]interface
 }
 
 func (v *ValidationCodeBlockInputCode) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLanguage sets the Language field and marks it as non-optional;
@@ -36740,12 +38398,12 @@ func (v ValidationCodeBlockInputCodeLanguage) Ptr() *ValidationCodeBlockInputCod
 	return &v
 }
 
-// A next entry for `VALIDATION` steps. Routes based on whether all validation blocks passed.
 var (
 	validationNextEntryFieldStep   = big.NewInt(1 << 0)
 	validationNextEntryFieldResult = big.NewInt(1 << 1)
 )
 
+// A next entry for `VALIDATION` steps. Routes based on whether all validation blocks passed.
 type ValidationNextEntry struct {
 	// The name of the target step.
 	Step string `json:"step" url:"step"`
@@ -36781,10 +38439,12 @@ func (v *ValidationNextEntry) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *ValidationNextEntry) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetStep sets the Step field and marks it as non-optional;
@@ -36866,13 +38526,13 @@ func (v ValidationNextEntryResult) Ptr() *ValidationNextEntryResult {
 	return &v
 }
 
-// A validation block that evaluates natural-language instructions against the workflow context.
 var (
 	validationSemanticBlockInputFieldID       = big.NewInt(1 << 0)
 	validationSemanticBlockInputFieldName     = big.NewInt(1 << 1)
 	validationSemanticBlockInputFieldSemantic = big.NewInt(1 << 2)
 )
 
+// A validation block that evaluates natural-language instructions against the workflow context.
 type ValidationSemanticBlockInput struct {
 	// The block ID. Generated when omitted.
 	ID *string `json:"id,omitempty" url:"id,omitempty"`
@@ -36916,10 +38576,12 @@ func (v *ValidationSemanticBlockInput) GetExtraProperties() map[string]interface
 }
 
 func (v *ValidationSemanticBlockInput) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -37015,10 +38677,12 @@ func (v *ValidationSemanticBlockInputSemantic) GetExtraProperties() map[string]i
 }
 
 func (v *ValidationSemanticBlockInputSemantic) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetPromptText sets the PromptText field and marks it as non-optional;
@@ -37070,13 +38734,13 @@ func (v *ValidationSemanticBlockInputSemantic) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Evaluates code and semantic validation blocks and routes to pass or fail next steps.
 var (
 	validationStepDefinitionFieldName   = big.NewInt(1 << 0)
 	validationStepDefinitionFieldConfig = big.NewInt(1 << 1)
 	validationStepDefinitionFieldNext   = big.NewInt(1 << 2)
 )
 
+// Evaluates code and semantic validation blocks and routes to pass or fail next steps.
 type ValidationStepDefinition struct {
 	// Unique name for this step.
 	Name string `json:"name" url:"name"`
@@ -37121,10 +38785,12 @@ func (v *ValidationStepDefinition) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *ValidationStepDefinition) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -37190,11 +38856,11 @@ func (v *ValidationStepDefinition) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Optional. Omit on update to preserve the step's existing validation blocks. Omitted in responses when no blocks are configured.
 var (
 	validationStepDefinitionConfigFieldBlocks = big.NewInt(1 << 0)
 )
 
+// Optional. Omit on update to preserve the step's existing validation blocks. Omitted in responses when no blocks are configured.
 type ValidationStepDefinitionConfig struct {
 	// Validation blocks for this step. All blocks must pass for the step to be valid.
 	Blocks []*ValidationBlockInput `json:"blocks" url:"blocks"`
@@ -37221,10 +38887,12 @@ func (v *ValidationStepDefinitionConfig) GetExtraProperties() map[string]interfa
 }
 
 func (v *ValidationStepDefinitionConfig) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetBlocks sets the Blocks field and marks it as non-optional;
@@ -37276,11 +38944,11 @@ func (v *ValidationStepDefinitionConfig) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Advanced options for a verify run. Every field is optional. Unknown keys are rejected with `400`.
 var (
 	verifyAdvancedOptionsFieldRequireParsing = big.NewInt(1 << 0)
 )
 
+// Advanced options for a verify run. Every field is optional. Unknown keys are rejected with `400`.
 type VerifyAdvancedOptions struct {
 	// If `true`, this forces the verify run to parse the document if it has not already been parsed in Extend. This is for checks that require OCR, like detecting mismatches with the text layer. `verify_agentic` requires this to be `true`, and rejects `false` with `400`. `verify_standard` parses only when this is `true`. Defaults to `false` for `verify_standard` to reduce latency. In both cases, if the file has already been parsed in Extend with Verify's default parse settings and you reuse the `fileId` without zero data retention (ZDR), then the parsed results will be used here.
 	RequireParsing *bool `json:"requireParsing,omitempty" url:"requireParsing,omitempty"`
@@ -37307,10 +38975,12 @@ func (v *VerifyAdvancedOptions) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyAdvancedOptions) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetRequireParsing sets the RequireParsing field and marks it as non-optional;
@@ -37362,13 +39032,13 @@ func (v *VerifyAdvancedOptions) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Configuration for a verify run. Every field is optional on a request, and unknown keys are rejected with `400`. Runs echo the resolved configuration, with defaults applied, in `config`.
 var (
 	verifyConfigFieldEngine          = big.NewInt(1 << 0)
 	verifyConfigFieldEngineVersion   = big.NewInt(1 << 1)
 	verifyConfigFieldAdvancedOptions = big.NewInt(1 << 2)
 )
 
+// Configuration for a verify run. Every field is optional on a request, and unknown keys are rejected with `400`. Runs echo the resolved configuration, with defaults applied, in `config`.
 type VerifyConfig struct {
 	// The verification engine to use. Defaults to `"verify_agentic"`.
 	Engine *VerifyEngine `json:"engine,omitempty" url:"engine,omitempty"`
@@ -37412,10 +39082,12 @@ func (v *VerifyConfig) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyConfig) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEngine sets the Engine field and marks it as non-optional;
@@ -37731,7 +39403,6 @@ func (v *VerifyEvidence) validate() error {
 	return nil
 }
 
-// A rectangle on the page, defined by its edges and measured from the page's top-left corner, in the same units as the page's `width` and `height`.
 var (
 	verifyEvidenceBoundingBoxFieldLeft   = big.NewInt(1 << 0)
 	verifyEvidenceBoundingBoxFieldTop    = big.NewInt(1 << 1)
@@ -37739,6 +39410,7 @@ var (
 	verifyEvidenceBoundingBoxFieldBottom = big.NewInt(1 << 3)
 )
 
+// A rectangle on the page, defined by its edges and measured from the page's top-left corner, in the same units as the page's `width` and `height`.
 type VerifyEvidenceBoundingBox struct {
 	Left   float64 `json:"left" url:"left"`
 	Top    float64 `json:"top" url:"top"`
@@ -37788,10 +39460,12 @@ func (v *VerifyEvidenceBoundingBox) GetExtraProperties() map[string]interface{} 
 }
 
 func (v *VerifyEvidenceBoundingBox) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLeft sets the Left field and marks it as non-optional;
@@ -37864,12 +39538,12 @@ func (v *VerifyEvidenceBoundingBox) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// A range of bytes measured from the beginning of the submitted file.
 var (
 	verifyEvidenceByteRangeFieldOffset = big.NewInt(1 << 0)
 	verifyEvidenceByteRangeFieldLength = big.NewInt(1 << 1)
 )
 
+// A range of bytes measured from the beginning of the submitted file.
 type VerifyEvidenceByteRange struct {
 	Offset int `json:"offset" url:"offset"`
 	Length int `json:"length" url:"length"`
@@ -37903,10 +39577,12 @@ func (v *VerifyEvidenceByteRange) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyEvidenceByteRange) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetOffset sets the Offset field and marks it as non-optional;
@@ -37965,7 +39641,6 @@ func (v *VerifyEvidenceByteRange) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Where in the submitted document a piece of evidence was found. Every location carries at least one resolved locator (`page`, `boundingBox`, `objectRefs`, or `byteRange`); unresolved locators are omitted rather than guessed. A `boundingBox` is always accompanied by a `page` with its `width` and `height`.
 var (
 	verifyEvidenceLocationFieldLocationID  = big.NewInt(1 << 0)
 	verifyEvidenceLocationFieldPage        = big.NewInt(1 << 1)
@@ -37974,6 +39649,7 @@ var (
 	verifyEvidenceLocationFieldByteRange   = big.NewInt(1 << 4)
 )
 
+// Where in the submitted document a piece of evidence was found. Every location carries at least one resolved locator (`page`, `boundingBox`, `objectRefs`, or `byteRange`); unresolved locators are omitted rather than guessed. A `boundingBox` is always accompanied by a `page` with its `width` and `height`.
 type VerifyEvidenceLocation struct {
 	// Identifier referenced by `locationIds` fields inside the evidence `data`.
 	LocationID  string                     `json:"locationId" url:"locationId"`
@@ -38033,10 +39709,12 @@ func (v *VerifyEvidenceLocation) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyEvidenceLocation) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLocationID sets the LocationID field and marks it as non-optional;
@@ -38116,13 +39794,13 @@ func (v *VerifyEvidenceLocation) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// The page a location is on. Matches the `page` shape used elsewhere in the API: `number` starts at 1, and `width` and `height` give the page's dimensions (PDF points for PDF pages, pixels for image submissions).
 var (
 	verifyEvidencePageFieldNumber = big.NewInt(1 << 0)
 	verifyEvidencePageFieldWidth  = big.NewInt(1 << 1)
 	verifyEvidencePageFieldHeight = big.NewInt(1 << 2)
 )
 
+// The page a location is on. Matches the `page` shape used elsewhere in the API: `number` starts at 1, and `width` and `height` give the page's dimensions (PDF points for PDF pages, pixels for image submissions).
 type VerifyEvidencePage struct {
 	// The page number. Starts at 1.
 	Number int `json:"number" url:"number"`
@@ -38167,10 +39845,12 @@ func (v *VerifyEvidencePage) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyEvidencePage) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetNumber sets the Number field and marks it as non-optional;
@@ -38236,13 +39916,13 @@ func (v *VerifyEvidencePage) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// What happened to the document, in order. Each save, signature, and change is an event; array order is event order.
 var (
 	verifyHistoryEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyHistoryEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyHistoryEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// What happened to the document, in order. Each save, signature, and change is an event; array order is event order.
 type VerifyHistoryEvidence struct {
 	EvidenceID string                     `json:"evidenceId" url:"evidenceId"`
 	Data       *VerifyHistoryEvidenceData `json:"data" url:"data"`
@@ -38284,10 +39964,12 @@ func (v *VerifyHistoryEvidence) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyHistoryEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -38382,10 +40064,12 @@ func (v *VerifyHistoryEvidenceData) GetExtraProperties() map[string]interface{} 
 }
 
 func (v *VerifyHistoryEvidenceData) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvents sets the Events field and marks it as non-optional;
@@ -38505,10 +40189,12 @@ func (v *VerifyHistoryEvidenceDataEventsItem) GetExtraProperties() map[string]in
 }
 
 func (v *VerifyHistoryEvidenceDataEventsItem) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -38588,13 +40274,13 @@ func (v *VerifyHistoryEvidenceDataEventsItem) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// A count of one kind of item found in the document, with the items listed where they could be read.
 var (
 	verifyInventoryEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyInventoryEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyInventoryEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// A count of one kind of item found in the document, with the items listed where they could be read.
 type VerifyInventoryEvidence struct {
 	EvidenceID string                       `json:"evidenceId" url:"evidenceId"`
 	Data       *VerifyInventoryEvidenceData `json:"data" url:"data"`
@@ -38636,10 +40322,12 @@ func (v *VerifyInventoryEvidence) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyInventoryEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -38754,10 +40442,12 @@ func (v *VerifyInventoryEvidenceData) GetExtraProperties() map[string]interface{
 }
 
 func (v *VerifyInventoryEvidenceData) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -38861,10 +40551,12 @@ func (v *VerifyInventoryEvidenceDataItemsItem) GetExtraProperties() map[string]i
 }
 
 func (v *VerifyInventoryEvidenceDataItemsItem) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLocationIDs sets the LocationIDs field and marks it as non-optional;
@@ -38923,13 +40615,13 @@ func (v *VerifyInventoryEvidenceDataItemsItem) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// A detection model supports this signal. `locations` identify the regions that produced the prediction. Model identity, version, score, and thresholds remain internal, so `data` is empty.
 var (
 	verifyModelPredictionEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyModelPredictionEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyModelPredictionEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// A detection model supports this signal. `locations` identify the regions that produced the prediction. Model identity, version, score, and thresholds remain internal, so `data` is empty.
 type VerifyModelPredictionEvidence struct {
 	EvidenceID string `json:"evidenceId" url:"evidenceId"`
 	// Always an empty object in the current release.
@@ -38972,10 +40664,12 @@ func (v *VerifyModelPredictionEvidence) GetExtraProperties() map[string]interfac
 }
 
 func (v *VerifyModelPredictionEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -39041,7 +40735,6 @@ func (v *VerifyModelPredictionEvidence) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// A value read from the document, with an optional raw form, normalized form, and the locations it was read from. It operates as a non-strongly-typed key-value pair for rendering and evaluating findings.
 var (
 	verifyNamedValueFieldName        = big.NewInt(1 << 0)
 	verifyNamedValueFieldRaw         = big.NewInt(1 << 1)
@@ -39049,6 +40742,7 @@ var (
 	verifyNamedValueFieldLocationIDs = big.NewInt(1 << 3)
 )
 
+// A value read from the document, with an optional raw form, normalized form, and the locations it was read from. It operates as a non-strongly-typed key-value pair for rendering and evaluating findings.
 type VerifyNamedValue struct {
 	Name string `json:"name" url:"name"`
 	// The value exactly as it appears in the file.
@@ -39100,10 +40794,12 @@ func (v *VerifyNamedValue) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyNamedValue) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -39176,13 +40872,13 @@ func (v *VerifyNamedValue) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// The result of a processed verify run. `signals` contains detected Public Signals only. An empty `signals` array means no Public Signals were detected; it does not mean that every check ran or that the document is authentic.
 var (
 	verifyOutputFieldRiskLevel = big.NewInt(1 << 0)
 	verifyOutputFieldSummary   = big.NewInt(1 << 1)
 	verifyOutputFieldSignals   = big.NewInt(1 << 2)
 )
 
+// The result of a processed verify run. `signals` contains detected Public Signals only. An empty `signals` array means no Public Signals were detected; it does not mean that every check ran or that the document is authentic.
 type VerifyOutput struct {
 	// The document-level risk: the highest `riskAssessment` among the detected signals, or `"LOW"` when nothing was detected.
 	RiskLevel VerifyRiskLevel `json:"riskLevel" url:"riskLevel"`
@@ -39226,10 +40922,12 @@ func (v *VerifyOutput) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyOutput) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetRiskLevel sets the RiskLevel field and marks it as non-optional;
@@ -39318,6 +41016,38 @@ func (v *VerifyRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (v *VerifyRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			v.typ = "FileFromURL"
+			v.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			v.typ = "FileFromID"
+			v.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			v.typ = "FileFromURL"
+			v.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			v.typ = "FileFromID"
+			v.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		v.typ = "FileFromURL"
@@ -39358,11 +41088,11 @@ func (v *VerifyRequestFile) Accept(visitor VerifyRequestFileVisitor) error {
 	return fmt.Errorf("type %T does not include a non-empty union type", v)
 }
 
-// The risk attributed to one detected signal, distinct from the document-level `riskLevel`.
 var (
 	verifyRiskAssessmentFieldLevel = big.NewInt(1 << 0)
 )
 
+// The risk attributed to one detected signal, distinct from the document-level `riskLevel`.
 type VerifyRiskAssessment struct {
 	Level VerifyRiskLevel `json:"level" url:"level"`
 
@@ -39393,10 +41123,12 @@ func (v *VerifyRiskAssessment) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRiskAssessment) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetLevel sets the Level field and marks it as non-optional;
@@ -39485,7 +41217,6 @@ func (v VerifyRiskLevel) Ptr() *VerifyRiskLevel {
 	return &v
 }
 
-// A run that checks a single document for evidence of tampering, forgery, or AI generation.
 var (
 	verifyRunFieldID             = big.NewInt(1 << 0)
 	verifyRunFieldFile           = big.NewInt(1 << 1)
@@ -39503,6 +41234,18 @@ var (
 	verifyRunFieldUpdatedAt      = big.NewInt(1 << 13)
 )
 
+// verifyRunNullableFields maps the wire names of VerifyRun's nullable fields (required or optional) to their field bits.
+var verifyRunNullableFields = map[string]*big.Int{
+	"output":         verifyRunFieldOutput,
+	"failureReason":  verifyRunFieldFailureReason,
+	"failureMessage": verifyRunFieldFailureMessage,
+	"metadata":       verifyRunFieldMetadata,
+	"metrics":        verifyRunFieldMetrics,
+	"usage":          verifyRunFieldUsage,
+	"sourceId":       verifyRunFieldSourceID,
+}
+
+// A run that checks a single document for evidence of tampering, forgery, or AI generation.
 type VerifyRun struct {
 	// A unique identifier for the verify run.
 	//
@@ -39669,10 +41412,12 @@ func (v *VerifyRun) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRun) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -39798,6 +41543,13 @@ func (v *VerifyRun) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, verifyRunNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		v.require(presentFields)
+	}
 	v.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -39834,12 +41586,17 @@ func (v *VerifyRun) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Metrics about the verification process.
 var (
 	verifyRunMetricsFieldProcessingTimeMs = big.NewInt(1 << 0)
 	verifyRunMetricsFieldPageCount        = big.NewInt(1 << 1)
 )
 
+// verifyRunMetricsNullableFields maps the wire names of VerifyRunMetrics's nullable fields (required or optional) to their field bits.
+var verifyRunMetricsNullableFields = map[string]*big.Int{
+	"pageCount": verifyRunMetricsFieldPageCount,
+}
+
+// Metrics about the verification process.
 type VerifyRunMetrics struct {
 	// Total processing time in milliseconds.
 	ProcessingTimeMs float64 `json:"processingTimeMs" url:"processingTimeMs"`
@@ -39875,10 +41632,12 @@ func (v *VerifyRunMetrics) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyRunMetrics) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetProcessingTimeMs sets the ProcessingTimeMs field and marks it as non-optional;
@@ -39907,6 +41666,13 @@ func (v *VerifyRunMetrics) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, verifyRunMetricsNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		v.require(presentFields)
+	}
 	v.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -39993,7 +41759,6 @@ func (v VerifyRunStatus) Ptr() *VerifyRunStatus {
 	return &v
 }
 
-// One detected Public Signal. When several internal checks detect issues in the same category, they are combined into a single signal with one summary and the relevant evidence from each.
 var (
 	verifySignalFieldID             = big.NewInt(1 << 0)
 	verifySignalFieldType           = big.NewInt(1 << 1)
@@ -40002,6 +41767,7 @@ var (
 	verifySignalFieldEvidence       = big.NewInt(1 << 4)
 )
 
+// One detected Public Signal. When several internal checks detect issues in the same category, they are combined into a single signal with one summary and the relevant evidence from each.
 type VerifySignal struct {
 	// A stable identifier for this detected signal.
 	//
@@ -40063,10 +41829,12 @@ func (v *VerifySignal) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifySignal) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -40222,13 +41990,13 @@ func (v VerifySignalType) Ptr() *VerifySignalType {
 	return &v
 }
 
-// A recognised arrangement of objects in the file, such as one drawn over another, with the part each component plays.
 var (
 	verifyStructuralPatternEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyStructuralPatternEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyStructuralPatternEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// A recognised arrangement of objects in the file, such as one drawn over another, with the part each component plays.
 type VerifyStructuralPatternEvidence struct {
 	EvidenceID string                               `json:"evidenceId" url:"evidenceId"`
 	Data       *VerifyStructuralPatternEvidenceData `json:"data" url:"data"`
@@ -40270,10 +42038,12 @@ func (v *VerifyStructuralPatternEvidence) GetExtraProperties() map[string]interf
 }
 
 func (v *VerifyStructuralPatternEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -40378,10 +42148,12 @@ func (v *VerifyStructuralPatternEvidenceData) GetExtraProperties() map[string]in
 }
 
 func (v *VerifyStructuralPatternEvidenceData) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -40488,10 +42260,12 @@ func (v *VerifyStructuralPatternEvidenceDataComponentsItem) GetExtraProperties()
 }
 
 func (v *VerifyStructuralPatternEvidenceDataComponentsItem) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetRole sets the Role field and marks it as non-optional;
@@ -40557,13 +42331,13 @@ func (v *VerifyStructuralPatternEvidenceDataComponentsItem) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// A rule the document was checked against and failed. Only material failures are returned; passing checks stay internal.
 var (
 	verifyValidationEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyValidationEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyValidationEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// A rule the document was checked against and failed. Only material failures are returned; passing checks stay internal.
 type VerifyValidationEvidence struct {
 	EvidenceID string                        `json:"evidenceId" url:"evidenceId"`
 	Data       *VerifyValidationEvidenceData `json:"data" url:"data"`
@@ -40605,10 +42379,12 @@ func (v *VerifyValidationEvidence) GetExtraProperties() map[string]interface{} {
 }
 
 func (v *VerifyValidationEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -40703,10 +42479,12 @@ func (v *VerifyValidationEvidenceData) GetExtraProperties() map[string]interface
 }
 
 func (v *VerifyValidationEvidenceData) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetFindings sets the Findings field and marks it as non-optional;
@@ -40797,10 +42575,12 @@ func (v *VerifyValidationEvidenceDataFindingsItem) GetExtraProperties() map[stri
 }
 
 func (v *VerifyValidationEvidenceDataFindingsItem) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -40859,13 +42639,13 @@ func (v *VerifyValidationEvidenceDataFindingsItem) String() string {
 	return fmt.Sprintf("%#v", v)
 }
 
-// Two or more values from the document that should agree and do not. The disagreement itself is the finding.
 var (
 	verifyValueComparisonEvidenceFieldEvidenceID = big.NewInt(1 << 0)
 	verifyValueComparisonEvidenceFieldData       = big.NewInt(1 << 1)
 	verifyValueComparisonEvidenceFieldLocations  = big.NewInt(1 << 2)
 )
 
+// Two or more values from the document that should agree and do not. The disagreement itself is the finding.
 type VerifyValueComparisonEvidence struct {
 	// Unique within the run, such as `"meta.timestamp_conflict:001"`. Treat it as an opaque identifier; do not parse it.
 	EvidenceID string                             `json:"evidenceId" url:"evidenceId"`
@@ -40908,10 +42688,12 @@ func (v *VerifyValueComparisonEvidence) GetExtraProperties() map[string]interfac
 }
 
 func (v *VerifyValueComparisonEvidence) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetEvidenceID sets the EvidenceID field and marks it as non-optional;
@@ -41016,10 +42798,12 @@ func (v *VerifyValueComparisonEvidenceData) GetExtraProperties() map[string]inte
 }
 
 func (v *VerifyValueComparisonEvidenceData) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetCode sets the Code field and marks it as non-optional;
@@ -42139,13 +43923,13 @@ func (w *WebhookEvent) validate() error {
 	return nil
 }
 
-// A terminal step that triggers webhook delivery of the workflow results.
-//
-// See the [Webhook Response step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#webhook-response).
 var (
 	webhookResponseStepDefinitionFieldName = big.NewInt(1 << 0)
 )
 
+// A terminal step that triggers webhook delivery of the workflow results.
+//
+// See the [Webhook Response step docs](https://docs.extend.ai/2026-02-09/workflows/configuring-workflows#webhook-response).
 type WebhookResponseStepDefinition struct {
 	Name string `json:"name" url:"name"`
 
@@ -42171,10 +43955,12 @@ func (w *WebhookResponseStepDefinition) GetExtraProperties() map[string]interfac
 }
 
 func (w *WebhookResponseStepDefinition) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -42265,10 +44051,12 @@ func (w *WorkflowCreatedWebhookEvent) GetExtraProperties() map[string]interface{
 }
 
 func (w *WorkflowCreatedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -42366,10 +44154,12 @@ func (w *WorkflowDeletedWebhookEvent) GetExtraProperties() map[string]interface{
 }
 
 func (w *WorkflowDeletedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -42467,10 +44257,12 @@ func (w *WorkflowDeployedWebhookEvent) GetExtraProperties() map[string]interface
 }
 
 func (w *WorkflowDeployedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -42529,7 +44321,6 @@ func (w *WorkflowDeployedWebhookEvent) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// An inline extractor configuration for an `EXTRACT` workflow step. Same shape as the `config` accepted by [Create Extract Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/extract/create-extract-run), except `schema` is required — schema-less extraction (inferring the schema from the file at run time) is not supported in workflows.
 var (
 	workflowInlineExtractConfigFieldBaseProcessor   = big.NewInt(1 << 0)
 	workflowInlineExtractConfigFieldBaseVersion     = big.NewInt(1 << 1)
@@ -42539,6 +44330,7 @@ var (
 	workflowInlineExtractConfigFieldParseConfig     = big.NewInt(1 << 5)
 )
 
+// An inline extractor configuration for an `EXTRACT` workflow step. Same shape as the `config` accepted by [Create Extract Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/extract/create-extract-run), except `schema` is required — schema-less extraction (inferring the schema from the file at run time) is not supported in workflows.
 type WorkflowInlineExtractConfig struct {
 	BaseProcessor *ExtractBaseProcessor `json:"baseProcessor,omitempty" url:"baseProcessor,omitempty"`
 	// The version of the `"extraction_performance"`, `"extraction_light"`, or `"extraction_operator"` processor to use. If not provided, the latest stable version will be used. See [Extraction Changelog](https://docs.extend.ai/2026-02-09/model-versioning/extraction/extraction-performance) for more details.
@@ -42611,10 +44403,12 @@ func (w *WorkflowInlineExtractConfig) GetExtraProperties() map[string]interface{
 }
 
 func (w *WorkflowInlineExtractConfig) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetBaseProcessor sets the BaseProcessor field and marks it as non-optional;
@@ -42740,10 +44534,12 @@ func (w *WorkflowRunCancelledWebhookEvent) GetExtraProperties() map[string]inter
 }
 
 func (w *WorkflowRunCancelledWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -42841,10 +44637,12 @@ func (w *WorkflowRunCompletedWebhookEvent) GetExtraProperties() map[string]inter
 }
 
 func (w *WorkflowRunCompletedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -42942,10 +44740,12 @@ func (w *WorkflowRunFailedWebhookEvent) GetExtraProperties() map[string]interfac
 }
 
 func (w *WorkflowRunFailedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -43043,10 +44843,12 @@ func (w *WorkflowRunNeedsReviewWebhookEvent) GetExtraProperties() map[string]int
 }
 
 func (w *WorkflowRunNeedsReviewWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -43144,10 +44946,12 @@ func (w *WorkflowRunRejectedWebhookEvent) GetExtraProperties() map[string]interf
 }
 
 func (w *WorkflowRunRejectedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -43245,10 +45049,12 @@ func (w *WorkflowRunStepRunProcessedWebhookEvent) GetExtraProperties() map[strin
 }
 
 func (w *WorkflowRunStepRunProcessedWebhookEvent) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetEventID sets the EventID field and marks it as non-optional;
@@ -43772,7 +45578,6 @@ func (w *WorkflowStepDefinition) validate() error {
 	return nil
 }
 
-// A summary representation of a workflow.
 var (
 	workflowSummaryFieldID        = big.NewInt(1 << 0)
 	workflowSummaryFieldName      = big.NewInt(1 << 1)
@@ -43781,6 +45586,12 @@ var (
 	workflowSummaryFieldCreatedBy = big.NewInt(1 << 4)
 )
 
+// workflowSummaryNullableFields maps the wire names of WorkflowSummary's nullable fields (required or optional) to their field bits.
+var workflowSummaryNullableFields = map[string]*big.Int{
+	"createdBy": workflowSummaryFieldCreatedBy,
+}
+
+// A summary representation of a workflow.
 type WorkflowSummary struct {
 	// The ID of the workflow.
 	ID string `json:"id" url:"id"`
@@ -43845,10 +45656,12 @@ func (w *WorkflowSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowSummary) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -43911,6 +45724,13 @@ func (w *WorkflowSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -43947,7 +45767,6 @@ func (w *WorkflowSummary) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A workflow version with its step definitions.
 var (
 	workflowVersionFieldID        = big.NewInt(1 << 0)
 	workflowVersionFieldVersion   = big.NewInt(1 << 1)
@@ -43957,6 +45776,13 @@ var (
 	workflowVersionFieldCreatedBy = big.NewInt(1 << 5)
 )
 
+// workflowVersionNullableFields maps the wire names of WorkflowVersion's nullable fields (required or optional) to their field bits.
+var workflowVersionNullableFields = map[string]*big.Int{
+	"name":      workflowVersionFieldName,
+	"createdBy": workflowVersionFieldCreatedBy,
+}
+
+// A workflow version with its step definitions.
 type WorkflowVersion struct {
 	// The ID of the workflow version.
 	ID string `json:"id" url:"id"`
@@ -44031,10 +45857,12 @@ func (w *WorkflowVersion) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowVersion) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -44102,6 +45930,13 @@ func (w *WorkflowVersion) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowVersionNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -44136,7 +45971,6 @@ func (w *WorkflowVersion) String() string {
 	return fmt.Sprintf("%#v", w)
 }
 
-// A summary representation of a workflow version (without steps).
 var (
 	workflowVersionSummaryFieldID        = big.NewInt(1 << 0)
 	workflowVersionSummaryFieldVersion   = big.NewInt(1 << 1)
@@ -44145,6 +45979,13 @@ var (
 	workflowVersionSummaryFieldCreatedBy = big.NewInt(1 << 4)
 )
 
+// workflowVersionSummaryNullableFields maps the wire names of WorkflowVersionSummary's nullable fields (required or optional) to their field bits.
+var workflowVersionSummaryNullableFields = map[string]*big.Int{
+	"name":      workflowVersionSummaryFieldName,
+	"createdBy": workflowVersionSummaryFieldCreatedBy,
+}
+
+// A summary representation of a workflow version (without steps).
 type WorkflowVersionSummary struct {
 	// The ID of the workflow version.
 	ID string `json:"id" url:"id"`
@@ -44210,10 +46051,12 @@ func (w *WorkflowVersionSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowVersionSummary) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -44274,6 +46117,13 @@ func (w *WorkflowVersionSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowVersionSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -44328,10 +46178,12 @@ type VerifyRequest struct {
 }
 
 func (v *VerifyRequest) require(field *big.Int) {
-	if v.explicitFields == nil {
-		v.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if v.explicitFields != nil {
+		next.Set(v.explicitFields)
 	}
-	v.explicitFields.Or(v.explicitFields, field)
+	next.Or(next, field)
+	v.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;

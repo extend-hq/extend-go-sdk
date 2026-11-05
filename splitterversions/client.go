@@ -41,6 +41,19 @@ func NewClient(options *core.RequestOptions) *Client {
 // This endpoint allows you to fetch all versions of a given splitter, including the current `draft` version.
 //
 // Versions are returned in descending order of creation (newest first) with the `draft` version first. The `draft` version is the latest unpublished version of the splitter, which can be published to create a new version. It might not have any changes from the last published version.
+//
+// Example:
+//
+//	request := &extend.SplitterVersionsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.SplitterVersions.List(
+//	    context.TODO(),
+//	    "splitter_id_here",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the splitter.
@@ -65,6 +78,20 @@ func (c *Client) List(
 // This endpoint allows you to publish a new version of an existing splitter. Publishing a new version creates a snapshot of the splitter's current configuration and makes it available for use in workflows.
 //
 // Publishing a new version does not automatically update existing workflows using this splitter. You may need to manually update workflows to use the new version if desired.
+//
+// Example:
+//
+//	request := &extend.SplitterVersionsCreateRequest{
+//	    ReleaseType: extend.ReleaseTypeMinor,
+//	    Description: extend.String(
+//	        "Improved split boundary detection",
+//	    ),
+//	}
+//	_, err := client.SplitterVersions.Create(
+//	    context.TODO(),
+//	    "splitter_id_here",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the splitter.
@@ -87,6 +114,16 @@ func (c *Client) Create(
 }
 
 // Retrieve a specific version of a splitter in Extend
+//
+// Example:
+//
+//	request := &extend.SplitterVersionsRetrieveRequest{}
+//	_, err := client.SplitterVersions.Retrieve(
+//	    context.TODO(),
+//	    "splitter_id_here",
+//	    "draft",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the splitter.

@@ -55,6 +55,13 @@ func NewClient(options *core.RequestOptions) *Client {
 // - `GET /extract_runs?batchId={id}`
 // - `GET /classify_runs?batchId={id}`
 // - `GET /split_runs?batchId={id}`
+//
+// Example:
+//
+//	_, err := client.BatchRuns.Get(
+//	    context.TODO(),
+//	    "bpr_Xj8mK2pL9nR4vT7qY5wZ",
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	// The unique identifier of the batch processor run to retrieve.

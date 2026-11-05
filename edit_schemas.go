@@ -24,10 +24,12 @@ type EditSchemasGenerateRequest struct {
 }
 
 func (e *EditSchemasGenerateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -88,6 +90,38 @@ func (e *EditSchemasGenerateRequestFile) GetFileFromID() *FileFromID {
 }
 
 func (e *EditSchemasGenerateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"

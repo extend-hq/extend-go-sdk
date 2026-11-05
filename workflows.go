@@ -30,10 +30,12 @@ type WorkflowsCreateRequest struct {
 }
 
 func (w *WorkflowsCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -89,10 +91,12 @@ type WorkflowsListRequest struct {
 }
 
 func (w *WorkflowsListRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetNextPageToken sets the NextPageToken field and marks it as non-optional;
@@ -123,7 +127,6 @@ func (w *WorkflowsListRequest) SetSortDir(sortDir *SortDir) {
 	w.require(workflowsListRequestFieldSortDir)
 }
 
-// A workflow with its draft version and steps.
 var (
 	workflowFieldID           = big.NewInt(1 << 0)
 	workflowFieldName         = big.NewInt(1 << 1)
@@ -133,6 +136,12 @@ var (
 	workflowFieldCreatedBy    = big.NewInt(1 << 5)
 )
 
+// workflowNullableFields maps the wire names of Workflow's nullable fields (required or optional) to their field bits.
+var workflowNullableFields = map[string]*big.Int{
+	"createdBy": workflowFieldCreatedBy,
+}
+
+// A workflow with its draft version and steps.
 type Workflow struct {
 	// The ID of the workflow.
 	ID string `json:"id" url:"id"`
@@ -205,10 +214,12 @@ func (w *Workflow) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *Workflow) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -278,6 +289,13 @@ func (w *Workflow) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	w.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, workflowNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		w.require(presentFields)
+	}
 	w.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -357,10 +375,12 @@ func (w *WorkflowsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkflowsListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;
@@ -448,10 +468,12 @@ type WorkflowsUpdateRequest struct {
 }
 
 func (w *WorkflowsUpdateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;

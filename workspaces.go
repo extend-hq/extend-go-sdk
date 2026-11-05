@@ -26,10 +26,12 @@ type WorkspacesCreateRequest struct {
 }
 
 func (w *WorkspacesCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -86,10 +88,12 @@ type WorkspacesListRequest struct {
 }
 
 func (w *WorkspacesListRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -133,10 +137,12 @@ type WorkspacesRetrieveRequest struct {
 }
 
 func (w *WorkspacesRetrieveRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -146,7 +152,6 @@ func (w *WorkspacesRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID strin
 	w.require(workspacesRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// A workspace inside your organization. Workspaces isolate configs (extractors, classifiers, splitters, workflows), runs, files, and members from each other.
 var (
 	workspaceFieldID        = big.NewInt(1 << 0)
 	workspaceFieldName      = big.NewInt(1 << 1)
@@ -154,6 +159,7 @@ var (
 	workspaceFieldUpdatedAt = big.NewInt(1 << 3)
 )
 
+// A workspace inside your organization. Workspaces isolate configs (extractors, classifiers, splitters, workflows), runs, files, and members from each other.
 type Workspace struct {
 	// Unique identifier for the workspace.
 	ID string `json:"id" url:"id"`
@@ -210,10 +216,12 @@ func (w *Workspace) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *Workspace) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -348,10 +356,12 @@ func (w *WorkspacesListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (w *WorkspacesListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

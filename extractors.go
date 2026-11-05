@@ -36,10 +36,12 @@ type ExtractorsCreateRequest struct {
 }
 
 func (e *ExtractorsCreateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -112,10 +114,12 @@ type ExtractorsListRequest struct {
 }
 
 func (e *ExtractorsListRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -166,10 +170,12 @@ type ExtractorsRetrieveRequest struct {
 }
 
 func (e *ExtractorsRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -256,10 +262,12 @@ func (e *Extractor) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *Extractor) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -358,14 +366,14 @@ func (e *Extractor) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// If provided, an extraction schema is automatically generated from the supplied sample documents and applied to the extractor's draft. The response includes the extractor with the generated schema already in place.
-//
-// Cannot be provided together with `config` or `cloneExtractorId`.
 var (
 	extractorsCreateRequestGenerateFieldFiles        = big.NewInt(1 << 0)
 	extractorsCreateRequestGenerateFieldInstructions = big.NewInt(1 << 1)
 )
 
+// If provided, an extraction schema is automatically generated from the supplied sample documents and applied to the extractor's draft. The response includes the extractor with the generated schema already in place.
+//
+// Cannot be provided together with `config` or `cloneExtractorId`.
 type ExtractorsCreateRequestGenerate struct {
 	// One to five sample documents used to generate the schema. Each item is either a file URL (downloaded inline) or an existing Extend file ID.
 	Files []*ExtractorsCreateRequestGenerateFilesItem `json:"files" url:"files"`
@@ -401,10 +409,12 @@ func (e *ExtractorsCreateRequestGenerate) GetExtraProperties() map[string]interf
 }
 
 func (e *ExtractorsCreateRequestGenerate) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFiles sets the Files field and marks it as non-optional;
@@ -485,6 +495,38 @@ func (e *ExtractorsCreateRequestGenerateFilesItem) GetFileFromID() *FileFromID {
 }
 
 func (e *ExtractorsCreateRequestGenerateFilesItem) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -568,10 +610,12 @@ func (e *ExtractorsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractorsListResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;
@@ -660,10 +704,12 @@ type ExtractorsUpdateRequest struct {
 }
 
 func (e *ExtractorsUpdateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;

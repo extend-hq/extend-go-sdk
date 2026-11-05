@@ -25,10 +25,12 @@ type EvaluationSetItemsCreateRequest struct {
 }
 
 func (e *EvaluationSetItemsCreateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -79,10 +81,12 @@ type EvaluationSetItemsDeleteRequest struct {
 }
 
 func (e *EvaluationSetItemsDeleteRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -113,10 +117,12 @@ type EvaluationSetItemsListRequest struct {
 }
 
 func (e *EvaluationSetItemsListRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -167,10 +173,12 @@ type EvaluationSetItemsRetrieveRequest struct {
 }
 
 func (e *EvaluationSetItemsRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -188,6 +196,13 @@ var (
 	evaluationSetItemFieldExpectedOutput  = big.NewInt(1 << 4)
 	evaluationSetItemFieldCreatedBy       = big.NewInt(1 << 5)
 )
+
+// evaluationSetItemNullableFields maps the wire names of EvaluationSetItem's nullable fields (required or optional) to their field bits.
+var evaluationSetItemNullableFields = map[string]*big.Int{
+	"file":      evaluationSetItemFieldFile,
+	"files":     evaluationSetItemFieldFiles,
+	"createdBy": evaluationSetItemFieldCreatedBy,
+}
 
 type EvaluationSetItem struct {
 	// The ID of the evaluation set item.
@@ -270,10 +285,12 @@ func (e *EvaluationSetItem) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EvaluationSetItem) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -339,6 +356,13 @@ func (e *EvaluationSetItem) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, evaluationSetItemNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -377,6 +401,13 @@ var (
 	evaluationSetItemSummaryFieldFiles     = big.NewInt(1 << 2)
 	evaluationSetItemSummaryFieldCreatedBy = big.NewInt(1 << 3)
 )
+
+// evaluationSetItemSummaryNullableFields maps the wire names of EvaluationSetItemSummary's nullable fields (required or optional) to their field bits.
+var evaluationSetItemSummaryNullableFields = map[string]*big.Int{
+	"file":      evaluationSetItemSummaryFieldFile,
+	"files":     evaluationSetItemSummaryFieldFiles,
+	"createdBy": evaluationSetItemSummaryFieldCreatedBy,
+}
 
 type EvaluationSetItemSummary struct {
 	// The ID of the evaluation set item.
@@ -439,10 +470,12 @@ func (e *EvaluationSetItemSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *EvaluationSetItemSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -494,6 +527,13 @@ func (e *EvaluationSetItemSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, evaluationSetItemSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -526,13 +566,13 @@ func (e *EvaluationSetItemSummary) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Each item references exactly one of `fileId` (a single file) or `fileIds` (a multifile item) — provide one or the other.
 var (
 	evaluationSetItemsCreateRequestItemsItemFieldFileID         = big.NewInt(1 << 0)
 	evaluationSetItemsCreateRequestItemsItemFieldFileIDs        = big.NewInt(1 << 1)
 	evaluationSetItemsCreateRequestItemsItemFieldExpectedOutput = big.NewInt(1 << 2)
 )
 
+// Each item references exactly one of `fileId` (a single file) or `fileIds` (a multifile item) — provide one or the other.
 type EvaluationSetItemsCreateRequestItemsItem struct {
 	// Extend's internal ID for the file. It will always start with "file_". Mutually exclusive with `fileIds`.
 	//
@@ -583,10 +623,12 @@ func (e *EvaluationSetItemsCreateRequestItemsItem) GetExtraProperties() map[stri
 }
 
 func (e *EvaluationSetItemsCreateRequestItemsItem) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFileID sets the FileID field and marks it as non-optional;
@@ -681,10 +723,12 @@ func (e *EvaluationSetItemsCreateResponse) GetExtraProperties() map[string]inter
 }
 
 func (e *EvaluationSetItemsCreateResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetEvaluationSetItems sets the EvaluationSetItems field and marks it as non-optional;
@@ -766,10 +810,12 @@ func (e *EvaluationSetItemsDeleteResponse) GetExtraProperties() map[string]inter
 }
 
 func (e *EvaluationSetItemsDeleteResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -864,10 +910,12 @@ func (e *EvaluationSetItemsListResponse) GetExtraProperties() map[string]interfa
 }
 
 func (e *EvaluationSetItemsListResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;
@@ -953,10 +1001,12 @@ type EvaluationSetItemsUpdateRequest struct {
 }
 
 func (e *EvaluationSetItemsUpdateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;

@@ -29,10 +29,12 @@ type WorkflowVersionsCreateRequest struct {
 }
 
 func (w *WorkflowVersionsCreateRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetName sets the Name field and marks it as non-optional;
@@ -86,10 +88,12 @@ type WorkflowVersionsListRequest struct {
 }
 
 func (w *WorkflowVersionsListRequest) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetNextPageToken sets the NextPageToken field and marks it as non-optional;
@@ -156,10 +160,12 @@ func (w *WorkflowVersionsListResponse) GetExtraProperties() map[string]interface
 }
 
 func (w *WorkflowVersionsListResponse) require(field *big.Int) {
-	if w.explicitFields == nil {
-		w.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if w.explicitFields != nil {
+		next.Set(w.explicitFields)
 	}
-	w.explicitFields.Or(w.explicitFields, field)
+	next.Or(next, field)
+	w.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

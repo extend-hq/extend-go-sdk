@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all extract runs.
 //
 // Returns a summary of each run. Use `GET /extract_runs/{id}` to retrieve the full object including `output` and `config`.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ExtractRuns.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ExtractRunsListRequest,
@@ -60,6 +72,23 @@ func (c *Client) List(
 // Extract structured data from a file using an existing extractor or an inline configuration.
 //
 // The request returns immediately with a `PROCESSING` status. Use webhooks or poll the Get Extract Run endpoint for results.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsCreateRequest{
+//	    Extractor: &extend.ExtractRunsCreateRequestExtractor{
+//	        ID: "ex_1234567890",
+//	    },
+//	    File: &extend.ExtractRunsCreateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/invoice.pdf",
+//	        },
+//	    },
+//	}
+//	_, err := client.ExtractRuns.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ExtractRunsCreateRequest,
@@ -79,6 +108,15 @@ func (c *Client) Create(
 // Retrieve details about a specific extract run, including its status, outputs, and any edits made during review.
 //
 // A common use case for this endpoint is to poll for the status and final output of an extract run when using the [Create Extract Run](https://docs.extend.ai/2026-02-09/api-reference/endpoints/extract/create-extract-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsRetrieveRequest{}
+//	_, err := client.ExtractRuns.Retrieve(
+//	    context.TODO(),
+//	    "extract_run_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The unique identifier for this extract run.
@@ -103,6 +141,15 @@ func (c *Client) Retrieve(
 // Delete an extract run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsDeleteRequest{}
+//	_, err := client.ExtractRuns.Delete(
+//	    context.TODO(),
+//	    "id",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the extract run.
@@ -125,6 +172,15 @@ func (c *Client) Delete(
 // Cancel an in-progress extract run.
 //
 // Note: Only extract runs with a status of `"PROCESSING"` can be cancelled. Extractor runs that have already completed, failed, or been cancelled cannot be cancelled again.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsCancelRequest{}
+//	_, err := client.ExtractRuns.Cancel(
+//	    context.TODO(),
+//	    "extract_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The ID of the extract run to cancel.
@@ -158,6 +214,50 @@ func (c *Client) Cancel(
 // - A processor reference (`extractor.id`) is required — inline `config` is not supported for batch requests.
 // - `inputs` must contain between 1 and 1,000 items.
 // - All inputs in a batch use the same extractor version and override config.
+//
+// Example:
+//
+//	request := &extend.ExtractRunsCreateBatchRequest{
+//	    Extractor: &extend.ExtractRunsCreateBatchRequestExtractor{
+//	        ID: "ex_xK9mLPqRtN3vS8wF5hB2cQ",
+//	    },
+//	    Inputs: []*extend.ExtractRunsCreateBatchRequestInputsItem{
+//	        &extend.ExtractRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/invoice1.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_abc123",
+//	            },
+//	        },
+//	        &extend.ExtractRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/invoice2.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_def456",
+//	            },
+//	        },
+//	        &extend.ExtractRunsCreateBatchRequestInputsItem{
+//	            File: &extend.ExtractRunsCreateBatchRequestInputsItemFile{
+//	                FileFromURL: &extend.FileFromURL{
+//	                    URL: "https://example.com/invoice3.pdf",
+//	                },
+//	            },
+//	            Metadata: &extend.RunMetadata{
+//	                "customerId": "cust_ghi789",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.ExtractRuns.CreateBatch(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) CreateBatch(
 	ctx context.Context,
 	request *extend.ExtractRunsCreateBatchRequest,

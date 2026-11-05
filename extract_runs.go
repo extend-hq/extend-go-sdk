@@ -23,10 +23,12 @@ type ExtractRunsCancelRequest struct {
 }
 
 func (e *ExtractRunsCancelRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -66,10 +68,12 @@ type ExtractRunsCreateRequest struct {
 }
 
 func (e *ExtractRunsCreateRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtractor sets the Extractor field and marks it as non-optional;
@@ -153,10 +157,12 @@ type ExtractRunsCreateBatchRequest struct {
 }
 
 func (e *ExtractRunsCreateBatchRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtractor sets the Extractor field and marks it as non-optional;
@@ -214,10 +220,12 @@ type ExtractRunsDeleteRequest struct {
 }
 
 func (e *ExtractRunsDeleteRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -271,10 +279,12 @@ type ExtractRunsListRequest struct {
 }
 
 func (e *ExtractRunsListRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -367,10 +377,12 @@ type ExtractRunsRetrieveRequest struct {
 }
 
 func (e *ExtractRunsRetrieveRequest) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetExtendWorkspaceID sets the ExtendWorkspaceID field and marks it as non-optional;
@@ -380,7 +392,6 @@ func (e *ExtractRunsRetrieveRequest) SetExtendWorkspaceID(extendWorkspaceID *str
 	e.require(extractRunsRetrieveRequestFieldExtendWorkspaceID)
 }
 
-// Summary representation of an extract run.
 var (
 	extractRunSummaryFieldID               = big.NewInt(1 << 0)
 	extractRunSummaryFieldExtractor        = big.NewInt(1 << 1)
@@ -400,6 +411,20 @@ var (
 	extractRunSummaryFieldUpdatedAt        = big.NewInt(1 << 15)
 )
 
+// extractRunSummaryNullableFields maps the wire names of ExtractRunSummary's nullable fields (required or optional) to their field bits.
+var extractRunSummaryNullableFields = map[string]*big.Int{
+	"extractor":        extractRunSummaryFieldExtractor,
+	"extractorVersion": extractRunSummaryFieldExtractorVersion,
+	"failureReason":    extractRunSummaryFieldFailureReason,
+	"failureMessage":   extractRunSummaryFieldFailureMessage,
+	"metadata":         extractRunSummaryFieldMetadata,
+	"file":             extractRunSummaryFieldFile,
+	"files":            extractRunSummaryFieldFiles,
+	"parseRunId":       extractRunSummaryFieldParseRunID,
+	"usage":            extractRunSummaryFieldUsage,
+}
+
+// Summary representation of an extract run.
 type ExtractRunSummary struct {
 	// The unique identifier for this extract run.
 	ID string `json:"id" url:"id"`
@@ -593,10 +618,12 @@ func (e *ExtractRunSummary) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractRunSummary) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -736,6 +763,13 @@ func (e *ExtractRunSummary) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	e.extraProperties = extraProperties
+	presentFields, err := internal.ExplicitFieldsFromJSON(data, extractRunSummaryNullableFields)
+	if err != nil {
+		return err
+	}
+	if presentFields != nil {
+		e.require(presentFields)
+	}
 	e.rawJSON = json.RawMessage(data)
 	return nil
 }
@@ -772,13 +806,13 @@ func (e *ExtractRunSummary) String() string {
 	return fmt.Sprintf("%#v", e)
 }
 
-// Reference to the extractor to run against every input in this batch.
 var (
 	extractRunsCreateBatchRequestExtractorFieldID             = big.NewInt(1 << 0)
 	extractRunsCreateBatchRequestExtractorFieldVersion        = big.NewInt(1 << 1)
 	extractRunsCreateBatchRequestExtractorFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to the extractor to run against every input in this batch.
 type ExtractRunsCreateBatchRequestExtractor struct {
 	// The ID of the extractor to use.
 	ID      string                  `json:"id" url:"id"`
@@ -822,10 +856,12 @@ func (e *ExtractRunsCreateBatchRequestExtractor) GetExtraProperties() map[string
 }
 
 func (e *ExtractRunsCreateBatchRequestExtractor) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -930,10 +966,12 @@ func (e *ExtractRunsCreateBatchRequestInputsItem) GetExtraProperties() map[strin
 }
 
 func (e *ExtractRunsCreateBatchRequestInputsItem) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetFile sets the File field and marks it as non-optional;
@@ -1023,6 +1061,54 @@ func (e *ExtractRunsCreateBatchRequestInputsItemFile) GetFileFromText() *FileFro
 }
 
 func (e *ExtractRunsCreateBatchRequestInputsItemFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -1076,13 +1162,13 @@ func (e *ExtractRunsCreateBatchRequestInputsItemFile) Accept(visitor ExtractRuns
 	return fmt.Errorf("type %T does not include a non-empty union type", e)
 }
 
-// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 var (
 	extractRunsCreateRequestExtractorFieldID             = big.NewInt(1 << 0)
 	extractRunsCreateRequestExtractorFieldVersion        = big.NewInt(1 << 1)
 	extractRunsCreateRequestExtractorFieldOverrideConfig = big.NewInt(1 << 2)
 )
 
+// Reference to an existing extractor. Mutually exclusive with `config` — provide one or the other, or omit both to have Extend infer a schema from the document.
 type ExtractRunsCreateRequestExtractor struct {
 	// The ID of the extractor to use.
 	ID      string                  `json:"id" url:"id"`
@@ -1126,10 +1212,12 @@ func (e *ExtractRunsCreateRequestExtractor) GetExtraProperties() map[string]inte
 }
 
 func (e *ExtractRunsCreateRequestExtractor) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1228,6 +1316,54 @@ func (e *ExtractRunsCreateRequestFile) GetFileFromText() *FileFromText {
 }
 
 func (e *ExtractRunsCreateRequestFile) UnmarshalJSON(data []byte) error {
+	if internal.MatchesObjectKeys(data, []string{"url", "name", "settings"}, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"id"}, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.MatchesObjectKeys(data, []string{"text", "name"}, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"url"}) {
+		valueFileFromURL := new(FileFromURL)
+		if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
+			e.typ = "FileFromURL"
+			e.FileFromURL = valueFileFromURL
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"id"}) {
+		valueFileFromID := new(FileFromID)
+		if err := json.Unmarshal(data, &valueFileFromID); err == nil {
+			e.typ = "FileFromID"
+			e.FileFromID = valueFileFromID
+			return nil
+		}
+	}
+	if internal.HasObjectKeys(data, []string{"text"}) {
+		valueFileFromText := new(FileFromText)
+		if err := json.Unmarshal(data, &valueFileFromText); err == nil {
+			e.typ = "FileFromText"
+			e.FileFromText = valueFileFromText
+			return nil
+		}
+	}
 	valueFileFromURL := new(FileFromURL)
 	if err := json.Unmarshal(data, &valueFileFromURL); err == nil {
 		e.typ = "FileFromURL"
@@ -1311,10 +1447,12 @@ func (e *ExtractRunsDeleteResponse) GetExtraProperties() map[string]interface{} 
 }
 
 func (e *ExtractRunsDeleteResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetID sets the ID field and marks it as non-optional;
@@ -1409,10 +1547,12 @@ func (e *ExtractRunsListResponse) GetExtraProperties() map[string]interface{} {
 }
 
 func (e *ExtractRunsListResponse) require(field *big.Int) {
-	if e.explicitFields == nil {
-		e.explicitFields = big.NewInt(0)
+	next := new(big.Int)
+	if e.explicitFields != nil {
+		next.Set(e.explicitFields)
 	}
-	e.explicitFields.Or(e.explicitFields, field)
+	next.Or(next, field)
+	e.explicitFields = next
 }
 
 // SetData sets the Data field and marks it as non-optional;

@@ -39,6 +39,18 @@ func NewClient(options *core.RequestOptions) *Client {
 }
 
 // List runs of a Processor. A ProcessorRun represents a single execution of a processor against a file.
+//
+// Example:
+//
+//	request := &extend.ProcessorRunListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.ProcessorRun.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ProcessorRunListRequest,
@@ -64,6 +76,16 @@ func (c *Client) List(
 // **For asynchronous processing:**
 // - You can [configure webhooks](https://docs.extend.ai/2026-02-09/webhooks/configuration) to receive notifications when a processor run is complete or failed.
 // - Or you can [poll the get endpoint](https://docs.extend.ai/2026-02-09/api-reference/endpoints/legacy/get-processor-run) for updates on the status of the processor run.
+//
+// Example:
+//
+//	request := &extend.ProcessorRunCreateRequest{
+//	    ProcessorID: "processor_id_here",
+//	}
+//	_, err := client.ProcessorRun.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ProcessorRunCreateRequest,
@@ -83,6 +105,15 @@ func (c *Client) Create(
 // Retrieve details about a specific processor run, including its status, outputs, and any edits made during review.
 //
 // A common use case for this endpoint is to poll for the status and final output of an async processor run when using the [Run Processor](https://docs.extend.ai/2026-02-09/api-reference/endpoints/legacy/create-processor-run) endpoint. For instance, if you do not want to not configure webhooks to receive the output via completion/failure events.
+//
+// Example:
+//
+//	request := &extend.ProcessorRunGetRequest{}
+//	_, err := client.ProcessorRun.Get(
+//	    context.TODO(),
+//	    "processor_run_id_here",
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	// The unique identifier for this processor run.
@@ -107,6 +138,15 @@ func (c *Client) Get(
 // Delete a processor run and all associated data from Extend. This operation is permanent and cannot be undone.
 //
 // This endpoint can be used if you'd like to manage data retention on your own rather than automated data retention policies. Or make one-off deletions for your downstream customers.
+//
+// Example:
+//
+//	request := &extend.ProcessorRunDeleteRequest{}
+//	_, err := client.ProcessorRun.Delete(
+//	    context.TODO(),
+//	    "processor_run_id_here",
+//	    request,
+//	)
 func (c *Client) Delete(
 	ctx context.Context,
 	// The ID of the processor run to delete.
@@ -131,6 +171,15 @@ func (c *Client) Delete(
 // Cancel a running processor run by its ID. This endpoint allows you to stop a processor run that is currently in progress.
 //
 // Note: Only processor runs with a status of `"PROCESSING"` can be cancelled. Processor runs that have already completed, failed, or been cancelled cannot be cancelled again.
+//
+// Example:
+//
+//	request := &extend.ProcessorRunCancelRequest{}
+//	_, err := client.ProcessorRun.Cancel(
+//	    context.TODO(),
+//	    "processor_run_id_here",
+//	    request,
+//	)
 func (c *Client) Cancel(
 	ctx context.Context,
 	// The unique identifier for the processor run to cancel.

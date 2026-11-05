@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all splitters.
 //
 // Returns a summary of each splitter. Use `GET /splitters/{id}` to retrieve the full object including `draftVersion`.
+//
+// Example:
+//
+//	request := &extend.SplittersListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.Splitters.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.SplittersListRequest,
@@ -58,6 +70,41 @@ func (c *Client) List(
 }
 
 // Create a new splitter.
+//
+// Example:
+//
+//	request := &extend.SplittersCreateRequest{
+//	    Name: "Document Splitter",
+//	    Config: &extend.SplitConfig{
+//	        SplitClassifications: []*extend.SplitClassification{
+//	            &extend.SplitClassification{
+//	                ID: "invoice",
+//	                Type: "invoice",
+//	                Description: "An invoice or bill for goods or services",
+//	                IdentifierKey: extend.String(
+//	                    "invoice number from the document header",
+//	                ),
+//	            },
+//	            &extend.SplitClassification{
+//	                ID: "receipt",
+//	                Type: "receipt",
+//	                Description: "A receipt confirming payment",
+//	                IdentifierKey: extend.String(
+//	                    "receipt number",
+//	                ),
+//	            },
+//	            &extend.SplitClassification{
+//	                ID: "other",
+//	                Type: "other",
+//	                Description: "Any other document type",
+//	            },
+//	        },
+//	    },
+//	}
+//	_, err := client.Splitters.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.SplittersCreateRequest,
@@ -75,6 +122,15 @@ func (c *Client) Create(
 }
 
 // Get details of a splitter.
+//
+// Example:
+//
+//	request := &extend.SplittersRetrieveRequest{}
+//	_, err := client.Splitters.Retrieve(
+//	    context.TODO(),
+//	    "splitter_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the splitter to get.
@@ -97,6 +153,19 @@ func (c *Client) Retrieve(
 }
 
 // Update an existing splitter.
+//
+// Example:
+//
+//	request := &extend.SplittersUpdateRequest{
+//	    Name: extend.String(
+//	        "Document Splitter v2",
+//	    ),
+//	}
+//	_, err := client.Splitters.Update(
+//	    context.TODO(),
+//	    "splitter_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the splitter to update.

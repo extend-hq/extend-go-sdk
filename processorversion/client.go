@@ -42,6 +42,15 @@ func NewClient(options *core.RequestOptions) *Client {
 //
 // Versions are typically returned in descending order of creation (newest first), but this should be confirmed in the actual implementation.
 // The `draft` version is the latest unpublished version of the processor, which can be published to create a new version. It might not have any changes from the last published version.
+//
+// Example:
+//
+//	request := &extend.ProcessorVersionListRequest{}
+//	_, err := client.ProcessorVersion.List(
+//	    context.TODO(),
+//	    "processor_id_here",
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	// The ID of the processor to retrieve versions for.
@@ -66,6 +75,17 @@ func (c *Client) List(
 // This endpoint allows you to publish a new version of an existing processor. Publishing a new version creates a snapshot of the processor's current configuration and makes it available for use in workflows.
 //
 // Publishing a new version does not automatically update existing workflows using this processor. You may need to manually update workflows to use the new version if desired.
+//
+// Example:
+//
+//	request := &extend.ProcessorVersionCreateRequest{
+//	    ReleaseType: extend.ProcessorVersionCreateRequestReleaseTypeMajor,
+//	}
+//	_, err := client.ProcessorVersion.Create(
+//	    context.TODO(),
+//	    "processor_id_here",
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	// The ID of the processor to publish a new version for.
@@ -88,6 +108,16 @@ func (c *Client) Create(
 }
 
 // Retrieve a specific version of a processor in Extend
+//
+// Example:
+//
+//	request := &extend.ProcessorVersionGetRequest{}
+//	_, err := client.ProcessorVersion.Get(
+//	    context.TODO(),
+//	    "processor_id_here",
+//	    "processor_version_id_here",
+//	    request,
+//	)
 func (c *Client) Get(
 	ctx context.Context,
 	// The ID of the processor.

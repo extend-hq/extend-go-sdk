@@ -41,6 +41,18 @@ func NewClient(options *core.RequestOptions) *Client {
 // List all extractors.
 //
 // Returns a summary of each extractor. Use `GET /extractors/{id}` to retrieve the full object including `draftVersion`.
+//
+// Example:
+//
+//	request := &extend.ExtractorsListRequest{
+//	    NextPageToken: extend.String(
+//	        "xK9mLPqRtN3vS8wF5hB2cQ==:zWvUxYjM4nKpL7aDgE9HbTcR2mAyX3/Q+CNkfBSw1dZ=",
+//	    ),
+//	}
+//	_, err := client.Extractors.List(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) List(
 	ctx context.Context,
 	request *extend.ExtractorsListRequest,
@@ -60,6 +72,60 @@ func (c *Client) List(
 // Create a new extractor.
 //
 // You can optionally provide a `generate` object to automatically generate an extraction schema from sample documents using AI. `generate` is mutually exclusive with `config` and `cloneExtractorId`.
+//
+// Example:
+//
+//	request := &extend.ExtractorsCreateRequest{
+//	    Name: "Invoice Extractor",
+//	    Config: &extend.ExtractConfigJSON{
+//	        Schema: &extend.JSONObject{
+//	            "properties": map[string]any{
+//	                "invoice_number": map[string]any{
+//	                    "description": "The invoice number",
+//	                    "type": []any{
+//	                        "string",
+//	                        "null",
+//	                    },
+//	                },
+//	                "total_amount": map[string]any{
+//	                    "description": "The total amount due",
+//	                    "extend:type": "currency",
+//	                    "properties": map[string]any{
+//	                        "amount": map[string]any{
+//	                            "type": []any{
+//	                                "number",
+//	                                "null",
+//	                            },
+//	                        },
+//	                        "iso_4217_currency_code": map[string]any{
+//	                            "type": []any{
+//	                                "string",
+//	                                "null",
+//	                            },
+//	                        },
+//	                    },
+//	                    "required": []any{
+//	                        "amount",
+//	                        "iso_4217_currency_code",
+//	                    },
+//	                    "type": "object",
+//	                },
+//	                "vendor_name": map[string]any{
+//	                    "description": "The name of the vendor",
+//	                    "type": []any{
+//	                        "string",
+//	                        "null",
+//	                    },
+//	                },
+//	            },
+//	            "type": "object",
+//	        },
+//	    },
+//	}
+//	_, err := client.Extractors.Create(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Create(
 	ctx context.Context,
 	request *extend.ExtractorsCreateRequest,
@@ -77,6 +143,15 @@ func (c *Client) Create(
 }
 
 // Get details of an extractor.
+//
+// Example:
+//
+//	request := &extend.ExtractorsRetrieveRequest{}
+//	_, err := client.Extractors.Retrieve(
+//	    context.TODO(),
+//	    "extractor_id_here",
+//	    request,
+//	)
 func (c *Client) Retrieve(
 	ctx context.Context,
 	// The ID of the extractor to get.
@@ -99,6 +174,19 @@ func (c *Client) Retrieve(
 }
 
 // Update an existing extractor.
+//
+// Example:
+//
+//	request := &extend.ExtractorsUpdateRequest{
+//	    Name: extend.String(
+//	        "Invoice Extractor v2",
+//	    ),
+//	}
+//	_, err := client.Extractors.Update(
+//	    context.TODO(),
+//	    "extractor_id_here",
+//	    request,
+//	)
 func (c *Client) Update(
 	ctx context.Context,
 	// The ID of the extractor to update.

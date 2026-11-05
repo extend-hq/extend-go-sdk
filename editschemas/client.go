@@ -47,6 +47,33 @@ func NewClient(options *core.RequestOptions) *Client {
 // This endpoint returns the generated schema directly. There are no schema generation run resources to poll or delete.
 //
 // For more details, see the [Detect Form guide](https://docs.extend.ai/2026-02-09/editing/detect-form) and the [Edit File guide](https://docs.extend.ai/2026-02-09/editing/overview).
+//
+// Example:
+//
+//	request := &extend.EditSchemasGenerateRequest{
+//	    File: &extend.EditSchemasGenerateRequestFile{
+//	        FileFromURL: &extend.FileFromURL{
+//	            URL: "https://example.com/form.pdf",
+//	        },
+//	    },
+//	    Config: &extend.EditSchemaGenerationConfig{
+//	        EngineVersion: extend.String(
+//	            "1.0.0",
+//	        ),
+//	        Instructions: extend.String(
+//	            "Detect the form fields and use human-readable field names.",
+//	        ),
+//	        AdvancedOptions: &extend.EditSchemaGenerationConfigAdvancedOptions{
+//	            RadioEnumsEnabled: extend.Bool(
+//	                true,
+//	            ),
+//	        },
+//	    },
+//	}
+//	_, err := client.EditSchemas.Generate(
+//	    context.TODO(),
+//	    request,
+//	)
 func (c *Client) Generate(
 	ctx context.Context,
 	request *extend.EditSchemasGenerateRequest,
